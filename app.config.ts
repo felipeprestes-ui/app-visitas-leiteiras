@@ -6,30 +6,24 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   slug: 'app-visitas-leiteiras',
   version: '1.0.0',
   orientation: 'portrait',
-  icon: './assets/icon.png',
   userInterfaceStyle: 'light',
-  splash: {
-    image: './assets/splash.png',
-    resizeMode: 'contain',
-    backgroundColor: '#eef2fb',
-  },
-  updates: {
-    fallbackToCacheTimeout: 0,
-  },
   assetBundlePatterns: ['**/*'],
+  icon: './assets/icon.png',
+  splash: {
+    image: './assets/icon.png',
+    resizeMode: 'contain',
+    backgroundColor: '#1a3c7a',
+  },
   ios: {
     supportsTablet: false,
     bundleIdentifier: 'com.prestesfelipe.appvisitasleiteiras',
   },
   android: {
+    package: 'com.prestesfelipe.appvisitasleiteiras',
     adaptiveIcon: {
       foregroundImage: './assets/adaptive-icon.png',
-      backgroundColor: '#eef2fb',
+      backgroundColor: '#1a3c7a',
     },
-    package: 'com.prestesfelipe.appvisitasleiteiras',
-  },
-  web: {
-    favicon: './assets/favicon.png',
   },
   extra: {
     eas: {
