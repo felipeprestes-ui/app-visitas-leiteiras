@@ -1,29 +1,24 @@
-{
-  "cli": {
-    "version": ">= 7.0.0",
-    "appVersionSource": "local"
+import { ExpoConfig, ConfigContext } from 'expo/config';
+
+export default ({ config }: ConfigContext): ExpoConfig => ({
+  ...config,
+  name: 'CRV Lagoa Visitas',
+  slug: 'app-visitas-leiteiras',
+  version: '1.0.0',
+  orientation: 'portrait',
+  userInterfaceStyle: 'light',
+  assetBundlePatterns: ['**/*'],
+  ios: {
+    supportsTablet: false,
+    bundleIdentifier: 'com.prestesfelipe.appvisitasleiteiras',
   },
-  "build": {
-    "development": {
-      "developmentClient": true,
-      "distribution": "internal"
-    },
-    "preview": {
-      "distribution": "internal",
-      "android": {
-        "buildType": "apk"
-      },
-      "ios": {
-        "simulator": true
-      }
-    },
-    "production": {
-      "android": {
-        "buildType": "app-bundle"
-      }
-    }
+  android: {
+    package: 'com.prestesfelipe.appvisitasleiteiras',
   },
-  "submit": {
-    "production": {}
-  }
-}
+  extra: {
+    eas: {
+      projectId: 'ddc3db9a-e48b-4fc5-bbeb-c206d77b7eb4',
+    },
+  },
+  owner: 'prestesfelipe',
+});
