@@ -1,4 +1,4 @@
-﻿/**
+/**
  * CRV LAGOA — Visitas Leiteiras  (Expo Snack v8)
  *
  * Como usar (arquivo unico):
