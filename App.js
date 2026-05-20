@@ -19,7 +19,7 @@
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import {
   View, Text, TextInput, ScrollView, Pressable, Switch,
-  SafeAreaView, StyleSheet, Alert, ActivityIndicator,
+  StyleSheet, Alert, ActivityIndicator,
   KeyboardAvoidingView, Platform, BackHandler, StatusBar, Linking,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -42,7 +42,14 @@ const C = {
   gold:       '#d4a843',   // dourado LAGOA+
 };
 
-const STATUS_BAR_HEIGHT = Platform.OS === 'android' ? (StatusBar.currentHeight || 50) : 44;
+const STATUS_BAR_HEIGHT = (() => {
+  if (Platform.OS !== 'android') return 44;
+  try {
+    return StatusBar.currentHeight || 50;
+  } catch {
+    return 50;
+  }
+})();
 
 const CLIENT_TYPES = ['B', 'C', 'Conexao Leite', 'KAM', 'Lagoa+'];
 
@@ -1603,7 +1610,22 @@ function _mesToDate(m) {
 
 // Normaliza nome do especialista para corresponder ao USERS (sem acento)
 function _normName(n) {
-  return (n || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
+  const str = (n || '').trim();
+  // Remoção manual de acentos (Hermes não suporta String.prototype.normalize)
+  const accents = {
+    'A': /[ÀÁÂÃÄÅ]/g, 'a': /[àáâãäå]/g,
+    'E': /[ÈÉÊË]/g,   'e': /[èéêë]/g,
+    'I': /[ÌÍÎÏ]/g,   'i': /[ìíîï]/g,
+    'O': /[ÒÓÔÕÖØ]/g, 'o': /[òóôõöø]/g,
+    'U': /[ÙÚÛÜ]/g,   'u': /[ùúûü]/g,
+    'C': /[Ç]/g,      'c': /[ç]/g,
+    'N': /[Ñ]/g,      'n': /[ñ]/g,
+  };
+  let out = str;
+  for (const [rep, regex] of Object.entries(accents)) {
+    out = out.replace(regex, rep);
+  }
+  return out;
 }
 
 // Converte area "20" → "020", "12" → "012" etc.
@@ -1842,7 +1864,7 @@ function LoginScreen({ onLogin }) {
   }
 
   return (
-    <SafeAreaView style={s.safeArea}>
+    <View style={[s.safeArea, { paddingTop: STATUS_BAR_HEIGHT }]}>
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
         <ScrollView contentContainerStyle={s.loginWrap} keyboardShouldPersistTaps="handled">
           <BrandHeader size="large" />
@@ -1877,7 +1899,7 @@ function LoginScreen({ onLogin }) {
           </Card>
         </ScrollView>
       </KeyboardAvoidingView>
-    </SafeAreaView>
+    </View>
   );
 }
 
@@ -1899,7 +1921,7 @@ function HomeScreen({ session, go, onLogout }) {
   }, []);
 
   return (
-    <SafeAreaView style={s.safeArea}>
+    <View style={[s.safeArea, { paddingTop: STATUS_BAR_HEIGHT }]}>
       <ScrollView contentContainerStyle={s.page}>
         <View style={s.homeHead}>
           <View style={{ flex: 1 }}>
@@ -1990,7 +2012,7 @@ function HomeScreen({ session, go, onLogout }) {
           <Text style={s.muted}>Dados salvos localmente no celular. Funciona sem internet.</Text>
         </Card>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 }
 
@@ -2005,7 +2027,7 @@ function AgendaScreen({ go, onBack }) {
   useEffect(() => { reload(); }, [reload]);
 
   return (
-    <SafeAreaView style={s.safeArea}>
+    <View style={[s.safeArea, { paddingTop: STATUS_BAR_HEIGHT }]}>
       <ScrollView contentContainerStyle={s.page}>
         <Back onPress={onBack} />
         <PageTitle title="Agenda" sub={`${items.length} agendamento(s)`} />
@@ -2022,7 +2044,7 @@ function AgendaScreen({ go, onBack }) {
           ))
         }
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 }
 
@@ -2061,7 +2083,7 @@ function NewScheduleScreen({ onBack, onSaved }) {
   }
 
   return (
-    <SafeAreaView style={s.safeArea}>
+    <View style={[s.safeArea, { paddingTop: STATUS_BAR_HEIGHT }]}>
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
         <ScrollView contentContainerStyle={s.page} keyboardShouldPersistTaps="handled">
           <Back onPress={onBack} />
@@ -2081,7 +2103,7 @@ function NewScheduleScreen({ onBack, onSaved }) {
           </Card>
         </ScrollView>
       </KeyboardAvoidingView>
-    </SafeAreaView>
+    </View>
   );
 }
 
@@ -2096,7 +2118,7 @@ function ClientsScreen({ go, onBack }) {
   useEffect(() => { reload(); }, [reload]);
 
   return (
-    <SafeAreaView style={s.safeArea}>
+    <View style={[s.safeArea, { paddingTop: STATUS_BAR_HEIGHT }]}>
       <ScrollView contentContainerStyle={s.page}>
         <Back onPress={onBack} />
         <PageTitle title="Clientes" sub={`${items.length} cliente(s)`} />
@@ -2119,7 +2141,7 @@ function ClientsScreen({ go, onBack }) {
           ))
         }
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 }
 
@@ -2184,7 +2206,7 @@ function NewClientScreen({ session, onBack, onSaved }) {
   }
 
   return (
-    <SafeAreaView style={s.safeArea}>
+    <View style={[s.safeArea, { paddingTop: STATUS_BAR_HEIGHT }]}>
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
         <ScrollView contentContainerStyle={s.page} keyboardShouldPersistTaps="handled">
           <Back onPress={onBack} />
@@ -2265,7 +2287,7 @@ function NewClientScreen({ session, onBack, onSaved }) {
           <Card><Btn label={busy ? 'Salvando...' : 'Salvar cliente'} onPress={handleSave} disabled={busy} /></Card>
         </ScrollView>
       </KeyboardAvoidingView>
-    </SafeAreaView>
+    </View>
   );
 }
 
@@ -2279,7 +2301,7 @@ function VisitsScreen({ onBack }) {
   useEffect(() => { (async () => { setBusy(true); setItems(await load(KEY.VISITS)); setBusy(false); })(); }, []);
 
   return (
-    <SafeAreaView style={s.safeArea}>
+    <View style={[s.safeArea, { paddingTop: STATUS_BAR_HEIGHT }]}>
       <ScrollView contentContainerStyle={s.page}>
         <Back onPress={onBack} />
         <PageTitle title="Visitas registradas" sub={`${items.length} visita(s)`} />
@@ -2301,7 +2323,7 @@ function VisitsScreen({ onBack }) {
             ))
         }
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 }
 
@@ -2363,7 +2385,7 @@ function NewVisitScreen({ session, onBack, onSaved }) {
   }
 
   return (
-    <SafeAreaView style={s.safeArea}>
+    <View style={[s.safeArea, { paddingTop: STATUS_BAR_HEIGHT }]}>
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
         <ScrollView contentContainerStyle={s.page} keyboardShouldPersistTaps="handled">
           <Back onPress={onBack} />
@@ -2401,7 +2423,7 @@ function NewVisitScreen({ session, onBack, onSaved }) {
           </Card>
         </ScrollView>
       </KeyboardAvoidingView>
-    </SafeAreaView>
+    </View>
   );
 }
 
@@ -2472,7 +2494,7 @@ function TechsScreen({ go, onBack, onEdit }) {
   }
 
   return (
-    <SafeAreaView style={s.safeArea}>
+    <View style={[s.safeArea, { paddingTop: STATUS_BAR_HEIGHT }]}>
       <ScrollView contentContainerStyle={s.page}>
         <Back onPress={onBack} />
         <PageTitle title="Tecnicos" sub={`${items.length} tecnico(s) cadastrado(s)`} />
@@ -2518,7 +2540,7 @@ function TechsScreen({ go, onBack, onEdit }) {
           </Text>
         </Card>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 }
 
@@ -2547,7 +2569,7 @@ function NewTechScreen({ onBack, onSaved }) {
   }
 
   return (
-    <SafeAreaView style={s.safeArea}>
+    <View style={[s.safeArea, { paddingTop: STATUS_BAR_HEIGHT }]}>
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
         <ScrollView contentContainerStyle={s.page} keyboardShouldPersistTaps="handled">
           <Back onPress={onBack} />
@@ -2568,7 +2590,7 @@ function NewTechScreen({ onBack, onSaved }) {
           </Card>
         </ScrollView>
       </KeyboardAvoidingView>
-    </SafeAreaView>
+    </View>
   );
 }
 
@@ -2599,7 +2621,7 @@ function EditTechScreen({ tech, onBack, onSaved }) {
   }
 
   return (
-    <SafeAreaView style={s.safeArea}>
+    <View style={[s.safeArea, { paddingTop: STATUS_BAR_HEIGHT }]}>
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
         <ScrollView contentContainerStyle={s.page} keyboardShouldPersistTaps="handled">
           <Back onPress={onBack} />
@@ -2621,7 +2643,7 @@ function EditTechScreen({ tech, onBack, onSaved }) {
           </Card>
         </ScrollView>
       </KeyboardAvoidingView>
-    </SafeAreaView>
+    </View>
   );
 }
 
@@ -2713,9 +2735,9 @@ function DashboardScreen({ onBack }) {
 
   if (busy) {
     return (
-      <SafeAreaView style={s.safeArea}>
+      <View style={[s.safeArea, { paddingTop: STATUS_BAR_HEIGHT }]}>
         <View style={s.page}><Back onPress={onBack} /><ActivityIndicator color={C.green} style={{ marginTop: 40 }} /></View>
-      </SafeAreaView>
+      </View>
     );
   }
 
@@ -2723,7 +2745,7 @@ function DashboardScreen({ onBack }) {
   const maxService = stats.byService.length > 0 ? stats.byService[0][1] : 1;
 
   return (
-    <SafeAreaView style={s.safeArea}>
+    <View style={[s.safeArea, { paddingTop: STATUS_BAR_HEIGHT }]}>
       <ScrollView contentContainerStyle={s.page}>
         <Back onPress={onBack} />
         <PageTitle title="Dashboard" sub="Visao geral das visitas tecnicas" />
@@ -2817,7 +2839,7 @@ function DashboardScreen({ onBack }) {
           <Text style={s.muted}>Dados historicos: {HISTORICO_VISITS.length} registros (set/25–abr/26) + visitas locais do dispositivo.</Text>
         </Card>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 }
 
