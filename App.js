@@ -1593,6 +1593,96 @@ const HISTORICO = [
 ];
 
 
+// -----------------------------------------
+// DADOS DE VENDAS / DOSES (set/25 – ago/26)
+// Colunas: tecnico, mes, dosesNovos, meta, pctMeta, fatNovos, dosesAtivos, fatAtivos, totalDoses, totalFat
+// -----------------------------------------
+
+const VENDAS = [
+  {t:"César Oliveira",   m:"set-25", dn:0,    meta:845,  pct:0,    fn:0,        da:0,   fa:0,        td:0,    tf:0        },
+  {t:"Érica Fonseca",    m:"set-25", dn:20,   meta:845,  pct:2.37, fn:680,      da:45,  fa:3012,     td:65,   tf:3692     },
+  {t:"Felipe Prestes",   m:"set-25", dn:160,  meta:845,  pct:18.93,fn:7450,     da:850, fa:78150,    td:1010, tf:85600    },
+  {t:"Leandro Teixeira", m:"set-25", dn:120,  meta:845,  pct:14.2, fn:13200,    da:975, fa:65292,    td:1095, tf:78492    },
+  {t:"Phillippe Monteiro",m:"set-25",dn:0,    meta:845,  pct:0,    fn:0,        da:200, fa:15000,    td:200,  tf:15000    },
+  {t:"César Oliveira",   m:"out-25", dn:0,    meta:766,  pct:0,    fn:0,        da:0,   fa:0,        td:0,    tf:0        },
+  {t:"Érica Fonseca",    m:"out-25", dn:0,    meta:766,  pct:0,    fn:0,        da:0,   fa:0,        td:0,    tf:0        },
+  {t:"Felipe Prestes",   m:"out-25", dn:1000, meta:766,  pct:130.5,fn:30000,    da:480, fa:24880,    td:1480, tf:54880    },
+  {t:"Leandro Teixeira", m:"out-25", dn:670,  meta:766,  pct:87.5, fn:39500,    da:40,  fa:2353.5,   td:710,  tf:41853.5  },
+  {t:"Phillippe Monteiro",m:"out-25",dn:0,    meta:766,  pct:0,    fn:0,        da:50,  fa:5250,     td:50,   tf:5250     },
+  {t:"César Oliveira",   m:"nov-25", dn:0,    meta:737,  pct:0,    fn:0,        da:0,   fa:0,        td:0,    tf:0        },
+  {t:"Érica Fonseca",    m:"nov-25", dn:0,    meta:737,  pct:0,    fn:0,        da:0,   fa:0,        td:0,    tf:0        },
+  {t:"Felipe Prestes",   m:"nov-25", dn:540,  meta:737,  pct:73.3, fn:26250,    da:260, fa:18450,    td:800,  tf:44700    },
+  {t:"Leandro Teixeira", m:"nov-25", dn:1017, meta:737,  pct:137.9,fn:148095,   da:227, fa:22890,    td:1244, tf:170985   },
+  {t:"César Oliveira",   m:"dez-25", dn:0,    meta:524,  pct:0,    fn:0,        da:0,   fa:0,        td:0,    tf:0        },
+  {t:"Érica Fonseca",    m:"dez-25", dn:0,    meta:524,  pct:0,    fn:0,        da:240, fa:15300,    td:240,  tf:15300    },
+  {t:"Felipe Prestes",   m:"dez-25", dn:0,    meta:524,  pct:0,    fn:0,        da:0,   fa:0,        td:0,    tf:0        },
+  {t:"Phillippe Monteiro",m:"dez-25",dn:410,  meta:524,  pct:78.2, fn:25950,    da:160, fa:13200,    td:570,  tf:39150    },
+  {t:"Leandro Teixeira", m:"dez-25", dn:50,   meta:524,  pct:9.5,  fn:8750,     da:0,   fa:0,        td:50,   tf:8750     },
+  {t:"César Oliveira",   m:"jan-26", dn:0,    meta:653,  pct:0,    fn:0,        da:0,   fa:0,        td:0,    tf:0        },
+  {t:"Érica Fonseca",    m:"jan-26", dn:0,    meta:653,  pct:0,    fn:0,        da:0,   fa:0,        td:0,    tf:0        },
+  {t:"Felipe Prestes",   m:"jan-26", dn:0,    meta:653,  pct:0,    fn:0,        da:270, fa:15900,    td:270,  tf:15900    },
+  {t:"Leandro Teixeira", m:"jan-26", dn:0,    meta:653,  pct:0,    fn:0,        da:0,   fa:0,        td:0,    tf:0        },
+  {t:"César Oliveira",   m:"fev-26", dn:0,    meta:678,  pct:0,    fn:0,        da:1593,fa:78353.5,  td:1593, tf:78353.5  },
+  {t:"Érica Fonseca",    m:"fev-26", dn:260,  meta:678,  pct:38.3, fn:12942,    da:760, fa:44350,    td:1020, tf:57292    },
+  {t:"Felipe Prestes",   m:"fev-26", dn:760,  meta:678,  pct:112.1,fn:78386,    da:770, fa:47000,    td:1530, tf:125386   },
+  {t:"Leandro Teixeira", m:"fev-26", dn:70,   meta:678,  pct:10.3, fn:3299.8,   da:170, fa:7450,     td:240,  tf:10749.8  },
+  {t:"César Oliveira",   m:"mar-26", dn:0,    meta:376,  pct:0,    fn:0,        da:4918,fa:162226.9, td:4918, tf:162226.9 },
+  {t:"Érica Fonseca",    m:"mar-26", dn:371,  meta:376,  pct:98.7, fn:12334.9,  da:730, fa:30832.6,  td:1101, tf:43167.5  },
+  {t:"Felipe Prestes",   m:"mar-26", dn:0,    meta:376,  pct:0,    fn:0,        da:60,  fa:3498,     td:60,   tf:3498     },
+  {t:"Henrique Froehlich",m:"mar-26",dn:0,    meta:376,  pct:0,    fn:0,        da:0,   fa:0,        td:0,    tf:0        },
+  {t:"Leandro Teixeira", m:"mar-26", dn:560,  meta:376,  pct:148.9,fn:47640,    da:340, fa:11365,    td:900,  tf:59005    },
+  {t:"César Oliveira",   m:"abr-26", dn:100,  meta:663,  pct:15.1, fn:3976,     da:0,   fa:0,        td:100,  tf:3976     },
+  {t:"Érica Fonseca",    m:"abr-26", dn:170,  meta:663,  pct:25.6, fn:10220,    da:260, fa:11155.1,  td:430,  tf:21375.1  },
+  {t:"Henrique Froehlich",m:"abr-26",dn:100,  meta:663,  pct:15.1, fn:5330,     da:0,   fa:0,        td:100,  tf:5330     },
+  {t:"Felipe Prestes",   m:"abr-26", dn:30,   meta:663,  pct:4.5,  fn:6760.3,   da:40,  fa:1800,     td:70,   tf:8560.3   },
+  {t:"Leandro Teixeira", m:"abr-26", dn:240,  meta:663,  pct:36.2, fn:21032,    da:190, fa:15770,    td:430,  tf:36802    },
+  {t:"César Oliveira",   m:"mai-26", dn:0,    meta:775,  pct:0,    fn:0,        da:0,   fa:0,        td:0,    tf:0        },
+  {t:"Érica Fonseca",    m:"mai-26", dn:0,    meta:775,  pct:0,    fn:0,        da:0,   fa:0,        td:0,    tf:0        },
+  {t:"Felipe Prestes",   m:"mai-26", dn:0,    meta:775,  pct:0,    fn:0,        da:0,   fa:0,        td:0,    tf:0        },
+  {t:"Henrique Froehlich",m:"mai-26",dn:0,    meta:775,  pct:0,    fn:0,        da:0,   fa:0,        td:0,    tf:0        },
+  {t:"Leandro Teixeira", m:"mai-26", dn:0,    meta:775,  pct:0,    fn:0,        da:0,   fa:0,        td:0,    tf:0        },
+  {t:"César Oliveira",   m:"jun-26", dn:0,    meta:781,  pct:0,    fn:0,        da:0,   fa:0,        td:0,    tf:0        },
+  {t:"Érica Fonseca",    m:"jun-26", dn:0,    meta:781,  pct:0,    fn:0,        da:0,   fa:0,        td:0,    tf:0        },
+  {t:"Felipe Prestes",   m:"jun-26", dn:0,    meta:781,  pct:0,    fn:0,        da:0,   fa:0,        td:0,    tf:0        },
+  {t:"Henrique Froehlich",m:"jun-26",dn:0,    meta:781,  pct:0,    fn:0,        da:0,   fa:0,        td:0,    tf:0        },
+  {t:"Leandro Teixeira", m:"jun-26", dn:0,    meta:781,  pct:0,    fn:0,        da:0,   fa:0,        td:0,    tf:0        },
+  {t:"César Oliveira",   m:"jul-26", dn:0,    meta:808,  pct:0,    fn:0,        da:0,   fa:0,        td:0,    tf:0        },
+  {t:"Érica Fonseca",    m:"jul-26", dn:0,    meta:808,  pct:0,    fn:0,        da:0,   fa:0,        td:0,    tf:0        },
+  {t:"Felipe Prestes",   m:"jul-26", dn:0,    meta:808,  pct:0,    fn:0,        da:0,   fa:0,        td:0,    tf:0        },
+  {t:"Henrique Froehlich",m:"jul-26",dn:0,    meta:808,  pct:0,    fn:0,        da:0,   fa:0,        td:0,    tf:0        },
+  {t:"Leandro Teixeira", m:"jul-26", dn:0,    meta:808,  pct:0,    fn:0,        da:0,   fa:0,        td:0,    tf:0        },
+  {t:"César Oliveira",   m:"ago-26", dn:0,    meta:1025, pct:0,    fn:0,        da:0,   fa:0,        td:0,    tf:0        },
+  {t:"Érica Fonseca",    m:"ago-26", dn:0,    meta:1025, pct:0,    fn:0,        da:0,   fa:0,        td:0,    tf:0        },
+  {t:"Felipe Prestes",   m:"ago-26", dn:0,    meta:1025, pct:0,    fn:0,        da:0,   fa:0,        td:0,    tf:0        },
+  {t:"Henrique Froehlich",m:"ago-26",dn:0,    meta:1025, pct:0,    fn:0,        da:0,   fa:0,        td:0,    tf:0        },
+  {t:"Leandro Teixeira", m:"ago-26", dn:0,    meta:1025, pct:0,    fn:0,        da:0,   fa:0,        td:0,    tf:0        },
+];
+
+// Helper: converte "set-25" → {month:8, year:2025}
+const _MES_MAP = {jan:0,fev:1,mar:2,abr:3,mai:4,jun:5,jul:6,ago:7,set:8,out:9,nov:10,dez:11};
+function _parseMesVendas(m) {
+  if (!m) return null;
+  const p = m.toLowerCase().split('-');
+  const mi = _MES_MAP[p[0]];
+  if (mi === undefined) return null;
+  return { month: mi, year: 2000 + parseInt(p[1]) };
+}
+// Label legível: "set-25" → "Set/25"
+function _fmtMesLabel(m) {
+  if (!m) return m;
+  const p = m.split('-');
+  return p[0].charAt(0).toUpperCase() + p[0].slice(1) + '/' + p[1];
+}
+// Meses distintos na ordem do array VENDAS
+const VENDAS_MESES = [...new Set(VENDAS.map(r => r.m))];
+// Técnicos distintos na ordem do array VENDAS
+const VENDAS_TECNICOS = [...new Set(VENDAS.map(r => r.t))];
+// Formata valor monetário BR
+function _fmtBRL(v) {
+  if (!v) return 'R$ 0';
+  return 'R$ ' + Number(v).toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+}
+
 // ─────────────────────────────────────────
 // NORMALIZACAO DO HISTORICO
 // ─────────────────────────────────────────
@@ -1955,21 +2045,30 @@ function HomeScreen({ session, go, onLogout }) {
         </View>
 
         {!isGestor && (
-          <Card>
-            <Text style={s.sectionTitle}>Acoes rapidas</Text>
-            <View style={s.actGrid}>
-              {[
-                { lbl: 'Nova visita',  scr: 'new-visit'    },
-                { lbl: 'Nova agenda',  scr: 'new-schedule' },
-                { lbl: 'Novo cliente', scr: 'new-client'   },
-                { lbl: 'Ver visitas',  scr: 'visits'       },
-              ].map(a => (
-                <Pressable key={a.lbl} onPress={() => go(a.scr)} style={s.actBtn}>
-                  <Text style={s.actBtnText}>{a.lbl}</Text>
-                </Pressable>
-              ))}
-            </View>
-          </Card>
+          <>
+            <Card>
+              <Text style={s.sectionTitle}>Acoes rapidas</Text>
+              <View style={s.actGrid}>
+                {[
+                  { lbl: 'Nova visita',  scr: 'new-visit'    },
+                  { lbl: 'Nova agenda',  scr: 'new-schedule' },
+                  { lbl: 'Novo cliente', scr: 'new-client'   },
+                  { lbl: 'Ver visitas',  scr: 'visits'       },
+                ].map(a => (
+                  <Pressable key={a.lbl} onPress={() => go(a.scr)} style={s.actBtn}>
+                    <Text style={s.actBtnText}>{a.lbl}</Text>
+                  </Pressable>
+                ))}
+              </View>
+            </Card>
+            <Pressable onPress={() => go('vendas-tecnico')} style={s.dashBtn}>
+              <View style={{ flex: 1 }}>
+                <Text style={s.dashBtnTitle}>Minhas Vendas</Text>
+                <Text style={s.dashBtnSub}>Meta vs Realizado · Faturamento mensal</Text>
+              </View>
+              <Text style={s.dashBtnArrow}>→</Text>
+            </Pressable>
+          </>
         )}
 
         {isGestor && (
@@ -1994,6 +2093,14 @@ function HomeScreen({ session, go, onLogout }) {
               <View style={{ flex: 1 }}>
                 <Text style={s.dashBtnTitle}>Dashboard e Graficos</Text>
                 <Text style={s.dashBtnSub}>Filtros por mes, area, tecnico · Graficos atualizados</Text>
+              </View>
+              <Text style={s.dashBtnArrow}>→</Text>
+            </Pressable>
+
+            <Pressable onPress={() => go('vendas-gestor')} style={[s.dashBtn, { backgroundColor: '#0d4a2a' }]}>
+              <View style={{ flex: 1 }}>
+                <Text style={s.dashBtnTitle}>Doses Vendidas</Text>
+                <Text style={s.dashBtnSub}>Meta vs Realizado · Ranking · Faturamento</Text>
               </View>
               <Text style={s.dashBtnArrow}>→</Text>
             </Pressable>
@@ -2843,6 +2950,293 @@ function EditTechScreen({ tech, onBack, onSaved }) {
 
 const FILTER_INIT = { month: 'all', area: 'all', tech: 'all', service: 'all', clientType: 'all' };
 
+// ─────────────────────────────────────────
+// TELA: VENDAS GESTOR (Meta vs Realizado)
+// ─────────────────────────────────────────
+
+function VendasGestorScreen({ onBack }) {
+  const now = new Date();
+  // Monta chave do mês atual no formato "mmm-aa"
+  const _MES_NAMES = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+  const mesAtualKey = _MES_NAMES[now.getMonth()] + '-' + String(now.getFullYear()).slice(2);
+  // Seleciona o mês inicial: mês atual se existir nos dados, senão o último mês com dados
+  const mesInicial = VENDAS_MESES.includes(mesAtualKey)
+    ? mesAtualKey
+    : VENDAS_MESES[VENDAS_MESES.length - 1];
+  const [mesSel, setMesSel] = useState(mesInicial);
+
+  const linhasMes = useMemo(
+    () => VENDAS.filter(r => r.m === mesSel).sort((a, b) => b.pct - a.pct),
+    [mesSel]
+  );
+  const maxDoses = useMemo(
+    () => Math.max(1, ...linhasMes.map(r => Math.max(r.td, r.meta))),
+    [linhasMes]
+  );
+
+  function PctBadge({ pct }) {
+    const cor = pct >= 100 ? '#22c55e' : pct >= 70 ? '#f59e0b' : '#ef4444';
+    return (
+      <View style={{ backgroundColor: cor, borderRadius: 8, paddingHorizontal: 8, paddingVertical: 3, alignSelf: 'flex-start' }}>
+        <Text style={{ color: '#fff', fontWeight: '800', fontSize: 12 }}>{pct.toFixed(1)}%</Text>
+      </View>
+    );
+  }
+
+  return (
+    <View style={[s.safeArea, { paddingTop: STATUS_BAR_HEIGHT }]}>
+      <ScrollView contentContainerStyle={s.page}>
+        <Back onPress={onBack} />
+        <PageTitle title="Doses Vendidas" sub="Meta vs Realizado por tecnico" />
+
+        {/* Seletor de mês */}
+        <Card>
+          <Text style={s.filterLabel}>Selecionar mes</Text>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+            <View style={{ flexDirection: 'row' }}>
+              {VENDAS_MESES.map(m => (
+                <Pressable key={m} onPress={() => setMesSel(m)}
+                  style={[s.filterChip, mesSel === m && s.filterChipOn, { marginBottom: 0 }]}>
+                  <Text style={[s.filterChipText, mesSel === m && s.filterChipTextOn]}>
+                    {_fmtMesLabel(m)}
+                  </Text>
+                </Pressable>
+              ))}
+            </View>
+          </ScrollView>
+        </Card>
+
+        {/* Ranking */}
+        <Card>
+          <SectionTitle text={`Ranking — ${_fmtMesLabel(mesSel)}`} />
+          {linhasMes.length === 0
+            ? <Text style={s.muted}>Sem dados para este mes.</Text>
+            : linhasMes.map((r, idx) => {
+                const pctReal = r.meta > 0 ? (r.td / r.meta) * 100 : 0;
+                const barW = Math.min(100, (r.td / maxDoses) * 100);
+                const metaW = Math.min(100, (r.meta / maxDoses) * 100);
+                return (
+                  <View key={r.t} style={{ marginBottom: 16 }}>
+                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                      <Text style={{ fontWeight: '700', color: C.greenDark, fontSize: 14 }}>
+                        {idx + 1}. {r.t.split(' ')[0]} {r.t.split(' ')[1] || ''}
+                      </Text>
+                      <PctBadge pct={pctReal} />
+                    </View>
+                    {/* Barra meta */}
+                    <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 3 }}>
+                      <Text style={{ width: 60, fontSize: 11, color: C.muted }}>Meta</Text>
+                      <View style={{ flex: 1, height: 10, backgroundColor: C.greenLight, borderRadius: 5, overflow: 'hidden' }}>
+                        <View style={{ width: `${metaW}%`, height: 10, backgroundColor: C.border, borderRadius: 5 }} />
+                      </View>
+                      <Text style={{ width: 45, fontSize: 11, fontWeight: '700', color: C.muted, textAlign: 'right' }}>{r.meta}</Text>
+                    </View>
+                    {/* Barra realizado */}
+                    <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 3 }}>
+                      <Text style={{ width: 60, fontSize: 11, color: C.greenDark }}>Vendido</Text>
+                      <View style={{ flex: 1, height: 10, backgroundColor: C.greenLight, borderRadius: 5, overflow: 'hidden' }}>
+                        <View style={{ width: `${barW}%`, height: 10, backgroundColor: CHART_COLORS[idx % CHART_COLORS.length], borderRadius: 5 }} />
+                      </View>
+                      <Text style={{ width: 45, fontSize: 11, fontWeight: '700', color: C.greenDark, textAlign: 'right' }}>{r.td}</Text>
+                    </View>
+                    {/* Faturamento */}
+                    <Text style={{ fontSize: 12, color: C.muted, marginTop: 2 }}>
+                      Fat. total: {_fmtBRL(r.tf)}
+                      {'  '}Novos: {r.dn} doses
+                      {'  '}Ativos: {r.da} doses
+                    </Text>
+                  </View>
+                );
+              })}
+        </Card>
+
+        {/* Totais do mês */}
+        {linhasMes.length > 0 && (
+          <Card style={{ backgroundColor: '#f0f4ff' }}>
+            <SectionTitle text="Totais do mes" />
+            {(() => {
+              const totDoses = linhasMes.reduce((s, r) => s + r.td, 0);
+              const totMeta  = linhasMes.reduce((s, r) => s + r.meta, 0);
+              const totFat   = linhasMes.reduce((s, r) => s + r.tf, 0);
+              const pctGeral = totMeta > 0 ? (totDoses / totMeta * 100) : 0;
+              const pctGeralStr = pctGeral.toFixed(1);
+              return (
+                <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
+                  {[
+                    { label: 'Total doses', val: String(totDoses),  color: C.green },
+                    { label: 'Meta equipe', val: String(totMeta),   color: C.muted },
+                    { label: '% Atingido',  val: pctGeralStr + '%', color: pctGeral >= 100 ? '#22c55e' : '#f59e0b' },
+                    { label: 'Faturamento', val: _fmtBRL(totFat),   color: '#2196F3' },
+                  ].map(k => (
+                    <View key={k.label} style={[s.kpiCard, { borderTopColor: k.color, width: '47%' }]}>
+                      <Text style={[s.kpiVal, { color: k.color, fontSize: 20 }]}>{k.val}</Text>
+                      <Text style={s.kpiLabel}>{k.label}</Text>
+                    </View>
+                  ))}
+                </View>
+              );
+            })()}
+          </Card>
+        )}
+
+        <Card style={s.infoCard}>
+          <Text style={s.muted}>Dados do arquivo "doses vendidas.xlsx" — set/25 a ago/26. Meses sem venda mostram apenas a meta.</Text>
+        </Card>
+      </ScrollView>
+    </View>
+  );
+}
+
+// ─────────────────────────────────────────
+// TELA: VENDAS TECNICO (meu desempenho)
+// ─────────────────────────────────────────
+
+function VendasTecnicoScreen({ session, onBack }) {
+  const _MES_NAMES = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+  const now = new Date();
+  const mesAtualKey = _MES_NAMES[now.getMonth()] + '-' + String(now.getFullYear()).slice(2);
+
+  // Nome do técnico logado: normaliza para corresponder às chaves do VENDAS
+  const nomeTec = session?.name || '';
+  // Tenta correspondência exata, depois por primeiro+sobrenome sem acento
+  function _normAccent(s) {
+    return (s || '').replace(/[àáâãäå]/g,'a').replace(/[èéêë]/g,'e').replace(/[ìíîï]/g,'i')
+      .replace(/[òóôõöø]/g,'o').replace(/[ùúûü]/g,'u').replace(/[ç]/g,'c').replace(/[ñ]/g,'n')
+      .replace(/[ÀÁÂÃÄÅ]/g,'A').replace(/[ÈÉÊË]/g,'E').replace(/[ÌÍÎÏ]/g,'I')
+      .replace(/[ÒÓÔÕÖØ]/g,'O').replace(/[ÙÚÛÜ]/g,'U').replace(/[Ç]/g,'C').replace(/[Ñ]/g,'N');
+  }
+  const tecKey = VENDAS_TECNICOS.find(t => t === nomeTec)
+    || VENDAS_TECNICOS.find(t => _normAccent(t) === _normAccent(nomeTec))
+    || null;
+
+  // Meses disponíveis para esse técnico
+  const mesTec = useMemo(
+    () => VENDAS_MESES.filter(m => VENDAS.some(r => r.m === m && (tecKey ? r.t === tecKey : false))),
+    [tecKey]
+  );
+  const mesInicial = mesTec.includes(mesAtualKey)
+    ? mesAtualKey
+    : mesTec[mesTec.length - 1] || mesAtualKey;
+  const [mesSel, setMesSel] = useState(mesInicial);
+
+  const dado = tecKey ? VENDAS.find(r => r.t === tecKey && r.m === mesSel) : null;
+
+  // Dias restantes no mês selecionado
+  function diasRestantes(mKey) {
+    const parsed = _parseMesVendas(mKey);
+    if (!parsed) return null;
+    const ultimo = new Date(parsed.year, parsed.month + 1, 0);
+    const hoje = new Date();
+    if (hoje.getMonth() !== parsed.month || hoje.getFullYear() !== parsed.year) return null;
+    const diff = ultimo.getDate() - hoje.getDate();
+    return diff >= 0 ? diff : 0;
+  }
+  const dias = diasRestantes(mesSel);
+  const pctReal = dado && dado.meta > 0 ? Math.min(200, (dado.td / dado.meta) * 100) : 0;
+  const corPct = pctReal >= 100 ? '#22c55e' : pctReal >= 70 ? '#f59e0b' : '#ef4444';
+
+  if (!tecKey) {
+    return (
+      <View style={[s.safeArea, { paddingTop: STATUS_BAR_HEIGHT }]}>
+        <ScrollView contentContainerStyle={s.page}>
+          <Back onPress={onBack} />
+          <PageTitle title="Minhas Vendas" sub="Desempenho mensal" />
+          <Card style={s.infoCard}>
+            <Text style={s.muted}>Nenhum dado de vendas encontrado para {nomeTec}.</Text>
+          </Card>
+        </ScrollView>
+      </View>
+    );
+  }
+
+  return (
+    <View style={[s.safeArea, { paddingTop: STATUS_BAR_HEIGHT }]}>
+      <ScrollView contentContainerStyle={s.page}>
+        <Back onPress={onBack} />
+        <PageTitle title="Minhas Vendas" sub={tecKey} />
+
+        {/* Seletor de mês */}
+        <Card>
+          <Text style={s.filterLabel}>Mes</Text>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+            <View style={{ flexDirection: 'row' }}>
+              {mesTec.map(m => (
+                <Pressable key={m} onPress={() => setMesSel(m)}
+                  style={[s.filterChip, mesSel === m && s.filterChipOn, { marginBottom: 0 }]}>
+                  <Text style={[s.filterChipText, mesSel === m && s.filterChipTextOn]}>
+                    {_fmtMesLabel(m)}
+                  </Text>
+                </Pressable>
+              ))}
+            </View>
+          </ScrollView>
+        </Card>
+
+        {/* Card principal */}
+        {dado ? (
+          <>
+            {/* % atingimento grande */}
+            <Card style={{ alignItems: 'center', paddingVertical: 24 }}>
+              <Text style={{ fontSize: 56, fontWeight: '900', color: corPct }}>{pctReal.toFixed(0)}%</Text>
+              <Text style={{ fontSize: 14, color: C.muted, marginTop: 4 }}>da meta atingido em {_fmtMesLabel(mesSel)}</Text>
+              <View style={{ width: '100%', height: 14, backgroundColor: C.greenLight, borderRadius: 7, overflow: 'hidden', marginTop: 16 }}>
+                <View style={{ width: `${Math.min(100, pctReal)}%`, height: 14, backgroundColor: corPct, borderRadius: 7 }} />
+              </View>
+              {dias !== null && (
+                <Text style={{ fontSize: 13, color: C.muted, marginTop: 10 }}>
+                  {dias === 0 ? 'Ultimo dia do mes!' : `${dias} dia(s) restantes no mes`}
+                </Text>
+              )}
+            </Card>
+
+            {/* KPIs */}
+            <View style={s.kpiRow}>
+              {[
+                { label: 'Total doses',  val: String(dado.td),    color: C.green    },
+                { label: 'Meta mensal',  val: String(dado.meta),  color: C.muted    },
+                { label: 'Doses novos',  val: String(dado.dn),    color: '#2196F3'  },
+                { label: 'Doses ativos', val: String(dado.da),    color: '#FF9800'  },
+              ].map(k => (
+                <View key={k.label} style={[s.kpiCard, { borderTopColor: k.color }]}>
+                  <Text style={[s.kpiVal, { color: k.color }]}>{k.val}</Text>
+                  <Text style={s.kpiLabel}>{k.label}</Text>
+                </View>
+              ))}
+            </View>
+
+            {/* Faturamento */}
+            <Card>
+              <SectionTitle text="Faturamento" />
+              {[
+                { label: 'Fat. Novos/Inativos', val: _fmtBRL(dado.fn) },
+                { label: 'Fat. Ativos',          val: _fmtBRL(dado.fa) },
+                { label: 'Total Faturamento',    val: _fmtBRL(dado.tf) },
+              ].map(row => (
+                <View key={row.label} style={[s.detailRow, { paddingBottom: 8, marginBottom: 8 }]}>
+                  <Text style={s.detailLabel}>{row.label}</Text>
+                  <Text style={[s.detailValue, { color: '#2196F3' }]}>{row.val}</Text>
+                </View>
+              ))}
+            </Card>
+          </>
+        ) : (
+          <Card style={s.infoCard}>
+            <Text style={s.muted}>Nenhum dado para {_fmtMesLabel(mesSel)}.</Text>
+          </Card>
+        )}
+
+        <Card style={s.infoCard}>
+          <Text style={s.muted}>Dados do arquivo "doses vendidas.xlsx". Apenas meses com dados cadastrados sao exibidos.</Text>
+        </Card>
+      </ScrollView>
+    </View>
+  );
+}
+
+// ─────────────────────────────────────────
+// TELA: DASHBOARD (visitas)
+// ─────────────────────────────────────────
+
 function DashboardScreen({ onBack, go }) {
   const [rawVisits,   setRawVisits]   = useState([]);
   const [busy,        setBusy]        = useState(true);
@@ -3148,6 +3542,8 @@ export default function App() {
     ? <EditTechScreen tech={editingTech} onBack={back} onSaved={() => { setEditingTech(null); saved('techs'); }} />
     : <HomeScreen session={session} go={go} onLogout={logout} />;
   if (screen === 'dashboard')    return <DashboardScreen onBack={back} go={go} />;
+  if (screen === 'vendas-gestor') return <VendasGestorScreen onBack={back} />;
+  if (screen === 'vendas-tecnico') return <VendasTecnicoScreen session={session} onBack={back} />;
 
   return <HomeScreen session={session} go={go} onLogout={logout} />;
 }
