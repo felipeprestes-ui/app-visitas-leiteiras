@@ -87,6 +87,8 @@ const INITIAL_TECHS = [
   { id: 'tech-002', name: 'Erica Fonseca',      area: '012', email: 'erica@app.com',    phone: '', login: 'erica.fonseca',      createdAt: '2026-01-01T00:00:00.000Z' },
   { id: 'tech-003', name: 'Henrique Froehlich', area: '013', email: 'henrique@app.com', phone: '', login: 'henrique.froehlich', createdAt: '2026-01-01T00:00:00.000Z' },
   { id: 'tech-004', name: 'Leandro Teixeira',   area: '014', email: 'leandro@app.com',  phone: '', login: 'leandro.teixeira',   createdAt: '2026-01-01T00:00:00.000Z' },
+  { id: 'tech-005', name: 'Felipe Prestes',     area: '015', email: 'prestes@app.com',  phone: '', login: 'felipe.prestes',     createdAt: '2026-01-01T00:00:00.000Z' },
+  { id: 'tech-006', name: 'Felipe Piedade',     area: '018', email: 'piedade@app.com',  phone: '', login: 'felipe.piedade',     createdAt: '2026-01-01T00:00:00.000Z' },
 ];
 
 const USERS = [
@@ -94,13 +96,15 @@ const USERS = [
   { email: 'erica@app.com',    password: '123456', name: 'Erica Fonseca',      role: 'tecnico', area: '012' },
   { email: 'henrique@app.com', password: '123456', name: 'Henrique Froehlich', role: 'tecnico', area: '013' },
   { email: 'leandro@app.com',  password: '123456', name: 'Leandro Teixeira',   role: 'tecnico', area: '014' },
+  { email: 'prestes@app.com',  password: '123456', name: 'Felipe Prestes',     role: 'tecnico', area: '015' },
+  { email: 'piedade@app.com',  password: '123456', name: 'Felipe Piedade',     role: 'tecnico', area: '018' },
   { email: 'gestor@app.com',   password: '123456', name: 'Felipe Prestes',     role: 'gestor',  area: null  },
 ];
 
 const KEY = {
   SESSION: '@vl/session', CLIENTS: '@vl/clients',
   SCHEDULES: '@vl/schedules', VISITS: '@vl/visits', TECHS: '@vl/techs',
-  INITIALIZED: '@vl/initialized_v7',
+  INITIALIZED: '@vl/initialized_v9',
 };
 
 const CHART_COLORS = [
@@ -1882,7 +1886,9 @@ function LoginScreen({ onLogin }) {
               { label: 'Tecnico', email: 'erica@app.com',    name: 'Erica Fonseca'      },
               { label: 'Tecnico', email: 'henrique@app.com', name: 'Henrique Froehlich' },
               { label: 'Tecnico', email: 'leandro@app.com',  name: 'Leandro Teixeira'   },
-              { label: 'Gestor',  email: 'gestor@app.com',   name: 'Felipe Prestes'     },
+              { label: 'Tecnico', email: 'prestes@app.com',  name: 'Felipe Prestes (Tecnico)' },
+              { label: 'Tecnico', email: 'piedade@app.com',  name: 'Felipe Piedade'     },
+              { label: 'Gestor',  email: 'gestor@app.com',   name: 'Felipe Prestes (Gestor)' },
             ].map(c => (
               <Pressable key={c.email} onPress={() => setEmail(c.email)} style={s.credRow}>
                 <View style={[s.credBadge, c.label === 'Gestor' && s.credBadgeGestor]}>
@@ -2034,15 +2040,66 @@ function AgendaScreen({ go, onBack }) {
         <Btn label="+ Novo agendamento" onPress={() => go('new-schedule')} style={s.mb8} />
         {busy ? <ActivityIndicator color={C.green} /> : items.length === 0 ? <Empty msg="Nenhum agendamento salvo." /> :
           items.map(item => (
-            <Card key={item.id} style={s.listCard}>
+            <Pressable key={item.id} onPress={() => go('schedule-detail', item)} style={s.listCard}>
               {item.clientName ? <Text style={s.listClientName}>{item.clientName}</Text> : null}
               <Text style={s.listTitle}>{item.propertyName || '(sem propriedade)'}</Text>
               <Text style={s.muted}>{fmtDate(item.scheduledAt)}</Text>
               <Text style={s.muted}>Status: {item.status}</Text>
               {item.notes ? <Text style={s.muted}>{item.notes}</Text> : null}
-            </Card>
+              <Text style={[s.hint, { marginTop: 4 }]}>Toque para ver detalhes →</Text>
+            </Pressable>
           ))
         }
+      </ScrollView>
+    </View>
+  );
+}
+
+// ─────────────────────────────────────────
+// TELA: DETALHE DO AGENDAMENTO
+// ─────────────────────────────────────────
+
+function ScheduleDetailScreen({ schedule, onBack }) {
+  if (!schedule) return <View style={[s.safeArea, { paddingTop: STATUS_BAR_HEIGHT }]}><Back onPress={onBack} /></View>;
+  return (
+    <View style={[s.safeArea, { paddingTop: STATUS_BAR_HEIGHT }]}>
+      <ScrollView contentContainerStyle={s.page}>
+        <Back onPress={onBack} />
+        <PageTitle title="Detalhes do Agendamento" />
+        <Card>
+          {schedule.clientName ? (
+            <View style={s.detailRow}>
+              <Text style={s.detailLabel}>Cliente</Text>
+              <Text style={s.detailValue}>{schedule.clientName}</Text>
+            </View>
+          ) : null}
+          <View style={s.detailRow}>
+            <Text style={s.detailLabel}>Propriedade</Text>
+            <Text style={s.detailValue}>{schedule.propertyName || '(sem propriedade)'}</Text>
+          </View>
+          <View style={s.detailRow}>
+            <Text style={s.detailLabel}>Data/Hora</Text>
+            <Text style={s.detailValue}>{fmtDate(schedule.scheduledAt)}</Text>
+          </View>
+          <View style={s.detailRow}>
+            <Text style={s.detailLabel}>Status</Text>
+            <View style={[s.badge, s.badgeBlue]}>
+              <Text style={s.badgeText}>{schedule.status || 'agendada'}</Text>
+            </View>
+          </View>
+          {schedule.notes ? (
+            <View style={s.detailRow}>
+              <Text style={s.detailLabel}>Observacoes</Text>
+              <Text style={s.notesText}>"{schedule.notes}"</Text>
+            </View>
+          ) : null}
+          {schedule.createdAt ? (
+            <View style={s.detailRow}>
+              <Text style={s.detailLabel}>Criado em</Text>
+              <Text style={s.detailValue}>{fmtDate(schedule.createdAt)}</Text>
+            </View>
+          ) : null}
+        </Card>
       </ScrollView>
     </View>
   );
@@ -2238,8 +2295,8 @@ function NewClientScreen({ session, onBack, onSaved }) {
                 <Text style={[s.hint, { marginBottom: 8 }]}>
                   Pesquise no Google Maps, clique com botao direito e copie as coordenadas.
                 </Text>
-                <View style={{ flexDirection: 'row', gap: 8, marginBottom: 8 }}>
-                  <View style={{ flex: 1 }}>
+                <View style={{ flexDirection: 'row', marginBottom: 8 }}>
+                  <View style={{ flex: 1, marginRight: 8 }}>
                     <Text style={[s.hint, { marginBottom: 4 }]}>Latitude</Text>
                     <TextInput style={s.input} placeholder="-19.9245" value={manualLat}
                       onChangeText={setManualLat} keyboardType="numbers-and-punctuation" placeholderTextColor="#8a9dbf" />
@@ -2295,7 +2352,7 @@ function NewClientScreen({ session, onBack, onSaved }) {
 // TELA: VISITAS
 // ─────────────────────────────────────────
 
-function VisitsScreen({ onBack }) {
+function VisitsScreen({ go, onBack }) {
   const [items, setItems] = useState([]);
   const [busy, setBusy] = useState(true);
   useEffect(() => { (async () => { setBusy(true); setItems(await load(KEY.VISITS)); setBusy(false); })(); }, []);
@@ -2314,11 +2371,16 @@ function VisitsScreen({ onBack }) {
                 <Text style={s.muted}>Servico: {v.serviceType}</Text>
                 <Text style={s.muted}>Tipo cliente: {v.clientType}</Text>
                 <Text style={s.muted}>Rebanho: {v.herdSize} · Lactacao: {v.lactating} · Leite: {v.milkAvg} L/dia</Text>
-                {v.animalCount ? <Text style={s.muted}>Animais: {v.animalCount}</Text> : null}
+                {v.animalCount ? <Text style={s.muted}>Animais acasalados: {v.animalCount}</Text> : null}
                 <View style={[s.badge, v.dealClosed ? s.badgeBlue : s.badgeGray]}>
                   <Text style={s.badgeText}>{v.dealClosed ? 'Negocio fechado' : 'Sem negocio'}</Text>
                 </View>
                 {v.notes ? <Text style={s.notesText}>"{v.notes}"</Text> : null}
+                {go && (
+                  <Pressable onPress={() => go('edit-visit', v)} style={[s.editBtn, { marginTop: 8, alignSelf: 'flex-start' }]}>
+                    <Text style={s.editBtnText}>Editar observacoes</Text>
+                  </Pressable>
+                )}
               </Card>
             ))
         }
@@ -2333,7 +2395,8 @@ function VisitsScreen({ onBack }) {
 
 const VISIT_INIT = {
   propertyName: '', herdSize: '', clientType: 'B', serviceType: 'Prospec',
-  animalCount: '', milkAvg: '', lactating: '', dealClosed: false, notes: '',
+  animalCount: '', milkAvg: '', lactating: '', dealClosed: false,
+  dosesConvencional: '', dosesSexado: '', consultant: '', notes: '',
 };
 
 function NewVisitScreen({ session, onBack, onSaved }) {
@@ -2375,7 +2438,11 @@ function NewVisitScreen({ session, onBack, onSaved }) {
         herdSize: Number(form.herdSize), clientType: form.clientType, serviceType: form.serviceType,
         animalCount: needsAnimalCount ? Number(form.animalCount) : null,
         milkAvg: Number(form.milkAvg), lactating: Number(form.lactating),
-        dealClosed: form.dealClosed, notes: form.notes.trim(),
+        dealClosed: form.dealClosed,
+        dosesConvencional: form.dealClosed && form.dosesConvencional ? Number(form.dosesConvencional) : null,
+        dosesSexado: form.dealClosed && form.dosesSexado ? Number(form.dosesSexado) : null,
+        notes: form.notes.trim(),
+        consultant: form.consultant || '',
         visitedAt: new Date().toISOString(),
         technicianName: session?.name || '', area: session?.area || '' },
       ...existing,
@@ -2398,6 +2465,19 @@ function NewVisitScreen({ session, onBack, onSaved }) {
               onChangeText={v => set('herdSize', v)} keyboardType="number-pad" placeholder="Ex: 120" />
             <Chips label="Tipo de cliente" options={CLIENT_TYPES} value={form.clientType} onChange={v => set('clientType', v)} />
             <Chips label="Servico realizado" options={SERVICE_TYPES} value={form.serviceType} onChange={v => set('serviceType', v)} />
+            {session?.area && (CONSULTORES[session.area] || []).length > 0 && (
+              <View style={s.fieldWrap}>
+                <Text style={s.label}>Consultor responsavel</Text>
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} style={s.chipRow}>
+                  {(CONSULTORES[session.area] || []).map(opt => (
+                    <Pressable key={opt} onPress={() => set('consultant', opt)}
+                      style={[s.chip, form.consultant === opt && s.chipOn]}>
+                      <Text style={[s.chipText, form.consultant === opt && s.chipTextOn]}>{opt}</Text>
+                    </Pressable>
+                  ))}
+                </ScrollView>
+              </View>
+            )}
             {needsAnimalCount && (
               <View style={s.conditionalBox}>
                 <Text style={s.conditionalLabel}>Campo obrigatorio para {form.serviceType}</Text>
@@ -2414,12 +2494,88 @@ function NewVisitScreen({ session, onBack, onSaved }) {
               <Switch value={form.dealClosed} onValueChange={v => set('dealClosed', v)}
                 trackColor={{ false: C.border, true: C.green }} thumbColor={C.white} />
             </View>
+            {form.dealClosed && (
+              <View style={s.conditionalBox}>
+                <Text style={s.conditionalLabel}>Doses vendidas</Text>
+                <Input label="Doses Convencional" value={form.dosesConvencional}
+                  onChangeText={v => set('dosesConvencional', v)} keyboardType="number-pad"
+                  placeholder="Quantidade de doses convencional" />
+                <Input label="Doses Sexado" value={form.dosesSexado}
+                  onChangeText={v => set('dosesSexado', v)} keyboardType="number-pad"
+                  placeholder="Quantidade de doses sexado" />
+              </View>
+            )}
             <Input label="Observacoes (opcional)" value={form.notes} onChangeText={v => set('notes', v)}
               placeholder="Anotacoes sobre a visita..." multiline inputStyle={s.multiline} />
             {errors.length > 0 && (
               <View style={s.errorBox}>{errors.map(e => <Text key={e} style={s.errorText}>• {e}</Text>)}</View>
             )}
             <Btn label={busy ? 'Salvando...' : 'Salvar visita'} onPress={handleSave} disabled={busy} />
+          </Card>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </View>
+  );
+}
+
+// ─────────────────────────────────────────
+// TELA: EDITAR VISITA (observacoes)
+// ─────────────────────────────────────────
+
+function EditVisitScreen({ visit, onBack, onSaved }) {
+  const [notes,      setNotes]      = useState(visit?.notes      || '');
+  const [dealClosed, setDealClosed] = useState(visit?.dealClosed || false);
+  const [dosesConv,  setDosesConv]  = useState(visit?.dosesConvencional ? String(visit.dosesConvencional) : '');
+  const [dosesSex,   setDosesSex]   = useState(visit?.dosesSexado       ? String(visit.dosesSexado)       : '');
+  const [busy,       setBusy]       = useState(false);
+
+  async function handleSave() {
+    setBusy(true);
+    const existing = await load(KEY.VISITS);
+    const updated = existing.map(v =>
+      v.id === visit.id
+        ? { ...v, notes: notes.trim(), dealClosed,
+            dosesConvencional: dosesConv ? Number(dosesConv) : null,
+            dosesSexado: dosesSex ? Number(dosesSex) : null }
+        : v
+    );
+    await save(KEY.VISITS, updated);
+    setBusy(false);
+    Alert.alert('Visita atualizada!', '', [{ text: 'OK', onPress: onSaved }]);
+  }
+
+  return (
+    <View style={[s.safeArea, { paddingTop: STATUS_BAR_HEIGHT }]}>
+      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
+        <ScrollView contentContainerStyle={s.page} keyboardShouldPersistTaps="handled">
+          <Back onPress={onBack} />
+          <PageTitle title="Editar visita" sub={visit?.propertyName || ''} />
+          <Card>
+            <View style={s.detailRow}>
+              <Text style={s.detailLabel}>Propriedade</Text>
+              <Text style={s.detailValue}>{visit?.propertyName || '--'}</Text>
+            </View>
+            <View style={s.detailRow}>
+              <Text style={s.detailLabel}>Data</Text>
+              <Text style={s.detailValue}>{fmtDate(visit?.visitedAt)}</Text>
+            </View>
+            <View style={s.detailRow}>
+              <Text style={s.detailLabel}>Servico</Text>
+              <Text style={s.detailValue}>{visit?.serviceType || '--'}</Text>
+            </View>
+            <View style={s.switchRow}>
+              <Text style={s.label}>Negocio fechado?</Text>
+              <Switch value={dealClosed} onValueChange={setDealClosed}
+                trackColor={{ false: C.border, true: C.green }} thumbColor={C.white} />
+            </View>
+            <Input label="Doses Convencional" value={dosesConv} onChangeText={setDosesConv}
+              keyboardType="number-pad" placeholder="Quantidade de doses convencional" />
+            <Input label="Doses Sexado" value={dosesSex} onChangeText={setDosesSex}
+              keyboardType="number-pad" placeholder="Quantidade de doses sexado" />
+            <Input label="Observacoes" value={notes} onChangeText={setNotes}
+              placeholder="Anotacoes sobre a visita..." multiline inputStyle={s.multiline} />
+            <Btn label={busy ? 'Salvando...' : 'Salvar alteracoes'} onPress={handleSave} disabled={busy} />
+            <Btn label="Cancelar" onPress={onBack} secondary style={{ marginTop: 8 }} />
           </Card>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -2454,12 +2610,16 @@ function TechsScreen({ go, onBack, onEdit }) {
     return items.map(t => {
       const tv = visits.filter(v => v.technicianName === t.name);
       const closed = tv.filter(v => v.dealClosed).length;
+      const totalAnimais = tv.reduce((sum, v) => sum + (v.animalCount || 0), 0);
+      const totalDosesConv = tv.reduce((sum, v) => sum + (v.dosesConvencional || 0), 0);
+      const totalDosesSex  = tv.reduce((sum, v) => sum + (v.dosesSexado || 0), 0);
       const services = {};
       tv.forEach(v => { if (v.serviceType) services[v.serviceType] = (services[v.serviceType] || 0) + 1; });
       const topService = Object.entries(services).sort((a, b) => b[1] - a[1])[0];
       return { nome: t.name, area: t.area || '--', email: t.email || '--',
                visitas: tv.length, negFechados: closed,
                taxaNeg: tv.length > 0 ? Math.round(closed / tv.length * 100) : 0,
+               totalAnimais, totalDosesConv, totalDosesSex,
                topServico: topService ? `${topService[0]} (${topService[1]}x)` : '--' };
     });
   }
@@ -2469,7 +2629,7 @@ function TechsScreen({ go, onBack, onEdit }) {
     const data = await buildExportData();
     setExBusy(false);
     const linhas = data.map(r =>
-      `${r.nome} | Area ${r.area} | ${r.visitas} visitas | ${r.negFechados} neg. fechados (${r.taxaNeg}%) | Top: ${r.topServico}`
+      `${r.nome} | Area ${r.area} | ${r.visitas} visitas | ${r.negFechados} neg. fechados (${r.taxaNeg}%) | Animais acasalados: ${r.totalAnimais} | Doses Conv: ${r.totalDosesConv} | Doses Sex: ${r.totalDosesSex} | Top: ${r.topServico}`
     ).join('\n');
     Alert.alert(
       'Exportar Excel — Simulacao',
@@ -2486,9 +2646,12 @@ function TechsScreen({ go, onBack, onEdit }) {
     setExBusy(false);
     const closed = visits.filter(v => v.dealClosed).length;
     const rate = visits.length > 0 ? Math.round(closed / visits.length * 100) : 0;
+    const totalAnimais = visits.reduce((sum, v) => sum + (v.animalCount || 0), 0);
+    const totalDosesConv = visits.reduce((sum, v) => sum + (v.dosesConvencional || 0), 0);
+    const totalDosesSex  = visits.reduce((sum, v) => sum + (v.dosesSexado || 0), 0);
     Alert.alert(
       'Exportar PDF — Simulacao',
-      `Relatorio Geral — CRV Lagoa\n\nTecnicos ativos: ${items.length}\nTotal de visitas: ${visits.length}\nNegocios fechados: ${closed} (${rate}%)\n\nNa versao final, um PDF sera gerado.`,
+      `Relatorio Geral — CRV Lagoa\n\nTecnicos ativos: ${items.length}\nTotal de visitas: ${visits.length}\nNegocios fechados: ${closed} (${rate}%)\nAnimais acasalados: ${totalAnimais}\nDoses Convencional: ${totalDosesConv}\nDoses Sexado: ${totalDosesSex}\n\nNa versao final, um PDF sera gerado.`,
       [{ text: 'OK' }]
     );
   }
@@ -2653,7 +2816,7 @@ function EditTechScreen({ tech, onBack, onSaved }) {
 
 const FILTER_INIT = { month: 'all', area: 'all', tech: 'all', service: 'all', clientType: 'all' };
 
-function DashboardScreen({ onBack }) {
+function DashboardScreen({ onBack, go }) {
   const [rawVisits,   setRawVisits]   = useState([]);
   const [busy,        setBusy]        = useState(true);
   const [showFilters, setShowFilters] = useState(false);
@@ -2711,9 +2874,12 @@ function DashboardScreen({ onBack }) {
   }, [rawVisits, filters]);
 
   const stats = useMemo(() => {
+    const RANKING_EXCLUIDOS = ['Suelen Soares', 'Phillippe Monteiro'];
     const byTechMap = {};
     visits.forEach(v => { const n = v.technicianName || 'Desconhecido'; byTechMap[n] = (byTechMap[n] || 0) + 1; });
-    const byTech = Object.entries(byTechMap).sort((a, b) => b[1] - a[1]);
+    const byTech = Object.entries(byTechMap)
+      .filter(([name]) => !RANKING_EXCLUIDOS.includes(name))
+      .sort((a, b) => b[1] - a[1]);
 
     const byServiceMap = {};
     visits.forEach(v => { if (v.serviceType) byServiceMap[v.serviceType] = (byServiceMap[v.serviceType] || 0) + 1; });
@@ -2729,8 +2895,11 @@ function DashboardScreen({ onBack }) {
     const avgMilk  = milkVals.length > 0 ? (milkVals.reduce((a, b) => a + b, 0) / milkVals.length).toFixed(1) : '—';
     const herdVals = visits.map(v => Number(v.herdSize)).filter(n => n > 0);
     const avgHerd  = herdVals.length > 0 ? Math.round(herdVals.reduce((a, b) => a + b, 0) / herdVals.length) : '—';
+    const totalAnimais   = visits.reduce((sum, v) => sum + (v.animalCount || 0), 0);
+    const totalDosesConv = visits.reduce((sum, v) => sum + (v.dosesConvencional || 0), 0);
+    const totalDosesSex  = visits.reduce((sum, v) => sum + (v.dosesSexado || 0), 0);
 
-    return { total: visits.length, byTech, byService, byClient, dealRate, closed, avgMilk, avgHerd };
+    return { total: visits.length, byTech, byService, byClient, dealRate, closed, avgMilk, avgHerd, totalAnimais, totalDosesConv, totalDosesSex };
   }, [visits]);
 
   if (busy) {
@@ -2799,10 +2968,27 @@ function DashboardScreen({ onBack }) {
         {/* KPIs */}
         <View style={s.kpiRow}>
           {[
-            { label: 'Total visitas',  value: stats.total,   color: C.green   },
-            { label: 'Neg. fechados',  value: stats.closed,  color: '#2196F3' },
-            { label: 'Leite med. (L)', value: stats.avgMilk, color: '#FF9800' },
-            { label: 'Rebanho medio',  value: stats.avgHerd, color: '#9C27B0' },
+            { label: 'Total visitas',  value: stats.total,   color: C.green,    action: () => go && go('visits') },
+            { label: 'Neg. fechados',  value: stats.closed,  color: '#2196F3',  action: null },
+            { label: 'Leite med. (L)', value: stats.avgMilk, color: '#FF9800',  action: null },
+            { label: 'Rebanho medio',  value: stats.avgHerd, color: '#9C27B0',  action: null },
+          ].map(k => (
+            k.action
+              ? <Pressable key={k.label} onPress={k.action} style={[s.kpiCard, { borderTopColor: k.color }]}>
+                  <Text style={[s.kpiVal, { color: k.color }]}>{k.value}</Text>
+                  <Text style={s.kpiLabel}>{k.label} →</Text>
+                </Pressable>
+              : <View key={k.label} style={[s.kpiCard, { borderTopColor: k.color }]}>
+                  <Text style={[s.kpiVal, { color: k.color }]}>{k.value}</Text>
+                  <Text style={s.kpiLabel}>{k.label}</Text>
+                </View>
+          ))}
+        </View>
+        <View style={s.kpiRow}>
+          {[
+            { label: 'Animais acasalados', value: stats.totalAnimais,   color: '#4CAF50' },
+            { label: 'Doses Conv.',         value: stats.totalDosesConv, color: '#009688' },
+            { label: 'Doses Sex.',          value: stats.totalDosesSex,  color: '#E91E63' },
           ].map(k => (
             <View key={k.label} style={[s.kpiCard, { borderTopColor: k.color }]}>
               <Text style={[s.kpiVal, { color: k.color }]}>{k.value}</Text>
@@ -2853,6 +3039,8 @@ export default function App() {
   const [screen,      setScreen]      = useState('home');
   const [history,     setHistory]     = useState([]);
   const [editingTech, setEditingTech] = useState(null);
+  const [selectedSchedule, setSelectedSchedule] = useState(null);
+  const [editingVisit, setEditingVisit] = useState(null);
 
   const backRef = useRef({ history: [], screen: 'home' });
   useEffect(() => { backRef.current = { history, screen }; }, [history, screen]);
@@ -2884,7 +3072,11 @@ export default function App() {
     })();
   }, []);
 
-  function go(to) { setHistory(h => [...h, screen]); setScreen(to); }
+  function go(to, data) {
+    if (to === 'schedule-detail' && data) setSelectedSchedule(data);
+    if (to === 'edit-visit' && data) setEditingVisit(data);
+    setHistory(h => [...h, screen]); setScreen(to);
+  }
   function back() {
     if (history.length > 0) {
       const prev = history[history.length - 1];
@@ -2908,12 +3100,16 @@ export default function App() {
 
   if (!session) return <LoginScreen onLogin={u => { setSession(u); setScreen('home'); }} />;
 
-  if (screen === 'home')         return <HomeScreen session={session} go={go} onLogout={logout} />;
-  if (screen === 'agenda')       return <AgendaScreen go={go} onBack={back} />;
-  if (screen === 'clients')      return <ClientsScreen go={go} onBack={back} />;
-  if (screen === 'visits')       return <VisitsScreen onBack={back} />;
-  if (screen === 'new-visit')    return <NewVisitScreen session={session} onBack={back} onSaved={() => saved('visits')} />;
-  if (screen === 'new-schedule') return <NewScheduleScreen onBack={back} onSaved={() => saved('agenda')} />;
+  if (screen === 'home')             return <HomeScreen session={session} go={go} onLogout={logout} />;
+  if (screen === 'agenda')           return <AgendaScreen go={go} onBack={back} />;
+  if (screen === 'schedule-detail')  return <ScheduleDetailScreen schedule={selectedSchedule} onBack={back} />;
+  if (screen === 'clients')          return <ClientsScreen go={go} onBack={back} />;
+  if (screen === 'visits')           return <VisitsScreen go={go} onBack={back} />;
+  if (screen === 'new-visit')        return <NewVisitScreen session={session} onBack={back} onSaved={() => saved('visits')} />;
+  if (screen === 'edit-visit')       return editingVisit
+    ? <EditVisitScreen visit={editingVisit} onBack={back} onSaved={() => { setEditingVisit(null); saved('visits'); }} />
+    : <HomeScreen session={session} go={go} onLogout={logout} />;
+  if (screen === 'new-schedule')     return <NewScheduleScreen onBack={back} onSaved={() => saved('agenda')} />;
   if (screen === 'new-client')   return <NewClientScreen session={session} onBack={back} onSaved={() => saved('clients')} />;
   if (screen === 'techs')        return (
     <TechsScreen go={go} onBack={back} onEdit={tech => { setEditingTech(tech); go('edit-tech'); }} />
@@ -2922,7 +3118,7 @@ export default function App() {
   if (screen === 'edit-tech')    return editingTech
     ? <EditTechScreen tech={editingTech} onBack={back} onSaved={() => { setEditingTech(null); saved('techs'); }} />
     : <HomeScreen session={session} go={go} onLogout={logout} />;
-  if (screen === 'dashboard')    return <DashboardScreen onBack={back} />;
+  if (screen === 'dashboard')    return <DashboardScreen onBack={back} go={go} />;
 
   return <HomeScreen session={session} go={go} onLogout={logout} />;
 }
@@ -2967,13 +3163,13 @@ const s = StyleSheet.create({
   homeMeta:     { color: C.muted, fontSize: 13, marginTop: 2 },
   logoutBtn:    { borderWidth: 1, borderColor: C.border, borderRadius: 10, paddingHorizontal: 14, paddingVertical: 8 },
   logoutText:   { color: C.greenDark, fontWeight: '600', fontSize: 14 },
-  statsRow:     { flexDirection: 'row', gap: 10, marginBottom: 12 },
+  statsRow:     { flexDirection: 'row', marginBottom: 12 },
   statCard:     { flex: 1, backgroundColor: C.white, borderRadius: 14, padding: 14, alignItems: 'center' },
   statVal:      { fontSize: 28, fontWeight: '800', color: C.greenDark },
   statLbl:      { fontSize: 13, color: C.muted, marginTop: 4 },
   sectionTitle: { fontSize: 16, fontWeight: '700', color: C.greenDark, marginBottom: 10 },
-  actGrid:      { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
-  actBtn:       { backgroundColor: C.green, borderRadius: 10, paddingHorizontal: 14, paddingVertical: 10 },
+  actGrid:      { flexDirection: 'row', flexWrap: 'wrap' },
+  actBtn:       { backgroundColor: C.green, borderRadius: 10, paddingHorizontal: 14, paddingVertical: 10, marginRight: 10, marginBottom: 10 },
   actBtnText:   { color: C.white, fontWeight: '700', fontSize: 14 },
   infoCard:     { backgroundColor: '#e8edf8' },
   muted:        { color: C.muted, fontSize: 14, lineHeight: 20 },
@@ -2985,8 +3181,8 @@ const s = StyleSheet.create({
   techAddBtnText:  { color: C.white, fontWeight: '700', fontSize: 13 },
 
   // Tecnico card row
-  techCardRow:    { flexDirection: 'row', alignItems: 'center', marginBottom: 4, flexWrap: 'wrap', gap: 6 },
-  editBtn:        { borderWidth: 1, borderColor: '#2196F3', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 4 },
+  techCardRow:    { flexDirection: 'row', alignItems: 'center', marginBottom: 4, flexWrap: 'wrap' },
+  editBtn:        { borderWidth: 1, borderColor: '#2196F3', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 4, marginRight: 6, marginBottom: 6 },
   editBtnText:    { color: '#2196F3', fontWeight: '700', fontSize: 12 },
   deleteBtnBorder:{ borderColor: C.error },
   deleteBtnText:  { color: C.error, fontWeight: '700', fontSize: 12 },
@@ -3125,4 +3321,13 @@ const s = StyleSheet.create({
   empty:     { alignItems: 'center', paddingVertical: 40 },
   emptyText: { color: C.muted, fontSize: 15, textAlign: 'center' },
   mb8:       { marginBottom: 8 },
+
+  // Detail rows (ScheduleDetailScreen, EditVisitScreen)
+  detailRow:   { marginBottom: 10, borderBottomWidth: 1, borderBottomColor: C.greenLight, paddingBottom: 10 },
+  detailLabel: { fontSize: 12, fontWeight: '700', color: C.muted, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 4 },
+  detailValue: { fontSize: 15, fontWeight: '600', color: C.greenDark },
+
+  // Edit visit button
+  editBtn:     { backgroundColor: '#eef2fb', borderRadius: 8, paddingHorizontal: 14, paddingVertical: 8, borderWidth: 1, borderColor: C.green },
+  editBtnText: { color: C.green, fontWeight: '700', fontSize: 13 },
 });
