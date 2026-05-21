@@ -2040,13 +2040,15 @@ function AgendaScreen({ go, onBack }) {
         <Btn label="+ Novo agendamento" onPress={() => go('new-schedule')} style={s.mb8} />
         {busy ? <ActivityIndicator color={C.green} /> : items.length === 0 ? <Empty msg="Nenhum agendamento salvo." /> :
           items.map(item => (
-            <Pressable key={item.id} onPress={() => go('schedule-detail', item)} style={s.listCard}>
+            <Pressable key={item.id}
+              onPress={() => item.clientName ? go('new-visit-from-schedule', item) : go('schedule-detail', item)}
+              style={s.listCard}>
               {item.clientName ? <Text style={s.listClientName}>{item.clientName}</Text> : null}
               <Text style={s.listTitle}>{item.propertyName || '(sem propriedade)'}</Text>
               <Text style={s.muted}>{fmtDate(item.scheduledAt)}</Text>
               <Text style={s.muted}>Status: {item.status}</Text>
               {item.notes ? <Text style={s.muted}>{item.notes}</Text> : null}
-              <Text style={[s.hint, { marginTop: 4 }]}>Toque para ver detalhes →</Text>
+              <Text style={[s.hint, { marginTop: 4 }]}>{item.clientName ? 'Toque para registrar visita →' : 'Toque para ver detalhes →'}</Text>
             </Pressable>
           ))
         }
@@ -2399,13 +2401,30 @@ const VISIT_INIT = {
   dosesConvencional: '', dosesSexado: '', consultant: '', notes: '',
 };
 
-function NewVisitScreen({ session, onBack, onSaved }) {
-  const [form,    setForm]    = useState(VISIT_INIT);
+function NewVisitScreen({ session, scheduleData, onBack, onSaved }) {
+  const [form,    setForm]    = useState(() => {
+    if (scheduleData) {
+      return { ...VISIT_INIT, propertyName: scheduleData.propertyName || '' };
+    }
+    return VISIT_INIT;
+  });
   const [errors,  setErrors]  = useState([]);
   const [busy,    setBusy]    = useState(false);
   const [clients, setClients] = useState([]);
 
   useEffect(() => { load(KEY.CLIENTS).then(setClients); }, []);
+
+  // Quando clientes carregam, tentar pre-preencher clientType a partir do nome do cliente agendado
+  useEffect(() => {
+    if (!scheduleData || !scheduleData.clientName || clients.length === 0) return;
+    const matched = clients.find(c => c.name === scheduleData.clientName);
+    if (matched) {
+      setForm(prev => ({
+        ...prev,
+        clientType: matched.clientType || prev.clientType,
+      }));
+    }
+  }, [clients, scheduleData]);
   const needsAnimalCount = SERVICOS_COM_ANIMAIS.includes(form.serviceType);
 
   function set(field, value) {
@@ -2456,7 +2475,15 @@ function NewVisitScreen({ session, onBack, onSaved }) {
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
         <ScrollView contentContainerStyle={s.page} keyboardShouldPersistTaps="handled">
           <Back onPress={onBack} />
-          <PageTitle title="Nova visita" sub="Preencha os dados da visita" />
+          <PageTitle title="Nova visita" sub={scheduleData ? `Agendamento: ${scheduleData.clientName || scheduleData.propertyName}` : 'Preencha os dados da visita'} />
+          {scheduleData ? (
+            <View style={[s.infoCard, { marginBottom: 8 }]}>
+              <Text style={s.sectionTitle}>Dados pre-preenchidos da agenda</Text>
+              <Text style={s.muted}>Cliente: {scheduleData.clientName || '--'}</Text>
+              <Text style={s.muted}>Propriedade: {scheduleData.propertyName || '--'}</Text>
+              <Text style={s.muted}>Voce pode editar os campos antes de salvar.</Text>
+            </View>
+          ) : null}
           <Card>
             <Input label="Propriedade visitada" value={form.propertyName}
               onChangeText={v => set('propertyName', v)} placeholder="Nome da fazenda / propriedade"
@@ -3074,6 +3101,7 @@ export default function App() {
 
   function go(to, data) {
     if (to === 'schedule-detail' && data) setSelectedSchedule(data);
+    if (to === 'new-visit-from-schedule' && data) setSelectedSchedule(data);
     if (to === 'edit-visit' && data) setEditingVisit(data);
     setHistory(h => [...h, screen]); setScreen(to);
   }
@@ -3106,6 +3134,7 @@ export default function App() {
   if (screen === 'clients')          return <ClientsScreen go={go} onBack={back} />;
   if (screen === 'visits')           return <VisitsScreen go={go} onBack={back} />;
   if (screen === 'new-visit')        return <NewVisitScreen session={session} onBack={back} onSaved={() => saved('visits')} />;
+  if (screen === 'new-visit-from-schedule') return <NewVisitScreen session={session} scheduleData={selectedSchedule} onBack={back} onSaved={() => { setSelectedSchedule(null); saved('agenda'); }} />;
   if (screen === 'edit-visit')       return editingVisit
     ? <EditVisitScreen visit={editingVisit} onBack={back} onSaved={() => { setEditingVisit(null); saved('visits'); }} />
     : <HomeScreen session={session} go={go} onLogout={logout} />;
