@@ -9,11 +9,11 @@
  *
  *
  * Credenciais de teste:
- *   Tecnico: cesar@app.com     / 123456  (Cesar Oliveira)
- *   Tecnico: erica@app.com     / 123456  (Erica Fonseca)
- *   Tecnico: henrique@app.com  / 123456  (Henrique Froehlich)
- *   Tecnico: leandro@app.com   / 123456  (Leandro Teixeira)
- *   Gestor:  gestor@app.com    / 123456  (Felipe Prestes)
+ *   Tecnico: cesar@crv4all.com.br     / 123456  (Cesar Oliveira)
+ *   Tecnico: erica@crv4all.com.br     / 123456  (Erica Fonseca)
+ *   Tecnico: henrique@crv4all.com.br  / 123456  (Henrique Froehlich)
+ *   Tecnico: leandro@crv4all.com.br   / 123456  (Leandro Teixeira)
+ *   Gestor:  gestor@crv4all.com.br    / 123456  (Felipe Prestes)
  */
 
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
@@ -83,28 +83,28 @@ const CONSULTORES = {
 
 // Tecnicos pre-cadastrados (aparecem ja na tela de Gerenciar Tecnicos)
 const INITIAL_TECHS = [
-  { id: 'tech-001', name: 'Cesar Oliveira',     area: '011', email: 'cesar@app.com',    phone: '', login: 'cesar.oliveira',     createdAt: '2026-01-01T00:00:00.000Z' },
-  { id: 'tech-002', name: 'Erica Fonseca',      area: '012', email: 'erica@app.com',    phone: '', login: 'erica.fonseca',      createdAt: '2026-01-01T00:00:00.000Z' },
-  { id: 'tech-003', name: 'Henrique Froehlich', area: '013', email: 'henrique@app.com', phone: '', login: 'henrique.froehlich', createdAt: '2026-01-01T00:00:00.000Z' },
-  { id: 'tech-004', name: 'Leandro Teixeira',   area: '014', email: 'leandro@app.com',  phone: '', login: 'leandro.teixeira',   createdAt: '2026-01-01T00:00:00.000Z' },
-  { id: 'tech-005', name: 'Felipe Prestes',     area: '015', email: 'prestes@app.com',  phone: '', login: 'felipe.prestes',     createdAt: '2026-01-01T00:00:00.000Z' },
-  { id: 'tech-006', name: 'Felipe Piedade',     area: '018', email: 'piedade@app.com',  phone: '', login: 'felipe.piedade',     createdAt: '2026-01-01T00:00:00.000Z' },
+  { id: 'tech-001', name: 'Cesar Oliveira',     area: '011', email: 'cesar@crv4all.com.br',    phone: '', login: 'cesar.oliveira',     createdAt: '2026-01-01T00:00:00.000Z' },
+  { id: 'tech-002', name: 'Erica Fonseca',      area: '012', email: 'erica@crv4all.com.br',    phone: '', login: 'erica.fonseca',      createdAt: '2026-01-01T00:00:00.000Z' },
+  { id: 'tech-003', name: 'Henrique Froehlich', area: '013', email: 'henrique@crv4all.com.br', phone: '', login: 'henrique.froehlich', createdAt: '2026-01-01T00:00:00.000Z' },
+  { id: 'tech-004', name: 'Leandro Teixeira',   area: '015', email: 'leandro@crv4all.com.br',  phone: '', login: 'leandro.teixeira',   createdAt: '2026-01-01T00:00:00.000Z' },
+  { id: 'tech-005', name: 'Felipe Prestes',     area: '015', email: 'prestes@crv4all.com.br',  phone: '', login: 'felipe.prestes',     createdAt: '2026-01-01T00:00:00.000Z' },
+  { id: 'tech-006', name: 'Felipe Piedade',     area: '018', email: 'piedade@crv4all.com.br',  phone: '', login: 'felipe.piedade',     createdAt: '2026-01-01T00:00:00.000Z' },
 ];
 
 const USERS = [
-  { email: 'cesar@app.com',    password: '123456', name: 'Cesar Oliveira',     role: 'tecnico', area: '011' },
-  { email: 'erica@app.com',    password: '123456', name: 'Erica Fonseca',      role: 'tecnico', area: '012' },
-  { email: 'henrique@app.com', password: '123456', name: 'Henrique Froehlich', role: 'tecnico', area: '013' },
-  { email: 'leandro@app.com',  password: '123456', name: 'Leandro Teixeira',   role: 'tecnico', area: '014' },
-  { email: 'prestes@app.com',  password: '123456', name: 'Felipe Prestes',     role: 'tecnico', area: '015' },
-  { email: 'piedade@app.com',  password: '123456', name: 'Felipe Piedade',     role: 'tecnico', area: '018' },
-  { email: 'gestor@app.com',   password: '123456', name: 'Felipe Prestes',     role: 'gestor',  area: null  },
+  { email: 'cesar@crv4all.com.br',    password: '123456', name: 'Cesar Oliveira',     role: 'tecnico', area: '011' },
+  { email: 'erica@crv4all.com.br',    password: '123456', name: 'Erica Fonseca',      role: 'tecnico', area: '012' },
+  { email: 'henrique@crv4all.com.br', password: '123456', name: 'Henrique Froehlich', role: 'tecnico', area: '013' },
+  { email: 'leandro@crv4all.com.br',  password: '123456', name: 'Leandro Teixeira',   role: 'tecnico', area: '015' },
+  { email: 'prestes@crv4all.com.br',  password: '123456', name: 'Felipe Prestes',     role: 'tecnico', area: '015' },
+  { email: 'piedade@crv4all.com.br',  password: '123456', name: 'Felipe Piedade',     role: 'tecnico', area: '018' },
+  { email: 'gestor@crv4all.com.br',   password: '123456', name: 'Felipe Prestes',     role: 'gestor',  area: null  },
 ];
 
 const KEY = {
   SESSION: '@vl/session', CLIENTS: '@vl/clients',
   SCHEDULES: '@vl/schedules', VISITS: '@vl/visits', TECHS: '@vl/techs',
-  INITIALIZED: '@vl/initialized_v9',
+  INITIALIZED: '@vl/initialized_v9', PASSWORDS: '@vl/passwords',
 };
 
 const CHART_COLORS = [
@@ -1942,7 +1942,7 @@ function RateIndicator({ rate, closed, total }) {
 // ─────────────────────────────────────────
 
 function LoginScreen({ onLogin }) {
-  const [email, setEmail]       = useState('cesar@app.com');
+  const [email, setEmail]       = useState('cesar@crv4all.com.br');
   const [password, setPassword] = useState('123456');
   const [error, setError]       = useState('');
   const [busy, setBusy]         = useState(false);
@@ -1950,9 +1950,15 @@ function LoginScreen({ onLogin }) {
   async function handleLogin() {
     setError(''); setBusy(true);
     await new Promise(r => setTimeout(r, 400));
-    const user = USERS.find(u => u.email === email.trim().toLowerCase() && u.password === password);
+    const baseUser = USERS.find(u => u.email === email.trim().toLowerCase());
+    if (!baseUser) { setBusy(false); setError('E-mail ou senha incorretos.'); return; }
+    // Check for custom password stored in AsyncStorage
+    const pwdRaw = await AsyncStorage.getItem(KEY.PASSWORDS);
+    const pwdMap = pwdRaw ? JSON.parse(pwdRaw) : {};
+    const expectedPwd = pwdMap[baseUser.email] ?? baseUser.password;
+    if (password !== expectedPwd) { setBusy(false); setError('E-mail ou senha incorretos.'); return; }
+    const user = baseUser;
     setBusy(false);
-    if (!user) { setError('E-mail ou senha incorretos.'); return; }
     await AsyncStorage.setItem(KEY.SESSION, JSON.stringify(user));
     onLogin(user);
   }
@@ -1972,13 +1978,13 @@ function LoginScreen({ onLogin }) {
           <Card style={s.credCard}>
             <Text style={s.credTitle}>Credenciais de teste</Text>
             {[
-              { label: 'Tecnico', email: 'cesar@app.com',    name: 'Cesar Oliveira'     },
-              { label: 'Tecnico', email: 'erica@app.com',    name: 'Erica Fonseca'      },
-              { label: 'Tecnico', email: 'henrique@app.com', name: 'Henrique Froehlich' },
-              { label: 'Tecnico', email: 'leandro@app.com',  name: 'Leandro Teixeira'   },
-              { label: 'Tecnico', email: 'prestes@app.com',  name: 'Felipe Prestes (Tecnico)' },
-              { label: 'Tecnico', email: 'piedade@app.com',  name: 'Felipe Piedade'     },
-              { label: 'Gestor',  email: 'gestor@app.com',   name: 'Felipe Prestes (Gestor)' },
+              { label: 'Tecnico', email: 'cesar@crv4all.com.br',    name: 'Cesar Oliveira'     },
+              { label: 'Tecnico', email: 'erica@crv4all.com.br',    name: 'Erica Fonseca'      },
+              { label: 'Tecnico', email: 'henrique@crv4all.com.br', name: 'Henrique Froehlich' },
+              { label: 'Tecnico', email: 'leandro@crv4all.com.br',  name: 'Leandro Teixeira'   },
+              { label: 'Tecnico', email: 'prestes@crv4all.com.br',  name: 'Felipe Prestes (Tecnico)' },
+              { label: 'Tecnico', email: 'piedade@crv4all.com.br',  name: 'Felipe Piedade'     },
+              { label: 'Gestor',  email: 'gestor@crv4all.com.br',   name: 'Felipe Prestes (Gestor)' },
             ].map(c => (
               <Pressable key={c.email} onPress={() => setEmail(c.email)} style={s.credRow}>
                 <View style={[s.credBadge, c.label === 'Gestor' && s.credBadgeGestor]}>
@@ -2068,6 +2074,13 @@ function HomeScreen({ session, go, onLogout }) {
               </View>
               <Text style={s.dashBtnArrow}>→</Text>
             </Pressable>
+            <Pressable onPress={() => go('change-password')} style={[s.dashBtn, { backgroundColor: '#1a3c7a' }]}>
+              <View style={{ flex: 1 }}>
+                <Text style={s.dashBtnTitle}>Alterar Senha</Text>
+                <Text style={s.dashBtnSub}>Altere sua senha de acesso</Text>
+              </View>
+              <Text style={s.dashBtnArrow}>→</Text>
+            </Pressable>
           </>
         )}
 
@@ -2148,14 +2161,14 @@ function AgendaScreen({ go, onBack }) {
         {busy ? <ActivityIndicator color={C.green} /> : items.length === 0 ? <Empty msg="Nenhum agendamento salvo." /> :
           items.map(item => (
             <Pressable key={item.id}
-              onPress={() => item.clientName ? go('new-visit-from-schedule', item) : go('schedule-detail', item)}
+              onPress={() => item.clientName ? go('visits') : go('schedule-detail', item)}
               style={s.listCard}>
               {item.clientName ? <Text style={s.listClientName}>{item.clientName}</Text> : null}
               <Text style={s.listTitle}>{item.propertyName || '(sem propriedade)'}</Text>
               <Text style={s.muted}>{fmtDate(item.scheduledAt)}</Text>
               <Text style={s.muted}>Status: {item.status}</Text>
               {item.notes ? <Text style={s.muted}>{item.notes}</Text> : null}
-              <Text style={[s.hint, { marginTop: 4 }]}>{item.clientName ? 'Toque para registrar visita →' : 'Toque para ver detalhes →'}</Text>
+              <Text style={[s.hint, { marginTop: 4 }]}>{item.clientName ? 'Ver visitas →' : 'Toque para ver detalhes →'}</Text>
             </Pressable>
           ))
         }
@@ -2461,7 +2474,7 @@ function NewClientScreen({ session, onBack, onSaved }) {
 // TELA: VISITAS
 // ─────────────────────────────────────────
 
-function VisitsScreen({ go, onBack }) {
+function VisitsScreen({ go, onBack, session }) {
   const [items, setItems] = useState([]);
   const [busy, setBusy] = useState(true);
   useEffect(() => { (async () => { setBusy(true); setItems(await load(KEY.VISITS)); setBusy(false); })(); }, []);
@@ -2485,7 +2498,7 @@ function VisitsScreen({ go, onBack }) {
                   <Text style={s.badgeText}>{v.dealClosed ? 'Negocio fechado' : 'Sem negocio'}</Text>
                 </View>
                 {v.notes ? <Text style={s.notesText}>"{v.notes}"</Text> : null}
-                {go && (
+                {go && session?.role === 'gestor' && (
                   <Pressable onPress={() => go('edit-visit', v)} style={[s.editBtn, { marginTop: 8, alignSelf: 'flex-start' }]}>
                     <Text style={s.editBtnText}>Editar observacoes</Text>
                   </Pressable>
@@ -3012,7 +3025,7 @@ function VendasGestorScreen({ onBack }) {
           {linhasMes.length === 0
             ? <Text style={s.muted}>Sem dados para este mes.</Text>
             : linhasMes.map((r, idx) => {
-                const pctReal = r.meta > 0 ? (r.td / r.meta) * 100 : 0;
+                const pctReal = r.meta > 0 ? (r.dn / r.meta) * 100 : 0;
                 const barW = Math.min(100, (r.td / maxDoses) * 100);
                 const metaW = Math.min(100, (r.meta / maxDoses) * 100);
                 return (
@@ -3055,7 +3068,7 @@ function VendasGestorScreen({ onBack }) {
           <Card style={{ backgroundColor: '#f0f4ff' }}>
             <SectionTitle text="Totais do mes" />
             {(() => {
-              const totDoses = linhasMes.reduce((s, r) => s + r.td, 0);
+              const totDoses = linhasMes.reduce((s, r) => s + r.dn, 0);
               const totMeta  = linhasMes.reduce((s, r) => s + r.meta, 0);
               const totFat   = linhasMes.reduce((s, r) => s + r.tf, 0);
               const pctGeral = totMeta > 0 ? (totDoses / totMeta * 100) : 0;
@@ -3063,7 +3076,7 @@ function VendasGestorScreen({ onBack }) {
               return (
                 <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
                   {[
-                    { label: 'Total doses', val: String(totDoses),  color: C.green },
+                    { label: 'Doses novos', val: String(totDoses),  color: C.green },
                     { label: 'Meta equipe', val: String(totMeta),   color: C.muted },
                     { label: '% Atingido',  val: pctGeralStr + '%', color: pctGeral >= 100 ? '#22c55e' : '#f59e0b' },
                     { label: 'Faturamento', val: _fmtBRL(totFat),   color: '#2196F3' },
@@ -3132,7 +3145,7 @@ function VendasTecnicoScreen({ session, onBack }) {
     return diff >= 0 ? diff : 0;
   }
   const dias = diasRestantes(mesSel);
-  const pctReal = dado && dado.meta > 0 ? Math.min(200, (dado.td / dado.meta) * 100) : 0;
+  const pctReal = dado && dado.meta > 0 ? Math.min(200, (dado.dn / dado.meta) * 100) : 0;
   const corPct = pctReal >= 100 ? '#22c55e' : pctReal >= 70 ? '#f59e0b' : '#ef4444';
 
   if (!tecKey) {
@@ -3178,7 +3191,7 @@ function VendasTecnicoScreen({ session, onBack }) {
             {/* % atingimento grande */}
             <Card style={{ alignItems: 'center', paddingVertical: 24 }}>
               <Text style={{ fontSize: 56, fontWeight: '900', color: corPct }}>{pctReal.toFixed(0)}%</Text>
-              <Text style={{ fontSize: 14, color: C.muted, marginTop: 4 }}>da meta atingido em {_fmtMesLabel(mesSel)}</Text>
+              <Text style={{ fontSize: 14, color: C.muted, marginTop: 4 }}>da meta (doses novos) atingido em {_fmtMesLabel(mesSel)}</Text>
               <View style={{ width: '100%', height: 14, backgroundColor: C.greenLight, borderRadius: 7, overflow: 'hidden', marginTop: 16 }}>
                 <View style={{ width: `${Math.min(100, pctReal)}%`, height: 14, backgroundColor: corPct, borderRadius: 7 }} />
               </View>
@@ -3192,9 +3205,9 @@ function VendasTecnicoScreen({ session, onBack }) {
             {/* KPIs */}
             <View style={s.kpiRow}>
               {[
-                { label: 'Total doses',  val: String(dado.td),    color: C.green    },
+                { label: 'Doses novos',  val: String(dado.dn),    color: C.green    },
                 { label: 'Meta mensal',  val: String(dado.meta),  color: C.muted    },
-                { label: 'Doses novos',  val: String(dado.dn),    color: '#2196F3'  },
+                { label: 'Total doses',  val: String(dado.td),    color: '#2196F3'  },
                 { label: 'Doses ativos', val: String(dado.da),    color: '#FF9800'  },
               ].map(k => (
                 <View key={k.label} style={[s.kpiCard, { borderTopColor: k.color }]}>
@@ -3451,6 +3464,59 @@ function DashboardScreen({ onBack, go }) {
 }
 
 // ─────────────────────────────────────────
+// TELA: ALTERAR SENHA (tecnico)
+// ─────────────────────────────────────────
+
+function ChangePasswordScreen({ session, onBack, onChanged }) {
+  const [senhaAtual,  setSenhaAtual]  = useState('');
+  const [novaSenha,   setNovaSenha]   = useState('');
+  const [confirmar,   setConfirmar]   = useState('');
+  const [busy,        setBusy]        = useState(false);
+  const [error,       setError]       = useState('');
+
+  async function handleSave() {
+    setError('');
+    if (!senhaAtual || !novaSenha || !confirmar) { setError('Preencha todos os campos.'); return; }
+    if (novaSenha.length < 4) { setError('Nova senha deve ter pelo menos 4 caracteres.'); return; }
+    if (novaSenha !== confirmar) { setError('Nova senha e confirmacao nao conferem.'); return; }
+    setBusy(true);
+    // Verify current password
+    const pwdRaw = await AsyncStorage.getItem(KEY.PASSWORDS);
+    const pwdMap = pwdRaw ? JSON.parse(pwdRaw) : {};
+    const baseUser = USERS.find(u => u.email === session.email);
+    const expectedPwd = pwdMap[session.email] ?? (baseUser ? baseUser.password : '');
+    if (senhaAtual !== expectedPwd) { setBusy(false); setError('Senha atual incorreta.'); return; }
+    // Save new password
+    pwdMap[session.email] = novaSenha;
+    await AsyncStorage.setItem(KEY.PASSWORDS, JSON.stringify(pwdMap));
+    setBusy(false);
+    Alert.alert('Senha alterada!', 'Sua senha foi atualizada com sucesso.', [{ text: 'OK', onPress: onChanged }]);
+  }
+
+  return (
+    <View style={[s.safeArea, { paddingTop: STATUS_BAR_HEIGHT }]}>
+      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
+        <ScrollView contentContainerStyle={s.page} keyboardShouldPersistTaps="handled">
+          <Back onPress={onBack} />
+          <PageTitle title="Alterar Senha" sub={session?.name || ''} />
+          <Card>
+            <Input label="Senha atual" value={senhaAtual} onChangeText={setSenhaAtual}
+              secureTextEntry placeholder="••••••" />
+            <Input label="Nova senha" value={novaSenha} onChangeText={setNovaSenha}
+              secureTextEntry placeholder="••••••" />
+            <Input label="Confirmar nova senha" value={confirmar} onChangeText={setConfirmar}
+              secureTextEntry placeholder="••••••" />
+            {error ? <Text style={s.errorText}>{error}</Text> : null}
+            <Btn label={busy ? 'Salvando...' : 'Alterar senha'} onPress={handleSave} disabled={busy} />
+            <Btn label="Cancelar" onPress={onBack} secondary style={{ marginTop: 8 }} />
+          </Card>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </View>
+  );
+}
+
+// ─────────────────────────────────────────
 // APP PRINCIPAL
 // ─────────────────────────────────────────
 
@@ -3526,7 +3592,7 @@ export default function App() {
   if (screen === 'agenda')           return <AgendaScreen go={go} onBack={back} />;
   if (screen === 'schedule-detail')  return <ScheduleDetailScreen schedule={selectedSchedule} onBack={back} />;
   if (screen === 'clients')          return <ClientsScreen go={go} onBack={back} />;
-  if (screen === 'visits')           return <VisitsScreen go={go} onBack={back} />;
+  if (screen === 'visits')           return <VisitsScreen go={go} onBack={back} session={session} />;
   if (screen === 'new-visit')        return <NewVisitScreen session={session} onBack={back} onSaved={() => saved('visits')} />;
   if (screen === 'new-visit-from-schedule') return <NewVisitScreen session={session} scheduleData={selectedSchedule} onBack={back} onSaved={() => { setSelectedSchedule(null); saved('agenda'); }} />;
   if (screen === 'edit-visit')       return editingVisit
@@ -3544,6 +3610,7 @@ export default function App() {
   if (screen === 'dashboard')    return <DashboardScreen onBack={back} go={go} />;
   if (screen === 'vendas-gestor') return <VendasGestorScreen onBack={back} />;
   if (screen === 'vendas-tecnico') return <VendasTecnicoScreen session={session} onBack={back} />;
+  if (screen === 'change-password') return <ChangePasswordScreen session={session} onBack={back} onChanged={() => saved('home')} />;
 
   return <HomeScreen session={session} go={go} onLogout={logout} />;
 }
