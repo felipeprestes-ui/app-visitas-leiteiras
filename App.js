@@ -71,14 +71,65 @@ const MONTHS = [
 ];
 
 const CONSULTORES = {
-  '011': ['Murilo Canedo', 'Juarez'],
-  '012': ['Leonardo Soares', 'Jose Raimundo', 'Eduardo Soares'],
-  '013': ['Fernando Manica', 'Renata'],
-  '014': ['Thiago Nogueira', 'Jose A Tenorio', 'Marcos Fiel', 'Elmo', 'Jalmir Daniel S', 'Fernando F.'],
-  '015': ['Kevelan Almeida', 'Kourbany Luiz C'],
-  '018': ['Andres Hauers', 'Frederico Guerr', 'Mauricio Pinto'],
-  '019': ['Faber Monteiro', 'Moaciir Duarte', 'Rodrigo Almeida', 'Edivan', 'Paulo Henrique'],
-  '020': ['Gustavo Andrade', 'Junior Alves', 'Rubens Rudrigue', 'Gustavo Americo', 'Paulo Barros', 'Raafel Verner H', 'Thaymisson Lira', 'Robson da Silva', 'Luiz Harliton C'],
+  '011': [
+    'ELVIS G S LOPES', 'FERNANDO HENRIQ', 'FRANCISCO HENRI', 'FREDERICO ARANT', 'GIVANILDO JACIN',
+    'JEFFERSON', 'JEFFERSON DOS S', 'JOAO MACHADO', 'JUAREZ', 'JUSCELIO RAIMUN',
+    'LEANDRO VILELLA', 'LEONARDO TUFI', 'LUCAS DUARTE', 'LUCAS GONCALVES', 'LUCAS SIQUEIRA',
+    'LUIS HUMBERTO R', 'MURILO CANEDO', 'PAULO GARCIA SI', 'PAULO SOUSA', 'RAFAEL AUGUSTO',
+    'RICARDO BONATO', 'VILTON MODESTO', 'VINICIUS JOSE', 'VINICIUS MARTIN', 'VIRGILIO RODRIG',
+    'WILLY JOSE DE', 'WILSON VAGNER V',
+  ],
+  '012': [
+    'ANNY QUEIROZ SI', 'BRUNO FONSECA', 'CARLOS (SP)', 'CEZAR', 'EDUARDO SOARES',
+    'FABIO PACHECO', 'FELIPE SCARDUA', 'FERNANDO MOREIR', 'HUGO LEONARDO', 'JOAO ANT GUEDES',
+    'JOAO PEDRO MELO', 'JOSE RAIMUNDO', 'LEONARDO SOARES', 'LUCAS VALERIANO', 'LUCIANO FERREIR',
+    'LUIS HENRIQUE', 'MARIO CEZAR', 'MAYCON CEZAR', 'MIGUEL HADDAD', 'RODRIGO LIMA',
+    'RODRIGO PIVARI', 'RONALD DIAS TRO', 'VITOR', 'WLADIMIR LEON',
+  ],
+  '013': [
+    'ALEXANDRE MAZZO', 'DALTON LUIZ DE', 'FELIPE GUIZELIN', 'FERNANDO MANICA', 'JOSE ROB RANGEL',
+    'JOSE ROSA FILHO', 'LEANDRO PAVANEL', 'LEONARDO GODOY', 'MARCEL BERTONHA', 'MARINA PIPERAS',
+    'MARLON COSTA', 'NAUR SOUZA', 'OSVADO DE LAB.J', 'PAULO CEZAR OLI', 'PAULO SERGIO G',
+    'RAFAEL BRUNO', 'RAFAEL JOSE DE', 'RENATA', 'VALSAIR DE MATO', 'VINICIUS GABRIE',
+    'WILSON MARIANO',
+  ],
+  '014': [
+    'ALESSANDRO MAGN', 'ALEXANDRE TENOR', 'ANGELO ANTONELL', 'BRUNO CERQUEIRA', 'CELIO THEODORO',
+    'DARLAN DORIGHET', 'ELMO', 'ELTON MATOS', 'EVERTON DO PATR', 'FERNANDO F.',
+    'FRANCISCO OCTAV', 'GABRYEL TEIXEIR', 'GENILDO BORGES', 'ITAMAR', 'JAIR MILANEZI',
+    'JALMIR DANIEL S', 'JOAO DIOGO NETO', 'JORGE GOMES', 'JOSE A TENORIO', 'JOSE C BAMBINI',
+    'JOSE CLAUDIO', 'JUAREZ PEDRO DO', 'LAIR GABRIEL', 'MARCOS FIEL', 'NATALIA ANTONEL',
+    'PAULO GUSTAVO', 'ROBERTO GREG.', 'ROBSON RODRIGUE', 'RODOLFO REIS AL', 'SINARA MARTINS',
+    'THIAGO NOGUEIRA', 'UZIEL AMARAL', 'VALTER ALMEIDA', 'VITOR ALMEIDA',
+  ],
+  '015': [
+    'ALEXANDRE CEZER', 'ANDRE SOLEK MAC', 'CLAITON', 'DENILSON SEIDEL', 'EDUARDO MONT.',
+    'EDUARDO TOSHIHI', 'EMERSON HENRI', 'EVANDRO TELLES', 'FABIO (PR)', 'FILIPE ROPELATO',
+    'GUILHERME ROCHA', 'JEAN MICHEL ROT', 'KEVELAN ALMEIDA', 'KOURBANY LUIZ C', 'LAUDEMIR',
+    'LOURIAN TELEGIN', 'RAFAEL RUZA', 'RONALDO ROSA', 'VINICIUS MUCHIN',
+  ],
+  '018': [
+    'ALEX BRANDALISE', 'ANDRES HAURERS', 'DARLAN CARLETI', 'DIEGO BORBA MUL', 'EDUARDO LUIZ',
+    'EVANDRO', 'FRANCIANO', 'FREDERICO DE ME', 'FREDERICO GUERR', 'GUILHERME RODRI',
+    'HUGO FILHO', 'JOAO THOMAZ', 'LEANDRO GRAFF', 'LUCAS RUAS', 'LUCIANO WEBER',
+    'LUIS PANIZ', 'LUIZ AUGUSTO', 'LUIZ FELIPE', 'MARCELO BECKER', 'MARIANY DA PAIX',
+    'MAURICIO PINTO', 'RENAN MARSARO', 'RENAN MOROSSINO', 'RICARDO MOREIRA', 'RODRIGO BORGES',
+  ],
+  '019': [
+    'ADRIANO BOLOGNE', 'ADRIELLY LOPES', 'ALEXANDRE LOUZA', 'ANDRE HENRIQUE', 'BRENO DIAS',
+    'CASSIO ROBERTO', 'DANIEL GUSTAVO', 'EDIVALDO BATIST', 'EDIVAN', 'EVANILDO NUNES',
+    'FABER MONTEIRO', 'FABRICIO GARCES', 'GUSTAVO HENRIQU', 'IGOR/PAULO', 'IODOMIR CARVALH',
+    'ISMAEL DOS SANT', 'MAYLON DIOGO', 'MOACIIR DUARTE', 'NICOLE COLUCCI', 'PAULO HENRIQUE',
+    'RAI DAMASCENO E', 'RAYCON ROBERTO', 'RODRIGO ALMEIDA', 'WAGNER PESCA',
+  ],
+  '020': [
+    'ALOYSIO FRANCA', 'ANDERSON JOSE', 'ANDRE CARREIRA', 'ARTHUR NEGRAO', 'CLAUDIO FELIPE',
+    'DIEGO MOURA', 'EDUARDO FURTADO', 'FELIPE NAIS', 'GILMAR', 'GUSTAVO AMERICO',
+    'GUSTAVO ANDRADE', 'JALES', 'JULIANO MACHADO', 'JUNIOR ALVES', 'LUCAS DE SOUSA',
+    'LUCIANO ILTON', 'LUIZ HARLITON C', 'MARCELO CARNEIR', 'MARCOS VINICIUS', 'MAX MARIANO',
+    'OLICIO BATISTA', 'PAULO BARROS', 'PAULO NASCIPE', 'RAAFAEL VERNER H', 'ROBSON DA SILVA',
+    'RUBENS RUDRIGUE', 'THAYMISSON LIRA', 'THIAGO RESENDE',
+  ],
 };
 
 // Tecnicos pre-cadastrados (aparecem ja na tela de Gerenciar Tecnicos)
@@ -1830,10 +1881,18 @@ function HomeScreen({ session, go, onLogout }) {
 // TELA: AGENDA
 // ─────────────────────────────────────────
 
-function AgendaScreen({ go, onBack }) {
+function AgendaScreen({ go, onBack, session }) {
   const [items, setItems] = useState([]);
   const [busy, setBusy] = useState(true);
-  const reload = useCallback(async () => { setBusy(true); setItems(await load(KEY.SCHEDULES)); setBusy(false); }, []);
+  const reload = useCallback(async () => {
+    setBusy(true);
+    const all = await load(KEY.SCHEDULES);
+    const filtered = session?.role === 'gestor'
+      ? all
+      : all.filter(item => item.technicianName === session?.name);
+    setItems(filtered);
+    setBusy(false);
+  }, [session]);
   useEffect(() => { reload(); }, [reload]);
 
   return (
@@ -1915,7 +1974,7 @@ function ScheduleDetailScreen({ schedule, onBack }) {
 // TELA: NOVO AGENDAMENTO
 // ─────────────────────────────────────────
 
-function NewScheduleScreen({ onBack, onSaved }) {
+function NewScheduleScreen({ session, onBack, onSaved }) {
   const [clientName, setClientName] = useState('');
   const [prop,  setProp]  = useState('');
   const [date,  setDate]  = useState('');
@@ -1938,7 +1997,8 @@ function NewScheduleScreen({ onBack, onSaved }) {
       : new Date().toISOString();
     await save(KEY.SCHEDULES, [
       { id: genId(), clientName: clientName.trim(), propertyName: prop.trim(),
-        scheduledAt: iso, status: 'agendada', notes: notes.trim(), createdAt: new Date().toISOString() },
+        scheduledAt: iso, status: 'agendada', notes: notes.trim(), createdAt: new Date().toISOString(),
+        technicianName: session?.name || '', area: session?.area || '' },
       ...existing,
     ]);
     setBusy(false);
@@ -2161,7 +2221,17 @@ function NewClientScreen({ session, onBack, onSaved }) {
 function VisitsScreen({ go, onBack, session }) {
   const [items, setItems] = useState([]);
   const [busy, setBusy] = useState(true);
-  useEffect(() => { (async () => { setBusy(true); setItems(await load(KEY.VISITS)); setBusy(false); })(); }, []);
+  useEffect(() => {
+    (async () => {
+      setBusy(true);
+      const all = await load(KEY.VISITS);
+      const filtered = session?.role === 'gestor'
+        ? all
+        : all.filter(v => v.technicianName === session?.name);
+      setItems(filtered);
+      setBusy(false);
+    })();
+  }, [session]);
 
   return (
     <View style={[s.safeArea, { paddingTop: STATUS_BAR_HEIGHT }]}>
@@ -3278,7 +3348,7 @@ export default function App() {
   if (!session) return <LoginScreen onLogin={u => { setSession(u); setScreen('home'); }} />;
 
   if (screen === 'home')             return <HomeScreen session={session} go={go} onLogout={logout} />;
-  if (screen === 'agenda')           return <AgendaScreen go={go} onBack={back} />;
+  if (screen === 'agenda')           return <AgendaScreen go={go} onBack={back} session={session} />;
   if (screen === 'schedule-detail')  return <ScheduleDetailScreen schedule={selectedSchedule} onBack={back} />;
   if (screen === 'clients')          return <ClientsScreen go={go} onBack={back} />;
   if (screen === 'visits')           return <VisitsScreen go={go} onBack={back} session={session} />;
@@ -3287,7 +3357,7 @@ export default function App() {
   if (screen === 'edit-visit')       return editingVisit
     ? <EditVisitScreen visit={editingVisit} onBack={back} onSaved={() => { setEditingVisit(null); saved('visits'); }} />
     : <HomeScreen session={session} go={go} onLogout={logout} />;
-  if (screen === 'new-schedule')     return <NewScheduleScreen onBack={back} onSaved={() => saved('agenda')} />;
+  if (screen === 'new-schedule')     return <NewScheduleScreen session={session} onBack={back} onSaved={() => saved('agenda')} />;
   if (screen === 'new-client')   return <NewClientScreen session={session} onBack={back} onSaved={() => saved('clients')} />;
   if (screen === 'techs')        return (
     <TechsScreen go={go} onBack={back} onEdit={tech => { setEditingTech(tech); go('edit-tech'); }} />
