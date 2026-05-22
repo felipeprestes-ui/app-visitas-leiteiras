@@ -1458,6 +1458,11 @@ function _normName(n) {
   return out;
 }
 
+// Normaliza nome para comparacao robusta (sem acentos, lowercase, sem espacos extras)
+function normalizeName(name) {
+  return _normName(name || '').toLowerCase().trim();
+}
+
 // Converte area "20" → "020", "12" → "012" etc.
 function _normArea(a) {
   if (!a) return '';
@@ -1753,7 +1758,11 @@ function HomeScreen({ session, go, onLogout }) {
       const [v, ag, cl, tk] = await Promise.all([
         load(KEY.VISITS), load(KEY.SCHEDULES), load(KEY.CLIENTS), load(KEY.TECHS),
       ]);
-      setStats({ visits: v.length, schedules: ag.length, clients: cl.length, techs: tk.length });
+      const name = session?.name;
+      const filtV  = isGestor ? v  : v.filter(x => normalizeName(x.technicianName) === normalizeName(name));
+      const filtAg = isGestor ? ag : ag.filter(x => normalizeName(x.technicianName) === normalizeName(name));
+      const filtCl = isGestor ? cl : cl.filter(x => normalizeName(x.technicianName) === normalizeName(name));
+      setStats({ visits: filtV.length, schedules: filtAg.length, clients: filtCl.length, techs: tk.length });
     })();
   }, []);
 
@@ -1889,7 +1898,7 @@ function AgendaScreen({ go, onBack, session }) {
     const all = await load(KEY.SCHEDULES);
     const filtered = session?.role === 'gestor'
       ? all
-      : all.filter(item => item.technicianName === session?.name);
+      : all.filter(item => normalizeName(item.technicianName) === normalizeName(session?.name));
     setItems(filtered);
     setBusy(false);
   }, [session]);
@@ -2224,10 +2233,14 @@ function VisitsScreen({ go, onBack, session }) {
   useEffect(() => {
     (async () => {
       setBusy(true);
-      const all = await load(KEY.VISITS);
+      const localV = await load(KEY.VISITS);
+      // IDs das visitas locais (incluindo copias editadas de visitas historicas)
+      const localIds = new Set(localV.map(v => v.id));
+      // Combina visitas locais (topo) + historico (excluindo as que ja tem versao local)
+      const all = [...localV, ...HISTORICO_VISITS.filter(v => !localIds.has(v.id))];
       const filtered = session?.role === 'gestor'
         ? all
-        : all.filter(v => v.technicianName === session?.name);
+        : all.filter(v => normalizeName(v.technicianName) === normalizeName(session?.name));
       setItems(filtered);
       setBusy(false);
     })();
@@ -2252,7 +2265,7 @@ function VisitsScreen({ go, onBack, session }) {
                   <Text style={s.badgeText}>{v.dealClosed ? 'Negocio fechado' : 'Sem negocio'}</Text>
                 </View>
                 {v.notes ? <Text style={s.notesText}>"{v.notes}"</Text> : null}
-                {go && session?.role === 'gestor' && (
+                {go && (session?.role === 'gestor' || normalizeName(v.technicianName) === normalizeName(session?.name)) && (
                   <Pressable onPress={() => go('edit-visit', v)} style={[s.editBtn, { marginTop: 8, alignSelf: 'flex-start' }]}>
                     <Text style={s.editBtnText}>Editar observacoes</Text>
                   </Pressable>
@@ -2438,14 +2451,32 @@ function EditVisitScreen({ visit, onBack, onSaved }) {
   async function handleSave() {
     setBusy(true);
     const existing = await load(KEY.VISITS);
-    const updated = existing.map(v =>
-      v.id === visit.id
-        ? { ...v, notes: notes.trim(), dealClosed,
-            dosesConvencional: dosesConv ? Number(dosesConv) : null,
-            dosesSexado: dosesSex ? Number(dosesSex) : null }
-        : v
-    );
-    await save(KEY.VISITS, updated);
+    const editedFields = {
+      notes: notes.trim(),
+      dealClosed,
+      dosesConvencional: dosesConv ? Number(dosesConv) : null,
+      dosesSexado: dosesSex ? Number(dosesSex) : null,
+    };
+    if (visit.isHistorico) {
+      // Visita do historico: salvar copia editada no AsyncStorage
+      const alreadySaved = existing.find(v => v.id === visit.id);
+      if (alreadySaved) {
+        // Ja existe copia local, apenas atualizar
+        const updated = existing.map(v =>
+          v.id === visit.id ? { ...v, ...editedFields, isHistorico: false } : v
+        );
+        await save(KEY.VISITS, updated);
+      } else {
+        // Criar copia local da visita historica com as edicoes
+        await save(KEY.VISITS, [{ ...visit, ...editedFields, isHistorico: false }, ...existing]);
+      }
+    } else {
+      // Visita local: atualizar normalmente
+      const updated = existing.map(v =>
+        v.id === visit.id ? { ...v, ...editedFields } : v
+      );
+      await save(KEY.VISITS, updated);
+    }
     setBusy(false);
     Alert.alert('Visita atualizada!', '', [{ text: 'OK', onPress: onSaved }]);
   }
@@ -2474,10 +2505,15 @@ function EditVisitScreen({ visit, onBack, onSaved }) {
               <Switch value={dealClosed} onValueChange={setDealClosed}
                 trackColor={{ false: C.border, true: C.green }} thumbColor={C.white} />
             </View>
-            <Input label="Doses Convencional" value={dosesConv} onChangeText={setDosesConv}
-              keyboardType="number-pad" placeholder="Quantidade de doses convencional" />
-            <Input label="Doses Sexado" value={dosesSex} onChangeText={setDosesSex}
-              keyboardType="number-pad" placeholder="Quantidade de doses sexado" />
+            {dealClosed && (
+              <View style={s.conditionalBox}>
+                <Text style={s.conditionalLabel}>Doses vendidas</Text>
+                <Input label="Doses Convencional" value={dosesConv} onChangeText={setDosesConv}
+                  keyboardType="number-pad" placeholder="Quantidade de doses convencional" />
+                <Input label="Doses Sexado" value={dosesSex} onChangeText={setDosesSex}
+                  keyboardType="number-pad" placeholder="Quantidade de doses sexado" />
+              </View>
+            )}
             <Input label="Observacoes" value={notes} onChangeText={setNotes}
               placeholder="Anotacoes sobre a visita..." multiline inputStyle={s.multiline} />
             <Btn label={busy ? 'Salvando...' : 'Salvar alteracoes'} onPress={handleSave} disabled={busy} />
@@ -2514,7 +2550,7 @@ function TechsScreen({ go, onBack, onEdit }) {
   async function buildExportData() {
     const visits = await load(KEY.VISITS);
     return items.map(t => {
-      const tv = visits.filter(v => v.technicianName === t.name);
+      const tv = visits.filter(v => normalizeName(v.technicianName) === normalizeName(t.name));
       const closed = tv.filter(v => v.dealClosed).length;
       const totalAnimais = tv.reduce((sum, v) => sum + (v.animalCount || 0), 0);
       const totalDosesConv = tv.reduce((sum, v) => sum + (v.dosesConvencional || 0), 0);
@@ -2575,10 +2611,10 @@ function TechsScreen({ go, onBack, onEdit }) {
               <Card key={item.id} style={s.listCard}>
                 <View style={s.techCardRow}>
                   <Text style={[s.listTitle, { flex: 1 }]}>{item.name}</Text>
-                  <Pressable onPress={() => onEdit(item)} style={s.editBtn}>
-                    <Text style={s.editBtnText}>Editar</Text>
+                  <Pressable onPress={() => onEdit(item)} style={s.techEditBtn}>
+                    <Text style={s.techEditBtnText}>Editar</Text>
                   </Pressable>
-                  <Pressable onPress={() => handleDelete(item.id)} style={[s.editBtn, s.deleteBtnBorder]}>
+                  <Pressable onPress={() => handleDelete(item.id)} style={[s.techEditBtn, s.deleteBtnBorder]}>
                     <Text style={s.deleteBtnText}>Remover</Text>
                   </Pressable>
                 </View>
@@ -3433,8 +3469,8 @@ const s = StyleSheet.create({
 
   // Tecnico card row
   techCardRow:    { flexDirection: 'row', alignItems: 'center', marginBottom: 4, flexWrap: 'wrap' },
-  editBtn:        { borderWidth: 1, borderColor: '#2196F3', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 4, marginRight: 6, marginBottom: 6 },
-  editBtnText:    { color: '#2196F3', fontWeight: '700', fontSize: 12 },
+  techEditBtn:        { borderWidth: 1, borderColor: '#2196F3', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 4, marginRight: 6, marginBottom: 6 },
+  techEditBtnText:    { color: '#2196F3', fontWeight: '700', fontSize: 12 },
   deleteBtnBorder:{ borderColor: C.error },
   deleteBtnText:  { color: C.error, fontWeight: '700', fontSize: 12 },
 
