@@ -68,6 +68,7 @@ const MONTHS = [
   { label: 'Nov/25', value: '10-2025' }, { label: 'Dez/25', value: '11-2025' },
   { label: 'Jan/26', value: '0-2026' }, { label: 'Fev/26', value: '1-2026' },
   { label: 'Mar/26', value: '2-2026' }, { label: 'Abr/26', value: '3-2026' },
+  { label: 'Mai/26', value: '4-2026' }, { label: 'Jun/26', value: '5-2026' },
 ];
 
 const CONSULTORES = {
@@ -2238,9 +2239,22 @@ function VisitsScreen({ go, onBack, session }) {
       const localIds = new Set(localV.map(v => v.id));
       // Combina visitas locais (topo) + historico (excluindo as que ja tem versao local)
       const all = [...localV, ...HISTORICO_VISITS.filter(v => !localIds.has(v.id))];
-      const filtered = session?.role === 'gestor'
-        ? all
-        : all.filter(v => normalizeName(v.technicianName) === normalizeName(session?.name));
+      let filtered;
+      if (session?.role === 'gestor') {
+        // Gestor ve todas as visitas (historico + locais de todos os tecnicos)
+        filtered = all;
+      } else {
+        // Tecnico ve apenas visitas do mes atual (historico + locais proprias)
+        const now = new Date();
+        const curMonth = now.getMonth();
+        const curYear  = now.getFullYear();
+        filtered = all.filter(v => {
+          if (normalizeName(v.technicianName) !== normalizeName(session?.name)) return false;
+          if (!v.visitedAt) return false;
+          const d = new Date(v.visitedAt);
+          return d.getMonth() === curMonth && d.getFullYear() === curYear;
+        });
+      }
       setItems(filtered);
       setBusy(false);
     })();
@@ -2250,13 +2264,14 @@ function VisitsScreen({ go, onBack, session }) {
     <View style={[s.safeArea, { paddingTop: STATUS_BAR_HEIGHT }]}>
       <ScrollView contentContainerStyle={s.page}>
         <Back onPress={onBack} />
-        <PageTitle title="Visitas registradas" sub={`${items.length} visita(s)`} />
+        <PageTitle title="Visitas registradas" sub={session?.role === 'gestor' ? `${items.length} visita(s) — todos os tecnicos` : `${items.length} visita(s) — mes atual`} />
         {busy ? <ActivityIndicator color={C.green} /> : items.length === 0
           ? <Empty msg={'Nenhuma visita registrada.\nUse "Nova visita" na Home.'} />
           : items.map(v => (
               <Card key={v.id} style={s.listCard}>
                 <Text style={s.listTitle}>{v.propertyName || '(sem propriedade)'}</Text>
                 <Text style={s.muted}>{fmtDate(v.visitedAt)}</Text>
+                {session?.role === 'gestor' && v.technicianName ? <Text style={s.muted}>Tecnico: {v.technicianName}</Text> : null}
                 <Text style={s.muted}>Servico: {v.serviceType}</Text>
                 <Text style={s.muted}>Tipo cliente: {v.clientType}</Text>
                 <Text style={s.muted}>Rebanho: {v.herdSize} · Lactacao: {v.lactating} · Leite: {v.milkAvg} L/dia</Text>
@@ -3053,7 +3068,9 @@ function DashboardScreen({ onBack, go }) {
 
   useEffect(() => {
     load(KEY.VISITS).then(localV => {
-      setRawVisits([...HISTORICO_VISITS, ...localV]);
+      // Prioriza versoes locais; exclui registros historicos que ja tem versao local
+      const localIds = new Set(localV.map(v => v.id));
+      setRawVisits([...localV, ...HISTORICO_VISITS.filter(v => !localIds.has(v.id))]);
       setBusy(false);
     });
   }, []);
