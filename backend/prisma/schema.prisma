@@ -116,3 +116,16 @@ model Client {
 
   @@map("clients")
 }
+model MonthlySales {
+  id                String   @id @default(cuid())
+  month             String   @unique
+  dosesNovos        Int
+  dosesAtivos       Int
+  faturamentoNovos  Float
+  faturamentoAtivos Float
+  updatedBy         String?
+  updatedAt         DateTime @updatedAt
+  createdAt         DateTime @default(now())
+
+  @@map("monthly_sales")
+}
