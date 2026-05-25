@@ -135,26 +135,39 @@ const CONSULTORES = {
 
 // Tecnicos pre-cadastrados (aparecem ja na tela de Gerenciar Tecnicos)
 const INITIAL_TECHS = [
-  { id: 'tech-001', name: 'Cesar Oliveira',     area: '011', email: 'cesar@crv4all.com.br',    phone: '', login: 'cesar.oliveira',     createdAt: '2026-01-01T00:00:00.000Z' },
-  { id: 'tech-002', name: 'Erica Fonseca',      area: '012', email: 'erica@crv4all.com.br',    phone: '', login: 'erica.fonseca',      createdAt: '2026-01-01T00:00:00.000Z' },
-  { id: 'tech-003', name: 'Henrique Froehlich', area: '013', email: 'henrique@crv4all.com.br', phone: '', login: 'henrique.froehlich', createdAt: '2026-01-01T00:00:00.000Z' },
-  { id: 'tech-004', name: 'Leandro Teixeira',   area: '015', email: 'leandro@crv4all.com.br',  phone: '', login: 'leandro.teixeira',   createdAt: '2026-01-01T00:00:00.000Z' },
-  { id: 'tech-005', name: 'Felipe Prestes',     area: '015', email: 'prestes@crv4all.com.br',  phone: '', login: 'felipe.prestes',     createdAt: '2026-01-01T00:00:00.000Z' },
+  { id: 'tech-001', name: 'Cesar Oliveira',     area: '011', areas: ['011','012','019','020'], email: 'cesar@crv4all.com.br',    phone: '', login: 'cesar.oliveira',     createdAt: '2026-01-01T00:00:00.000Z' },
+  { id: 'tech-002', name: 'Erica Fonseca',      area: '011', areas: ['011','012'],             email: 'erica@crv4all.com.br',    phone: '', login: 'erica.fonseca',      createdAt: '2026-01-01T00:00:00.000Z' },
+  { id: 'tech-003', name: 'Henrique Froehlich', area: '018', areas: ['018'],                   email: 'henrique@crv4all.com.br', phone: '', login: 'henrique.froehlich', createdAt: '2026-01-01T00:00:00.000Z' },
+  { id: 'tech-004', name: 'Leandro Teixeira',   area: '015', areas: ['015'],                   email: 'leandro@crv4all.com.br',  phone: '', login: 'leandro.teixeira',   createdAt: '2026-01-01T00:00:00.000Z' },
+  { id: 'tech-005', name: 'Felipe Prestes',     area: '011', areas: null,                      email: 'prestes@crv4all.com.br',  phone: '', login: 'felipe.prestes',     createdAt: '2026-01-01T00:00:00.000Z' },
 ];
 
+// areas: array de areas permitidas ao tecnico; null = todas as areas (gestor / Felipe Prestes)
 const USERS = [
-  { email: 'cesar@crv4all.com.br',    password: '123456', name: 'Cesar Oliveira',     role: 'tecnico', area: '011' },
-  { email: 'erica@crv4all.com.br',    password: '123456', name: 'Erica Fonseca',      role: 'tecnico', area: '012' },
-  { email: 'henrique@crv4all.com.br', password: '123456', name: 'Henrique Froehlich', role: 'tecnico', area: '013' },
-  { email: 'leandro@crv4all.com.br',  password: '123456', name: 'Leandro Teixeira',   role: 'tecnico', area: '015' },
-  { email: 'prestes@crv4all.com.br',  password: '123456', name: 'Felipe Prestes',     role: 'tecnico', area: '015' },
-  { email: 'gestor@crv4all.com.br',   password: '123456', name: 'Felipe Prestes',     role: 'gestor',  area: null  },
+  { email: 'cesar@crv4all.com.br',    password: '123456', name: 'Cesar Oliveira',     role: 'tecnico', area: '011', areas: ['011','012','019','020'] },
+  { email: 'erica@crv4all.com.br',    password: '123456', name: 'Erica Fonseca',      role: 'tecnico', area: '011', areas: ['011','012']             },
+  { email: 'henrique@crv4all.com.br', password: '123456', name: 'Henrique Froehlich', role: 'tecnico', area: '018', areas: ['018']                   },
+  { email: 'leandro@crv4all.com.br',  password: '123456', name: 'Leandro Teixeira',   role: 'tecnico', area: '015', areas: ['015']                   },
+  { email: 'prestes@crv4all.com.br',  password: '123456', name: 'Felipe Prestes',     role: 'tecnico', area: '011', areas: null                      },
+  { email: 'gestor@crv4all.com.br',   password: '123456', name: 'Felipe Prestes',     role: 'gestor',  area: null,  areas: null                      },
 ];
 
+// ─────────────────────────────────────────
+// CONFIGURACAO DA API
+// ─────────────────────────────────────────
+
+// URL base da API backend. Deixe vazio ('') para modo totalmente offline.
+// Exemplo: 'https://minha-api.onrender.com' ou 'http://192.168.1.100:3000'
+const API_BASE_URL = 'https://app-visitas-leiteiras-api.onrender.com';
+
+// Chaves AsyncStorage compartilhadas por todos os usuarios no mesmo dispositivo.
+// KEY.VISITS (@vl/visits) armazena visitas de todos os tecnicos sem separacao por usuario,
+// permitindo que o gestor veja todas as visitas locais ao logar no mesmo dispositivo.
 const KEY = {
   SESSION: '@vl/session', CLIENTS: '@vl/clients',
   SCHEDULES: '@vl/schedules', VISITS: '@vl/visits', TECHS: '@vl/techs',
-  INITIALIZED: '@vl/initialized_v10', PASSWORDS: '@vl/passwords',
+  INITIALIZED: '@vl/initialized_v11', PASSWORDS: '@vl/passwords',
+  TOKEN: '@vl/api_token', LAST_SYNC: '@vl/last_sync',
 };
 
 const CHART_COLORS = [
@@ -1539,6 +1552,169 @@ function openGoogleMaps(lat, lng) {
 }
 
 // ─────────────────────────────────────────
+// CAMADA DE API
+// ─────────────────────────────────────────
+
+// Retorna true se a API está configurada e acessível (best-effort)
+function hasApi() { return Boolean(API_BASE_URL && API_BASE_URL.trim()); }
+
+// Requisição autenticada genérica. Retorna { ok, data } ou { ok: false, error }
+async function apiCall(path, options = {}) {
+  if (!hasApi()) return { ok: false, error: 'API nao configurada' };
+  try {
+    const token = await AsyncStorage.getItem(KEY.TOKEN);
+    const headers = { 'Content-Type': 'application/json', ...(options.headers || {}) };
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+    const res = await fetch(`${API_BASE_URL}${path}`, {
+      ...options,
+      headers,
+    });
+    const text = await res.text();
+    let data;
+    try { data = JSON.parse(text); } catch { data = text; }
+    if (!res.ok) return { ok: false, error: (data && data.error) || `HTTP ${res.status}` };
+    return { ok: true, data };
+  } catch (err) {
+    return { ok: false, error: err.message || 'Sem conexao' };
+  }
+}
+
+// Login via API. Persiste token e retorna dados do usuario, ou null em caso de falha.
+async function apiLogin(email, password) {
+  if (!hasApi()) return null;
+  const result = await apiCall('/auth/login', {
+    method: 'POST',
+    body: JSON.stringify({ email, password }),
+  });
+  if (result.ok && result.data && result.data.token) {
+    await AsyncStorage.setItem(KEY.TOKEN, result.data.token);
+    return result.data.user;
+  }
+  return null;
+}
+
+// Remove o token da API (logout)
+async function apiLogout() {
+  try { await AsyncStorage.removeItem(KEY.TOKEN); } catch {}
+}
+
+// Sincroniza visitas: envia locais pendentes e recebe atualizacoes do servidor.
+// Retorna { ok, synced, received } ou { ok: false, error }
+async function syncVisits() {
+  if (!hasApi()) return { ok: false, error: 'API nao configurada' };
+  const visits = await load(KEY.VISITS);
+  const lastSyncRaw = await AsyncStorage.getItem(KEY.LAST_SYNC + '_visits');
+  const lastSyncAt = lastSyncRaw || null;
+
+  const result = await apiCall('/visits/sync', {
+    method: 'POST',
+    body: JSON.stringify({ visits, lastSyncAt }),
+  });
+  if (!result.ok) return { ok: false, error: result.error };
+
+  const { serverVisits = [], syncedAt } = result.data;
+  // Mescla: server wins para items com localId coincidente
+  const localMap = {};
+  visits.forEach(v => { if (v.localId) localMap[v.localId] = v; });
+  const merged = [...visits];
+  for (const sv of serverVisits) {
+    if (sv.localId && localMap[sv.localId]) {
+      const idx = merged.findIndex(v => v.localId === sv.localId);
+      if (idx !== -1) merged[idx] = { ...merged[idx], ...sv };
+    } else if (sv.localId && !localMap[sv.localId]) {
+      merged.push(sv);
+    }
+  }
+  await save(KEY.VISITS, merged);
+  if (syncedAt) await AsyncStorage.setItem(KEY.LAST_SYNC + '_visits', syncedAt);
+  return { ok: true, synced: result.data.created + result.data.updated, received: serverVisits.length };
+}
+
+// Sincroniza agendamentos
+async function syncSchedules() {
+  if (!hasApi()) return { ok: false, error: 'API nao configurada' };
+  const schedules = await load(KEY.SCHEDULES);
+  const lastSyncRaw = await AsyncStorage.getItem(KEY.LAST_SYNC + '_schedules');
+  const lastSyncAt = lastSyncRaw || null;
+
+  const result = await apiCall('/schedules/sync', {
+    method: 'POST',
+    body: JSON.stringify({ schedules, lastSyncAt }),
+  });
+  if (!result.ok) return { ok: false, error: result.error };
+
+  const { serverSchedules = [], syncedAt } = result.data;
+  const localMap = {};
+  schedules.forEach(s => { if (s.localId) localMap[s.localId] = s; });
+  const merged = [...schedules];
+  for (const ss of serverSchedules) {
+    if (ss.localId && localMap[ss.localId]) {
+      const idx = merged.findIndex(s => s.localId === ss.localId);
+      if (idx !== -1) merged[idx] = { ...merged[idx], ...ss };
+    } else if (ss.localId && !localMap[ss.localId]) {
+      merged.push(ss);
+    }
+  }
+  await save(KEY.SCHEDULES, merged);
+  if (syncedAt) await AsyncStorage.setItem(KEY.LAST_SYNC + '_schedules', syncedAt);
+  return { ok: true, synced: result.data.created + result.data.updated, received: serverSchedules.length };
+}
+
+// Sincroniza clientes
+async function syncClients() {
+  if (!hasApi()) return { ok: false, error: 'API nao configurada' };
+  const clients = await load(KEY.CLIENTS);
+  const lastSyncRaw = await AsyncStorage.getItem(KEY.LAST_SYNC + '_clients');
+  const lastSyncAt = lastSyncRaw || null;
+
+  const result = await apiCall('/clients/sync', {
+    method: 'POST',
+    body: JSON.stringify({ clients, lastSyncAt }),
+  });
+  if (!result.ok) return { ok: false, error: result.error };
+
+  const { serverClients = [], syncedAt } = result.data;
+  const localMap = {};
+  clients.forEach(c => { if (c.localId) localMap[c.localId] = c; });
+  const merged = [...clients];
+  for (const sc of serverClients) {
+    if (sc.localId && localMap[sc.localId]) {
+      const idx = merged.findIndex(c => c.localId === sc.localId);
+      if (idx !== -1) merged[idx] = { ...merged[idx], ...sc };
+    } else if (sc.localId && !localMap[sc.localId]) {
+      merged.push(sc);
+    }
+  }
+  await save(KEY.CLIENTS, merged);
+  if (syncedAt) await AsyncStorage.setItem(KEY.LAST_SYNC + '_clients', syncedAt);
+  return { ok: true, synced: result.data.created + result.data.updated, received: serverClients.length };
+}
+
+// Carrega tecnicos do servidor e mescla com os locais
+async function syncTechs() {
+  if (!hasApi()) return { ok: false, error: 'API nao configurada' };
+  const result = await apiCall('/techs');
+  if (!result.ok) return { ok: false, error: result.error };
+  const serverTechs = Array.isArray(result.data) ? result.data : [];
+  if (serverTechs.length > 0) {
+    const local = await load(KEY.TECHS);
+    const serverIds = new Set(serverTechs.map(t => t.id));
+    const onlyLocal = local.filter(t => !serverIds.has(t.id));
+    await save(KEY.TECHS, [...serverTechs, ...onlyLocal]);
+  }
+  return { ok: true, received: serverTechs.length };
+}
+
+// Sincronizacao completa (visitas + agendas + clientes + tecnicos)
+async function syncAll() {
+  const results = await Promise.allSettled([syncVisits(), syncSchedules(), syncClients(), syncTechs()]);
+  const errors = results
+    .filter(r => r.status === 'rejected' || (r.status === 'fulfilled' && !r.value.ok))
+    .map(r => r.reason?.message || (r.value && r.value.error) || 'Erro desconhecido');
+  return { ok: errors.length === 0, errors };
+}
+
+// ─────────────────────────────────────────
 // COMPONENTES COMPARTILHADOS
 // ─────────────────────────────────────────
 
@@ -1691,10 +1867,36 @@ function LoginScreen({ onLogin }) {
 
   async function handleLogin() {
     setError(''); setBusy(true);
-    await new Promise(r => setTimeout(r, 400));
-    const baseUser = USERS.find(u => u.email === email.trim().toLowerCase());
+
+    const emailLower = email.trim().toLowerCase();
+
+    // 1) Tenta login via API (quando configurada)
+    if (hasApi()) {
+      const apiUser = await apiLogin(emailLower, password);
+      if (apiUser) {
+        // Constroi objeto de sessao compativel com o formato local
+        const sessionUser = {
+          id: apiUser.id,
+          email: apiUser.email,
+          name: apiUser.name,
+          role: apiUser.role,
+          area: apiUser.area || null,
+          areas: null, // servidor nao tem campo areas; ajuste se necessario
+        };
+        setBusy(false);
+        await AsyncStorage.setItem(KEY.SESSION, JSON.stringify(sessionUser));
+        onLogin(sessionUser);
+        // Sincroniza dados em background apos login
+        syncAll().catch(() => {});
+        return;
+      }
+      // Falha na API: cai para fallback local sem mostrar erro de rede
+    }
+
+    // 2) Fallback offline: valida contra USERS hardcoded + senhas customizadas
+    await new Promise(r => setTimeout(r, 200));
+    const baseUser = USERS.find(u => u.email === emailLower);
     if (!baseUser) { setBusy(false); setError('E-mail ou senha incorretos.'); return; }
-    // Check for custom password stored in AsyncStorage
     const pwdRaw = await AsyncStorage.getItem(KEY.PASSWORDS);
     const pwdMap = pwdRaw ? JSON.parse(pwdRaw) : {};
     const expectedPwd = pwdMap[baseUser.email] ?? baseUser.password;
@@ -1752,20 +1954,36 @@ function LoginScreen({ onLogin }) {
 
 function HomeScreen({ session, go, onLogout }) {
   const [stats, setStats] = useState({ visits: 0, schedules: 0, clients: 0, techs: 0 });
+  const [syncStatus, setSyncStatus] = useState(''); // '', 'syncing', 'ok', 'error'
   const isGestor = session?.role === 'gestor';
 
-  useEffect(() => {
-    (async () => {
-      const [v, ag, cl, tk] = await Promise.all([
-        load(KEY.VISITS), load(KEY.SCHEDULES), load(KEY.CLIENTS), load(KEY.TECHS),
-      ]);
-      const name = session?.name;
-      const filtV  = isGestor ? v  : v.filter(x => normalizeName(x.technicianName) === normalizeName(name));
-      const filtAg = isGestor ? ag : ag.filter(x => normalizeName(x.technicianName) === normalizeName(name));
-      const filtCl = isGestor ? cl : cl.filter(x => normalizeName(x.technicianName) === normalizeName(name));
-      setStats({ visits: filtV.length, schedules: filtAg.length, clients: filtCl.length, techs: tk.length });
-    })();
-  }, []);
+  const reloadStats = useCallback(async () => {
+    const [v, ag, cl, tk] = await Promise.all([
+      load(KEY.VISITS), load(KEY.SCHEDULES), load(KEY.CLIENTS), load(KEY.TECHS),
+    ]);
+    const name = session?.name;
+    const filtV  = isGestor ? v  : v.filter(x => normalizeName(x.technicianName) === normalizeName(name));
+    const filtAg = isGestor ? ag : ag.filter(x => normalizeName(x.technicianName) === normalizeName(name));
+    const filtCl = isGestor ? cl : cl.filter(x => normalizeName(x.technicianName) === normalizeName(name));
+    setStats({ visits: filtV.length, schedules: filtAg.length, clients: filtCl.length, techs: tk.length });
+  }, [session, isGestor]);
+
+  useEffect(() => { reloadStats(); }, [reloadStats]);
+
+  async function handleSync() {
+    if (!hasApi()) {
+      Alert.alert('API nao configurada', 'Defina API_BASE_URL no codigo para habilitar a sincronizacao.');
+      return;
+    }
+    setSyncStatus('syncing');
+    const result = await syncAll();
+    setSyncStatus(result.ok ? 'ok' : 'error');
+    await reloadStats();
+    if (!result.ok && result.errors.length > 0) {
+      Alert.alert('Sincronizacao parcial', result.errors.join('\n'));
+    }
+    setTimeout(() => setSyncStatus(''), 3000);
+  }
 
   return (
     <View style={[s.safeArea, { paddingTop: STATUS_BAR_HEIGHT }]}>
@@ -1779,7 +1997,7 @@ function HomeScreen({ session, go, onLogout }) {
 
         <View style={s.homeGreetBox}>
           <Text style={s.homeGreet}>Ola, {session.name}</Text>
-          <Text style={s.homeMeta}>{isGestor ? 'Perfil: Gestor' : `Area ${session.area || '--'} • Offline`}</Text>
+          <Text style={s.homeMeta}>{isGestor ? 'Perfil: Gestor' : `Area${session.areas && session.areas.length > 1 ? 's ' + session.areas.join(', ') : ' ' + (session.area || '--')} • ${hasApi() ? 'Online' : 'Offline'}`}</Text>
         </View>
 
         <View style={s.statsRow}>
@@ -1879,8 +2097,25 @@ function HomeScreen({ session, go, onLogout }) {
         )}
 
         <Card style={s.infoCard}>
-          <Text style={s.sectionTitle}>Modo demonstracao</Text>
-          <Text style={s.muted}>Dados salvos localmente no celular. Funciona sem internet.</Text>
+          <Text style={s.sectionTitle}>{hasApi() ? 'Sincronizacao com servidor' : 'Modo offline'}</Text>
+          <Text style={s.muted}>
+            {hasApi()
+              ? 'Dados salvos localmente e sincronizados com o servidor quando ha conexao.'
+              : 'Dados salvos localmente no celular. Funciona sem internet.'}
+          </Text>
+          {hasApi() && (
+            <Pressable onPress={handleSync} disabled={syncStatus === 'syncing'}
+              style={[s.btn, { marginTop: 10 }, syncStatus === 'syncing' && s.btnDisabled,
+                syncStatus === 'ok' && { backgroundColor: '#2e7d32' },
+                syncStatus === 'error' && { backgroundColor: C.error }]}>
+              <Text style={s.btnText}>
+                {syncStatus === 'syncing' ? 'Sincronizando...'
+                  : syncStatus === 'ok' ? 'Sincronizado!'
+                  : syncStatus === 'error' ? 'Erro na sync — tentar novamente'
+                  : 'Sincronizar agora'}
+              </Text>
+            </Pressable>
+          )}
         </Card>
       </ScrollView>
     </View>
@@ -2005,12 +2240,16 @@ function NewScheduleScreen({ session, onBack, onSaved }) {
     const iso = parts.length === 3
       ? `${parts[2]}-${parts[1].padStart(2,'0')}-${parts[0].padStart(2,'0')}T${time}:00`
       : new Date().toISOString();
-    await save(KEY.SCHEDULES, [
-      { id: genId(), clientName: clientName.trim(), propertyName: prop.trim(),
-        scheduledAt: iso, status: 'agendada', notes: notes.trim(), createdAt: new Date().toISOString(),
-        technicianName: session?.name || '', area: session?.area || '' },
-      ...existing,
-    ]);
+    const localId = genId();
+    const newItem = {
+      id: localId, localId,
+      clientName: clientName.trim(), propertyName: prop.trim(),
+      scheduledAt: iso, status: 'agendada', notes: notes.trim(), createdAt: new Date().toISOString(),
+      technicianName: session?.name || '', area: session?.area || '',
+    };
+    await save(KEY.SCHEDULES, [newItem, ...existing]);
+    // Tenta enviar para a API em background (sem bloquear o usuario)
+    syncSchedules().catch(() => {});
     setBusy(false);
     Alert.alert('Agenda salva!', '', [{ text: 'OK', onPress: onSaved }]);
   }
@@ -2083,11 +2322,13 @@ function ClientsScreen({ go, onBack }) {
 // ─────────────────────────────────────────
 
 function NewClientScreen({ session, onBack, onSaved }) {
+  // Areas disponiveis para este tecnico (null = todas as areas)
+  const allowedAreas = session?.areas === null ? AREAS : (session?.areas || (session?.area ? [session.area] : AREAS));
   const [name,         setName]         = useState('');
   const [clientType,   setClientType]   = useState('B');
   const [propertyName, setPropertyName] = useState('');
-  const [area,         setArea]         = useState(session?.area || '011');
-  const [consultant,   setConsultant]   = useState(CONSULTORES[session?.area || '011']?.[0] || '');
+  const [area,         setArea]         = useState(allowedAreas[0] || '011');
+  const [consultant,   setConsultant]   = useState(CONSULTORES[allowedAreas[0] || '011']?.[0] || '');
   const [city,         setCity]         = useState('');
   const [stateUF,      setStateUF]      = useState('');
   const [busy,         setBusy]         = useState(false);
@@ -2128,12 +2369,15 @@ function NewClientScreen({ session, onBack, onSaved }) {
     if (!propertyName.trim()) { Alert.alert('Informe o nome da propriedade.'); return; }
     setBusy(true);
     const existing = await load(KEY.CLIENTS);
+    const localId = genId();
     await save(KEY.CLIENTS, [
-      { id: genId(), name: name.trim(), clientType, propertyName: propertyName.trim(),
+      { id: localId, localId, name: name.trim(), clientType, propertyName: propertyName.trim(),
         area, consultant, city: city.trim(), state: stateUF.trim(), coords: coords || null,
         createdAt: new Date().toISOString() },
       ...existing,
     ]);
+    // Tenta enviar para a API em background
+    syncClients().catch(() => {});
     setBusy(false);
     Alert.alert('Cliente salvo!', '', [{ text: 'OK', onPress: onSaved }]);
   }
@@ -2148,7 +2392,7 @@ function NewClientScreen({ session, onBack, onSaved }) {
             <Input label="Nome do cliente / fazenda" value={name} onChangeText={setName} placeholder="Ex: Joao da Silva" />
             <Chips label="Tipo de cliente" options={CLIENT_TYPES} value={clientType} onChange={setClientType} />
             <Input label="Nome da propriedade" value={propertyName} onChangeText={setPropertyName} placeholder="Ex: Fazenda Boa Esperanca" />
-            <Chips label="Area do consultor" options={AREAS} value={area} onChange={handleAreaChange} />
+            <Chips label="Area do consultor" options={allowedAreas} value={area} onChange={handleAreaChange} />
             <Input label="Consultor responsavel" value={consultant} onChangeText={setConsultant}
               placeholder="Nome do consultor"
               hint={`Sugestoes area ${area}: ${(CONSULTORES[area] || []).join(', ')}`} />
@@ -2304,6 +2548,10 @@ const VISIT_INIT = {
 };
 
 function NewVisitScreen({ session, scheduleData, onBack, onSaved }) {
+  // Areas disponiveis para este tecnico (null = todas as areas)
+  const allowedAreas = session?.areas === null ? AREAS : (session?.areas || (session?.area ? [session.area] : AREAS));
+  const [selectedArea, setSelectedArea] = useState(allowedAreas[0] || '011');
+
   const [form,    setForm]    = useState(() => {
     if (scheduleData) {
       return { ...VISIT_INIT, propertyName: scheduleData.propertyName || '' };
@@ -2354,8 +2602,10 @@ function NewVisitScreen({ session, scheduleData, onBack, onSaved }) {
     if (errs.length) { setErrors(errs); return; }
     setErrors([]); setBusy(true);
     const existing = await load(KEY.VISITS);
+    const localId = genId();
     await save(KEY.VISITS, [
-      { id: genId(), propertyName: form.propertyName.trim(),
+      { id: localId, localId,
+        propertyName: form.propertyName.trim(),
         herdSize: Number(form.herdSize), clientType: form.clientType, serviceType: form.serviceType,
         animalCount: needsAnimalCount ? Number(form.animalCount) : null,
         milkAvg: Number(form.milkAvg), lactating: Number(form.lactating),
@@ -2365,7 +2615,7 @@ function NewVisitScreen({ session, scheduleData, onBack, onSaved }) {
         notes: form.notes.trim(),
         consultant: form.consultant || '',
         visitedAt: new Date().toISOString(),
-        technicianName: session?.name || '', area: session?.area || '' },
+        technicianName: session?.name || '', area: selectedArea },
       ...existing,
     ]);
     // Se veio de um agendamento, remover o agendamento da lista
@@ -2373,6 +2623,8 @@ function NewVisitScreen({ session, scheduleData, onBack, onSaved }) {
       const schedules = await load(KEY.SCHEDULES);
       await save(KEY.SCHEDULES, schedules.filter(sc => sc.id !== scheduleData.id));
     }
+    // Tenta enviar para a API em background
+    syncVisits().catch(() => {});
     setBusy(false);
     Alert.alert('Visita salva!', 'Registro salvo localmente.', [{ text: 'OK', onPress: onSaved }]);
   }
@@ -2399,11 +2651,14 @@ function NewVisitScreen({ session, scheduleData, onBack, onSaved }) {
               onChangeText={v => set('herdSize', v)} keyboardType="number-pad" placeholder="Ex: 120" />
             <Chips label="Tipo de cliente" options={CLIENT_TYPES} value={form.clientType} onChange={v => set('clientType', v)} />
             <Chips label="Servico realizado" options={SERVICE_TYPES} value={form.serviceType} onChange={v => set('serviceType', v)} />
-            {session?.area && (CONSULTORES[session.area] || []).length > 0 && (
+            {allowedAreas.length > 1 && (
+              <Chips label="Area" options={allowedAreas} value={selectedArea} onChange={v => { setSelectedArea(v); set('consultant', ''); }} />
+            )}
+            {selectedArea && (CONSULTORES[selectedArea] || []).length > 0 && (
               <View style={s.fieldWrap}>
                 <Text style={s.label}>Consultor responsavel</Text>
                 <ScrollView horizontal showsHorizontalScrollIndicator={false} style={s.chipRow}>
-                  {(CONSULTORES[session.area] || []).map(opt => (
+                  {(CONSULTORES[selectedArea] || []).map(opt => (
                     <Pressable key={opt} onPress={() => set('consultant', opt)}
                       style={[s.chip, form.consultant === opt && s.chipOn]}>
                       <Text style={[s.chipText, form.consultant === opt && s.chipTextOn]}>{opt}</Text>
@@ -3386,6 +3641,7 @@ export default function App() {
   function saved(returnTo = 'home') { setHistory([]); setScreen(returnTo); }
   async function logout() {
     await AsyncStorage.removeItem(KEY.SESSION);
+    await apiLogout();
     setSession(null); setScreen('home'); setHistory([]);
   }
 
