@@ -5,113 +5,82 @@ const { authMiddleware, gestorOnly } = require('../middleware/auth');
 const router = express.Router();
 const prisma = new PrismaClient();
 
-// GET /clients
-router.get('/', authMiddleware, async (req, res) => {
+// POST /sales - cria ou atualiza dados de um mes (gestor only)
+router.post('/', authMiddleware, gestorOnly, async (req, res) => {
   try {
-    const { page = 1, limit = 100, area, search } = req.query;
+    const { month, dosesNovos, dosesAtivos, faturamentoNovos, faturamentoAtivos } = req.body;
 
-    const where = {};
-    if (area) where.area = area;
-    if (search) {
-      where.OR = [
-        { name: { contains: search, mode: 'insensitive' } },
-        { propertyName: { contains: search, mode: 'insensitive' } },
-        { city: { contains: search, mode: 'insensitive' } },
-      ];
+    if (!month || !/^\d{4}-\d{2}$/.test(month)) {
+      return res.status(400).json({ error: 'Campo "month" obrigatorio no formato YYYY-MM' });
+    }
+    if (dosesNovos === undefined || dosesAtivos === undefined) {
+      return res.status(400).json({ error: 'Campos dosesNovos e dosesAtivos sao obrigatorios' });
+    }
+    if (faturamentoNovos === undefined || faturamentoAtivos === undefined) {
+      return res.status(400).json({ error: 'Campos faturamentoNovos e faturamentoAtivos sao obrigatorios' });
     }
 
-    const [total, clients] = await Promise.all([
-      prisma.client.count({ where }),
-      prisma.client.findMany({
-        where,
-        orderBy: { name: 'asc' },
-        skip: (Number(page) - 1) * Number(limit),
-        take: Number(limit),
-      }),
-    ]);
-
-    res.json({ total, page: Number(page), limit: Number(limit), data: clients });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Erro ao listar clientes' });
-  }
-});
-
-// POST /clients
-router.post('/', authMiddleware, async (req, res) => {
-  try {
-    const data = req.body;
-    const client = await prisma.client.create({ data });
-    res.status(201).json(client);
-  } catch (err) {
-    if (err.code === 'P2002') {
-      return res.status(409).json({ error: 'Cliente com esse localId ja existe' });
-    }
-    console.error(err);
-    res.status(500).json({ error: 'Erro ao criar cliente' });
-  }
-});
-
-// PUT /clients/:id
-router.put('/:id', authMiddleware, async (req, res) => {
-  try {
-    const { id } = req.params;
-    const data = req.body;
-    delete data.id;
-
-    const existing = await prisma.client.findUnique({ where: { id } });
-    if (!existing) return res.status(404).json({ error: 'Cliente nao encontrado' });
-
-    const client = await prisma.client.update({ where: { id }, data });
-    res.json(client);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Erro ao atualizar cliente' });
-  }
-});
-
-// POST /clients/sync
-router.post('/sync', authMiddleware, async (req, res) => {
-  try {
-    const { clients: localClients = [], lastSyncAt } = req.body;
-
-    const results = { created: 0, updated: 0, errors: [] };
-
-    for (const client of localClients) {
-      try {
-        const { localId, id: _id, ...clientData } = client;
-
-        if (localId) {
-          const existing = await prisma.client.findUnique({ where: { localId } });
-          if (existing) {
-            await prisma.client.update({ where: { localId }, data: clientData });
-            results.updated++;
-          } else {
-            await prisma.client.create({ data: { ...clientData, localId } });
-            results.created++;
-          }
-        } else {
-          await prisma.client.create({ data: clientData });
-          results.created++;
-        }
-      } catch (e) {
-        results.errors.push({ localId: client.localId, error: e.message });
-      }
-    }
-
-    const where = {};
-    if (lastSyncAt) where.updatedAt = { gte: new Date(lastSyncAt) };
-
-    const serverClients = await prisma.client.findMany({
-      where,
-      orderBy: { name: 'asc' },
-      take: 1000,
+    const record = await prisma.monthlySales.upsert({
+      where: { month },
+      update: {
+        dosesNovos: parseInt(dosesNovos),
+        dosesAtivos: parseInt(dosesAtivos),
+        faturamentoNovos: parseFloat(faturamentoNovos),
+        faturamentoAtivos: parseFloat(faturamentoAtivos),
+        updatedBy: req.user.name,
+      },
+      create: {
+        month,
+        dosesNovos: parseInt(dosesNovos),
+        dosesAtivos: parseInt(dosesAtivos),
+        faturamentoNovos: parseFloat(faturamentoNovos),
+        faturamentoAtivos: parseFloat(faturamentoAtivos),
+        updatedBy: req.user.name,
+      },
     });
 
-    res.json({ ...results, serverClients, syncedAt: new Date().toISOString() });
+    res.json(record);
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: 'Erro na sincronizacao de clientes' });
+    res.status(500).json({ error: 'Erro ao salvar dados de vendas' });
+  }
+});
+
+// GET /sales/:month - retorna dados de um mes especifico
+router.get('/:month', authMiddleware, async (req, res) => {
+  try {
+    const { month } = req.params;
+
+    if (!/^\d{4}-\d{2}$/.test(month)) {
+      return res.status(400).json({ error: 'Formato de mes invalido. Use YYYY-MM' });
+    }
+
+    const record = await prisma.monthlySales.findUnique({
+      where: { month },
+    });
+
+    if (!record) {
+      return res.status(404).json({ error: 'Dados nao encontrados para este mes' });
+    }
+
+    res.json(record);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Erro ao buscar dados de vendas' });
+  }
+});
+
+// GET /sales - lista todos os meses ordenados por month desc
+router.get('/', authMiddleware, async (req, res) => {
+  try {
+    const records = await prisma.monthlySales.findMany({
+      orderBy: { month: 'desc' },
+    });
+
+    res.json(records);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Erro ao listar dados de vendas' });
   }
 });
 
