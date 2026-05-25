@@ -168,6 +168,7 @@ const KEY = {
   SCHEDULES: '@vl/schedules', VISITS: '@vl/visits', TECHS: '@vl/techs',
   INITIALIZED: '@vl/initialized_v11', PASSWORDS: '@vl/passwords',
   TOKEN: '@vl/api_token', LAST_SYNC: '@vl/last_sync',
+  SALES_CURRENT: '@vl/sales_current',
 };
 
 const CHART_COLORS = [
@@ -1598,6 +1599,21 @@ async function apiLogout() {
   try { await AsyncStorage.removeItem(KEY.TOKEN); } catch {}
 }
 
+// Envia lancamento de vendas (gestor)
+async function apiPostSales(data) {
+  return apiCall('/sales', { method: 'POST', body: JSON.stringify(data) });
+}
+
+// Busca vendas de um mes especifico, ex: '2026-05'
+async function apiGetSales(month) {
+  return apiCall(`/sales/${month}`);
+}
+
+// Busca todos os meses cadastrados
+async function apiGetAllSales() {
+  return apiCall('/sales');
+}
+
 // Sincroniza visitas: envia locais pendentes e recebe atualizacoes do servidor.
 // Retorna { ok, synced, received } ou { ok: false, error }
 async function syncVisits() {
@@ -1855,6 +1871,82 @@ function RateIndicator({ rate, closed, total }) {
   );
 }
 
+// Card de vendas do mes atual para tecnicos
+function SalesCardTecnico() {
+  const [data,    setData]    = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [fromCache, setFromCache] = useState(false);
+
+  useEffect(() => {
+    (async () => {
+      setLoading(true);
+      const now = new Date();
+      const yyyy = now.getFullYear();
+      const mm   = String(now.getMonth() + 1).padStart(2, '0');
+      const mesKey = `${yyyy}-${mm}`;
+
+      const res = await apiGetSales(mesKey);
+      if (res.ok && res.data) {
+        setData(res.data);
+        setFromCache(false);
+        try { await AsyncStorage.setItem(KEY.SALES_CURRENT, JSON.stringify(res.data)); } catch {}
+      } else {
+        // fallback cache
+        try {
+          const raw = await AsyncStorage.getItem(KEY.SALES_CURRENT);
+          if (raw) { setData(JSON.parse(raw)); setFromCache(true); }
+        } catch {}
+      }
+      setLoading(false);
+    })();
+  }, []);
+
+  function _fmtBRLCard(v) {
+    const n = Number(v);
+    if (isNaN(n) || !v) return 'R$ 0';
+    return n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 });
+  }
+
+  if (loading) {
+    return (
+      <Card style={{ backgroundColor: C.greenLight }}>
+        <ActivityIndicator color={C.green} size="small" />
+        <Text style={[s.muted, { marginTop: 6, textAlign: 'center' }]}>Carregando vendas do mes...</Text>
+      </Card>
+    );
+  }
+  if (!data) return null;
+
+  const now = new Date();
+  const mesLabel = now.toLocaleString('pt-BR', { month: 'long', year: 'numeric' });
+  const totalDoses = (data.dosesNovos || 0) + (data.dosesAtivos || 0);
+  const totalFat   = (data.fatNovos   || 0) + (data.fatAtivos   || 0);
+
+  return (
+    <Card style={{ backgroundColor: '#eef4ff', borderLeftWidth: 4, borderLeftColor: C.green }}>
+      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+        <Text style={s.sectionTitle}>Vendas — {mesLabel}</Text>
+        {fromCache && <Text style={{ fontSize: 10, color: C.muted }}>(cache)</Text>}
+      </View>
+      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+        {[
+          { label: 'Doses Novos',   val: String(data.dosesNovos  || 0), color: C.green      },
+          { label: 'Doses Ativos',  val: String(data.dosesAtivos || 0), color: C.muted      },
+          { label: 'Fat. Novos',    val: _fmtBRLCard(data.fatNovos),    color: '#2196F3'    },
+          { label: 'Fat. Ativos',   val: _fmtBRLCard(data.fatAtivos),   color: '#9C27B0'    },
+          { label: 'Total Doses',   val: String(totalDoses),             color: C.greenDark  },
+          { label: 'Fat. Total',    val: _fmtBRLCard(totalFat),          color: C.gold       },
+        ].map(k => (
+          <View key={k.label} style={{ width: '47%', backgroundColor: C.white, borderRadius: 10, padding: 10, borderTopWidth: 2, borderTopColor: k.color, marginBottom: 4 }}>
+            <Text style={{ fontSize: 16, fontWeight: '800', color: k.color }}>{k.val}</Text>
+            <Text style={{ fontSize: 11, color: C.muted, marginTop: 2 }}>{k.label}</Text>
+          </View>
+        ))}
+      </View>
+    </Card>
+  );
+}
+
 // ─────────────────────────────────────────
 // TELA: LOGIN
 // ─────────────────────────────────────────
@@ -2037,6 +2129,7 @@ function HomeScreen({ session, go, onLogout }) {
               </View>
               <Text style={s.dashBtnArrow}>→</Text>
             </Pressable>
+            <SalesCardTecnico />
             <Pressable onPress={() => go('change-password')} style={[s.dashBtn, { backgroundColor: '#1a3c7a' }]}>
               <View style={{ flex: 1 }}>
                 <Text style={s.dashBtnTitle}>Alterar Senha</Text>
@@ -2077,6 +2170,14 @@ function HomeScreen({ session, go, onLogout }) {
               <View style={{ flex: 1 }}>
                 <Text style={s.dashBtnTitle}>Doses Vendidas</Text>
                 <Text style={s.dashBtnSub}>Meta vs Realizado · Ranking · Faturamento</Text>
+              </View>
+              <Text style={s.dashBtnArrow}>→</Text>
+            </Pressable>
+
+            <Pressable onPress={() => go('lancamento-vendas')} style={[s.dashBtn, { backgroundColor: '#1a5c3a' }]}>
+              <View style={{ flex: 1 }}>
+                <Text style={s.dashBtnTitle}>Lancamento de Vendas</Text>
+                <Text style={s.dashBtnSub}>Registrar doses e faturamento por mes</Text>
               </View>
               <Text style={s.dashBtnArrow}>→</Text>
             </Pressable>
@@ -3029,6 +3130,154 @@ function EditTechScreen({ tech, onBack, onSaved }) {
 const FILTER_INIT = { month: 'all', area: 'all', tech: 'all', service: 'all', clientType: 'all' };
 
 // ─────────────────────────────────────────
+// TELA: LANCAMENTO DE VENDAS (somente gestor)
+// ─────────────────────────────────────────
+
+function LancamentoVendasScreen({ onBack }) {
+  const [mes,           setMes]           = useState('');
+  const [dosesNovos,    setDosesNovos]    = useState('');
+  const [dosesAtivos,   setDosesAtivos]   = useState('');
+  const [fatNovos,      setFatNovos]      = useState('');
+  const [fatAtivos,     setFatAtivos]     = useState('');
+  const [busy,          setBusy]          = useState(false);
+  const [error,         setError]         = useState('');
+  const [success,       setSuccess]       = useState('');
+  const [lista,         setLista]         = useState([]);
+  const [loadingLista,  setLoadingLista]  = useState(true);
+
+  const carregarLista = useCallback(async () => {
+    setLoadingLista(true);
+    const res = await apiGetAllSales();
+    if (res.ok && Array.isArray(res.data)) {
+      const sorted = [...res.data].sort((a, b) => b.mes.localeCompare(a.mes));
+      setLista(sorted);
+    } else {
+      setLista([]);
+    }
+    setLoadingLista(false);
+  }, []);
+
+  useEffect(() => { carregarLista(); }, [carregarLista]);
+
+  async function handleSalvar() {
+    setError(''); setSuccess('');
+    if (!mes.match(/^\d{4}-\d{2}$/)) {
+      setError('Mes invalido. Use o formato AAAA-MM, ex: 2026-05'); return;
+    }
+    const payload = {
+      mes,
+      dosesNovos:  parseInt(dosesNovos  || '0', 10),
+      dosesAtivos: parseInt(dosesAtivos || '0', 10),
+      fatNovos:    parseFloat((fatNovos  || '0').replace(',', '.')),
+      fatAtivos:   parseFloat((fatAtivos || '0').replace(',', '.')),
+    };
+    if (isNaN(payload.dosesNovos) || isNaN(payload.dosesAtivos) ||
+        isNaN(payload.fatNovos)   || isNaN(payload.fatAtivos)) {
+      setError('Preencha os campos numericos corretamente.'); return;
+    }
+    setBusy(true);
+    const res = await apiPostSales(payload);
+    setBusy(false);
+    if (!res.ok) {
+      setError(res.error || 'Erro ao salvar.'); return;
+    }
+    setSuccess(`Lancamento de ${mes} salvo com sucesso!`);
+    setMes(''); setDosesNovos(''); setDosesAtivos(''); setFatNovos(''); setFatAtivos('');
+    carregarLista();
+  }
+
+  function _fmtValor(v) {
+    if (v === undefined || v === null || v === '') return '—';
+    const n = Number(v);
+    if (isNaN(n)) return String(v);
+    return n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 });
+  }
+
+  return (
+    <View style={[s.safeArea, { paddingTop: STATUS_BAR_HEIGHT }]}>
+      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
+        <ScrollView contentContainerStyle={s.page}>
+          <Back onPress={onBack} />
+          <PageTitle title="Lancamento de Vendas" sub="Registrar doses e faturamento mensal" />
+
+          <Card>
+            <Text style={s.sectionTitle}>Novo lancamento</Text>
+
+            <Input
+              label="Mes (AAAA-MM)"
+              placeholder="ex: 2026-05"
+              value={mes}
+              onChangeText={setMes}
+              keyboardType="numeric"
+              maxLength={7}
+            />
+            <Input
+              label="Doses Novos"
+              placeholder="0"
+              value={dosesNovos}
+              onChangeText={setDosesNovos}
+              keyboardType="numeric"
+            />
+            <Input
+              label="Doses Ativos"
+              placeholder="0"
+              value={dosesAtivos}
+              onChangeText={setDosesAtivos}
+              keyboardType="numeric"
+            />
+            <Input
+              label="Faturamento Novos (R$)"
+              placeholder="0"
+              value={fatNovos}
+              onChangeText={setFatNovos}
+              keyboardType="decimal-pad"
+            />
+            <Input
+              label="Faturamento Ativos (R$)"
+              placeholder="0"
+              value={fatAtivos}
+              onChangeText={setFatAtivos}
+              keyboardType="decimal-pad"
+            />
+
+            {!!error   && <View style={s.errorBox}><Text style={s.errorText}>{error}</Text></View>}
+            {!!success && <View style={[s.errorBox, { backgroundColor: '#e8f5e9' }]}><Text style={[s.errorText, { color: '#2e7d32' }]}>{success}</Text></View>}
+
+            <Btn label={busy ? 'Salvando...' : 'Salvar'} onPress={handleSalvar} disabled={busy} />
+          </Card>
+
+          <Card>
+            <Text style={s.sectionTitle}>Meses cadastrados</Text>
+            {loadingLista
+              ? <ActivityIndicator color={C.green} />
+              : lista.length === 0
+                ? <Text style={s.muted}>Nenhum mes cadastrado ainda.</Text>
+                : lista.map(item => (
+                    <View key={item.mes} style={{ borderBottomWidth: 1, borderBottomColor: C.border, paddingVertical: 10 }}>
+                      <Text style={{ fontWeight: '700', color: C.greenDark, fontSize: 15, marginBottom: 4 }}>{item.mes}</Text>
+                      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+                        <View style={{ backgroundColor: C.greenLight, borderRadius: 8, paddingHorizontal: 10, paddingVertical: 4 }}>
+                          <Text style={{ fontSize: 12, color: C.green, fontWeight: '700' }}>
+                            Novos: {item.dosesNovos ?? 0} doses · {_fmtValor(item.fatNovos)}
+                          </Text>
+                        </View>
+                        <View style={{ backgroundColor: '#fff8e6', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 4 }}>
+                          <Text style={{ fontSize: 12, color: C.muted, fontWeight: '700' }}>
+                            Ativos: {item.dosesAtivos ?? 0} doses · {_fmtValor(item.fatAtivos)}
+                          </Text>
+                        </View>
+                      </View>
+                    </View>
+                  ))
+            }
+          </Card>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </View>
+  );
+}
+
+// ─────────────────────────────────────────
 // TELA: VENDAS GESTOR (Meta vs Realizado)
 // ─────────────────────────────────────────
 
@@ -3678,6 +3927,7 @@ export default function App() {
   if (screen === 'dashboard')    return <DashboardScreen onBack={back} go={go} />;
   if (screen === 'vendas-gestor') return <VendasGestorScreen onBack={back} />;
   if (screen === 'vendas-tecnico') return <VendasTecnicoScreen session={session} onBack={back} />;
+  if (screen === 'lancamento-vendas') return <LancamentoVendasScreen onBack={back} />;
   if (screen === 'change-password') return <ChangePasswordScreen session={session} onBack={back} onChanged={() => saved('home')} />;
 
   return <HomeScreen session={session} go={go} onLogout={logout} />;
