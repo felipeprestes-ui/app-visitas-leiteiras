@@ -1,6 +1,7 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
+const { PrismaClient } = require('@prisma/client');
 
 const authRoutes = require('./routes/auth');
 const visitsRoutes = require('./routes/visits');
@@ -8,9 +9,37 @@ const schedulesRoutes = require('./routes/schedules');
 const clientsRoutes = require('./routes/clients');
 const techsRoutes = require('./routes/techs');
 const dashboardRoutes = require('./routes/dashboard');
+const salesRoutes = require('./routes/sales');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+const prisma = new PrismaClient();
+
+// Auto-migration: cria tabela monthly_sales se nao existir
+async function runMigrations() {
+  try {
+    await prisma.$executeRawUnsafe(`
+      CREATE TABLE IF NOT EXISTS "monthly_sales" (
+        "id" TEXT NOT NULL,
+        "month" TEXT NOT NULL,
+        "dosesNovos" INTEGER NOT NULL,
+        "dosesAtivos" INTEGER NOT NULL,
+        "faturamentoNovos" DOUBLE PRECISION NOT NULL,
+        "faturamentoAtivos" DOUBLE PRECISION NOT NULL,
+        "updatedBy" TEXT,
+        "updatedAt" TIMESTAMP(3) NOT NULL,
+        "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        CONSTRAINT "monthly_sales_pkey" PRIMARY KEY ("id")
+      );
+    `);
+    await prisma.$executeRawUnsafe(`
+      CREATE UNIQUE INDEX IF NOT EXISTS "monthly_sales_month_key" ON "monthly_sales"("month");
+    `);
+    console.log('[Migration] Tabela monthly_sales verificada/criada com sucesso');
+  } catch (err) {
+    console.error('[Migration] Erro ao criar tabela monthly_sales:', err.message);
+  }
+}
 
 // Middlewares
 app.use(cors({
@@ -33,6 +62,7 @@ app.use('/schedules', schedulesRoutes);
 app.use('/clients', clientsRoutes);
 app.use('/techs', techsRoutes);
 app.use('/dashboard', dashboardRoutes);
+app.use('/sales', salesRoutes);
 
 // 404 handler
 app.use((req, res) => {
@@ -45,8 +75,10 @@ app.use((err, req, res, next) => {
   res.status(500).json({ error: 'Erro interno do servidor' });
 });
 
-app.listen(PORT, () => {
+// Start server + run migrations
+app.listen(PORT, async () => {
   console.log(`Servidor rodando na porta ${PORT}`);
+  await runMigrations();
 });
 
 module.exports = app;
