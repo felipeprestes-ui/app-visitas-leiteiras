@@ -1,0 +1,118 @@
+// Prisma Schema - App Visitas Leiteiras
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  tecnico
+  gestor
+}
+
+enum VisitStatus {
+  pendente
+  realizada
+  cancelada
+}
+
+enum ScheduleStatus {
+  agendada
+  realizada
+  cancelada
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  name      String
+  role      Role     @default(tecnico)
+  area      String?
+  phone     String?
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  visits    Visit[]
+  schedules Schedule[]
+
+  @@map("users")
+}
+
+model Visit {
+  id               String   @id @default(cuid())
+  propertyId       String?
+  clientName       String
+  clientType       String?
+  technicianId     String?
+  technicianName   String
+  area             String?
+  serviceType      String?
+  animalCount      Int?
+  herdSize         Int?
+  milkAverage      Float?
+  lactatingAnimals Int?
+  dealClosed       Boolean  @default(false)
+  dosesConvencional Int?
+  dosesSexado      Int?
+  notes            String?
+  visitedAt        DateTime
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  syncedAt         DateTime?
+
+  // Local ID from mobile (for sync dedup)
+  localId          String?  @unique
+
+  technician       User?    @relation(fields: [technicianId], references: [id], onDelete: SetNull)
+
+  @@map("visits")
+}
+
+model Schedule {
+  id             String         @id @default(cuid())
+  propertyId     String?
+  clientName     String
+  technicianId   String?
+  technicianName String
+  area           String?
+  scheduledAt    DateTime
+  status         ScheduleStatus @default(agendada)
+  notes          String?
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+  syncedAt       DateTime?
+
+  // Local ID from mobile (for sync dedup)
+  localId        String?        @unique
+
+  technician     User?          @relation(fields: [technicianId], references: [id], onDelete: SetNull)
+
+  @@map("schedules")
+}
+
+model Client {
+  id           String   @id @default(cuid())
+  name         String
+  type         String?
+  propertyName String?
+  area         String?
+  consultant   String?
+  city         String?
+  state        String?
+  coords       String?
+  phone        String?
+  email        String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  // Local ID from mobile (for sync dedup)
+  localId      String?  @unique
+
+  @@map("clients")
+}
