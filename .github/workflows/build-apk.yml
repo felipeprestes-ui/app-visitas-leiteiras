@@ -1,5 +1,6 @@
 name: "Build APK Android"
 
+# Roda manualmente pelo botao "Run workflow" no GitHub
 on:
   workflow_dispatch:
 
