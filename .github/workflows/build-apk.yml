@@ -1,6 +1,5 @@
 name: "Build APK Android"
 
-# Roda manualmente pelo botao "Run workflow" no GitHub
 on:
   workflow_dispatch:
 
@@ -17,10 +16,9 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "20"
-          cache: "npm"
 
       - name: "Instalar dependencias"
-        run: npm install
+        run: npm install --no-package-lock
 
       - name: "Configurar Expo / EAS CLI"
         uses: expo/expo-github-action@v8
