@@ -15,7 +15,17 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 const prisma = new PrismaClient();
 
-// Auto-migration: cria tabela monthly_sales se nao existir
+// Validacao de variaveis obrigatorias
+if (!process.env.JWT_SECRET) {
+  console.error('[ERRO] JWT_SECRET nao configurado. Defina a variavel de ambiente.');
+  process.exit(1);
+}
+if (!process.env.DATABASE_URL) {
+  console.error('[ERRO] DATABASE_URL nao configurada. Defina a variavel de ambiente.');
+  process.exit(1);
+}
+
+// Auto-migration: cria/atualiza tabela monthly_sales
 async function runMigrations() {
   try {
     await prisma.$executeRawUnsafe(`
@@ -33,11 +43,19 @@ async function runMigrations() {
       );
     `);
     await prisma.$executeRawUnsafe(`
-      CREATE UNIQUE INDEX IF NOT EXISTS "monthly_sales_month_key" ON "monthly_sales"("month");
+      ALTER TABLE "monthly_sales"
+      ADD COLUMN IF NOT EXISTS "technicianName" TEXT NOT NULL DEFAULT '';
     `);
-    console.log('[Migration] Tabela monthly_sales verificada/criada com sucesso');
+    await prisma.$executeRawUnsafe(`
+      DROP INDEX IF EXISTS "monthly_sales_month_key";
+    `);
+    await prisma.$executeRawUnsafe(`
+      CREATE UNIQUE INDEX IF NOT EXISTS "monthly_sales_month_technicianName_key"
+      ON "monthly_sales"("month", "technicianName");
+    `);
+    console.log('[Migration] Tabela monthly_sales verificada/atualizada com sucesso');
   } catch (err) {
-    console.error('[Migration] Erro ao criar tabela monthly_sales:', err.message);
+    console.error('[Migration] Erro ao atualizar tabela monthly_sales:', err.message);
   }
 }
 
