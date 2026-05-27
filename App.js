@@ -1599,14 +1599,21 @@ async function apiLogout() {
   try { await AsyncStorage.removeItem(KEY.TOKEN); } catch {}
 }
 
+// Remove uma agenda pelo id via API
+async function apiDeleteSchedule(id) {
+  return apiCall(`/schedules/${id}`, { method: 'DELETE' });
+}
+
 // Envia lancamento de vendas (gestor)
 async function apiPostSales(data) {
   return apiCall('/sales', { method: 'POST', body: JSON.stringify(data) });
 }
 
 // Busca vendas de um mes especifico, ex: '2026-05'
-async function apiGetSales(month) {
-  return apiCall(`/sales/${month}`);
+// technicianName opcional: filtra por tecnico
+async function apiGetSales(month, technicianName) {
+  const qs = technicianName ? `?technicianName=${encodeURIComponent(technicianName)}` : '';
+  return apiCall(`/sales/${month}${qs}`);
 }
 
 // Busca todos os meses cadastrados
@@ -1872,10 +1879,13 @@ function RateIndicator({ rate, closed, total }) {
 }
 
 // Card de vendas do mes atual para tecnicos
-function SalesCardTecnico() {
+// session.name e usado para filtrar dados do tecnico logado
+function SalesCardTecnico({ session }) {
   const [data,    setData]    = useState(null);
   const [loading, setLoading] = useState(true);
   const [fromCache, setFromCache] = useState(false);
+
+  const technicianName = session?.name || null;
 
   useEffect(() => {
     (async () => {
@@ -1885,8 +1895,8 @@ function SalesCardTecnico() {
       const mm   = String(now.getMonth() + 1).padStart(2, '0');
       const mesKey = `${yyyy}-${mm}`;
 
-      const res = await apiGetSales(mesKey);
-      if (res.ok && res.data) {
+      const res = await apiGetSales(mesKey, technicianName);
+      if (res.ok && res.data && !Array.isArray(res.data)) {
         setData(res.data);
         setFromCache(false);
         try { await AsyncStorage.setItem(KEY.SALES_CURRENT, JSON.stringify(res.data)); } catch {}
@@ -1899,7 +1909,7 @@ function SalesCardTecnico() {
       }
       setLoading(false);
     })();
-  }, []);
+  }, [technicianName]);
 
   function _fmtBRLCard(v) {
     const n = Number(v);
@@ -1920,7 +1930,7 @@ function SalesCardTecnico() {
   const now = new Date();
   const mesLabel = now.toLocaleString('pt-BR', { month: 'long', year: 'numeric' });
   const totalDoses = (data.dosesNovos || 0) + (data.dosesAtivos || 0);
-  const totalFat   = (data.fatNovos   || 0) + (data.fatAtivos   || 0);
+  const totalFat   = (data.faturamentoNovos || 0) + (data.faturamentoAtivos || 0);
 
   return (
     <Card style={{ backgroundColor: '#eef4ff', borderLeftWidth: 4, borderLeftColor: C.green }}>
@@ -1930,12 +1940,12 @@ function SalesCardTecnico() {
       </View>
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
         {[
-          { label: 'Doses Novos',   val: String(data.dosesNovos  || 0), color: C.green      },
-          { label: 'Doses Ativos',  val: String(data.dosesAtivos || 0), color: C.muted      },
-          { label: 'Fat. Novos',    val: _fmtBRLCard(data.fatNovos),    color: '#2196F3'    },
-          { label: 'Fat. Ativos',   val: _fmtBRLCard(data.fatAtivos),   color: '#9C27B0'    },
-          { label: 'Total Doses',   val: String(totalDoses),             color: C.greenDark  },
-          { label: 'Fat. Total',    val: _fmtBRLCard(totalFat),          color: C.gold       },
+          { label: 'Doses Novos',   val: String(data.dosesNovos  || 0),            color: C.green      },
+          { label: 'Doses Ativos',  val: String(data.dosesAtivos || 0),            color: C.muted      },
+          { label: 'Fat. Novos',    val: _fmtBRLCard(data.faturamentoNovos),       color: '#2196F3'    },
+          { label: 'Fat. Ativos',   val: _fmtBRLCard(data.faturamentoAtivos),      color: '#9C27B0'    },
+          { label: 'Total Doses',   val: String(totalDoses),                        color: C.greenDark  },
+          { label: 'Fat. Total',    val: _fmtBRLCard(totalFat),                    color: C.gold       },
         ].map(k => (
           <View key={k.label} style={{ width: '47%', backgroundColor: C.white, borderRadius: 10, padding: 10, borderTopWidth: 2, borderTopColor: k.color, marginBottom: 4 }}>
             <Text style={{ fontSize: 16, fontWeight: '800', color: k.color }}>{k.val}</Text>
@@ -1978,14 +1988,17 @@ function LoginScreen({ onLogin }) {
         setBusy(false);
         await AsyncStorage.setItem(KEY.SESSION, JSON.stringify(sessionUser));
         onLogin(sessionUser);
-        // Sincroniza dados em background apos login
-        syncAll().catch(() => {});
+        // Sincroniza dados em background apos login (token ja foi salvo por apiLogin)
+        const savedToken = await AsyncStorage.getItem(KEY.TOKEN);
+        if (savedToken) syncAll().catch(() => {});
         return;
       }
       // Falha na API: cai para fallback local sem mostrar erro de rede
     }
 
     // 2) Fallback offline: valida contra USERS hardcoded + senhas customizadas
+    // Garante que nao ha token de sessao anterior pendente
+    await AsyncStorage.removeItem(KEY.TOKEN).catch(() => {});
     await new Promise(r => setTimeout(r, 200));
     const baseUser = USERS.find(u => u.email === emailLower);
     if (!baseUser) { setBusy(false); setError('E-mail ou senha incorretos.'); return; }
@@ -2067,6 +2080,11 @@ function HomeScreen({ session, go, onLogout }) {
       Alert.alert('API nao configurada', 'Defina API_BASE_URL no codigo para habilitar a sincronizacao.');
       return;
     }
+    const token = await AsyncStorage.getItem(KEY.TOKEN);
+    if (!token) {
+      Alert.alert('Nao autenticado', 'Faca login com sua conta online para sincronizar.');
+      return;
+    }
     setSyncStatus('syncing');
     const result = await syncAll();
     setSyncStatus(result.ok ? 'ok' : 'error');
@@ -2129,7 +2147,7 @@ function HomeScreen({ session, go, onLogout }) {
               </View>
               <Text style={s.dashBtnArrow}>→</Text>
             </Pressable>
-            <SalesCardTecnico />
+            <SalesCardTecnico session={session} />
             <Pressable onPress={() => go('change-password')} style={[s.dashBtn, { backgroundColor: '#1a3c7a' }]}>
               <View style={{ flex: 1 }}>
                 <Text style={s.dashBtnTitle}>Alterar Senha</Text>
@@ -2241,6 +2259,20 @@ function AgendaScreen({ go, onBack, session }) {
   }, [session]);
   useEffect(() => { reload(); }, [reload]);
 
+  async function handleDeleteSchedule(item) {
+    Alert.alert('Excluir agenda', `Deseja excluir o agendamento de "${item.propertyName || 'sem propriedade'}"?`, [
+      { text: 'Cancelar', style: 'cancel' },
+      { text: 'Excluir', style: 'destructive', onPress: async () => {
+        const updated = items.filter(s => s.id !== item.id);
+        await save(KEY.SCHEDULES, updated);
+        setItems(updated);
+        if (item.id && !item.id.startsWith('local_')) {
+          await apiDeleteSchedule(item.id);
+        }
+      }},
+    ]);
+  }
+
   return (
     <View style={[s.safeArea, { paddingTop: STATUS_BAR_HEIGHT }]}>
       <ScrollView contentContainerStyle={s.page}>
@@ -2249,16 +2281,23 @@ function AgendaScreen({ go, onBack, session }) {
         <Btn label="+ Novo agendamento" onPress={() => go('new-schedule')} style={s.mb8} />
         {busy ? <ActivityIndicator color={C.green} /> : items.length === 0 ? <Empty msg="Nenhum agendamento salvo." /> :
           items.map(item => (
-            <Pressable key={item.id}
-              onPress={() => item.clientName ? go('new-visit-from-schedule', item) : go('schedule-detail', item)}
-              style={s.listCard}>
-              {item.clientName ? <Text style={s.listClientName}>{item.clientName}</Text> : null}
-              <Text style={s.listTitle}>{item.propertyName || '(sem propriedade)'}</Text>
-              <Text style={s.muted}>{fmtDate(item.scheduledAt)}</Text>
-              <Text style={s.muted}>Status: {item.status}</Text>
-              {item.notes ? <Text style={s.muted}>{item.notes}</Text> : null}
-              <Text style={[s.hint, { marginTop: 4 }]}>{item.clientName ? 'Registrar visita →' : 'Toque para ver detalhes →'}</Text>
-            </Pressable>
+            <View key={item.id} style={s.listCard}>
+              <View style={s.techCardRow}>
+                <Pressable
+                  onPress={() => item.clientName ? go('new-visit-from-schedule', item) : go('schedule-detail', item)}
+                  style={{ flex: 1 }}>
+                  {item.clientName ? <Text style={s.listClientName}>{item.clientName}</Text> : null}
+                  <Text style={s.listTitle}>{item.propertyName || '(sem propriedade)'}</Text>
+                  <Text style={s.muted}>{fmtDate(item.scheduledAt)}</Text>
+                  <Text style={s.muted}>Status: {item.status}</Text>
+                  {item.notes ? <Text style={s.muted}>{item.notes}</Text> : null}
+                  <Text style={[s.hint, { marginTop: 4 }]}>{item.clientName ? 'Registrar visita →' : 'Toque para ver detalhes →'}</Text>
+                </Pressable>
+                <Pressable onPress={() => handleDeleteSchedule(item)} style={[s.techEditBtn, s.deleteBtnBorder]}>
+                  <Text style={s.deleteBtnText}>Excluir</Text>
+                </Pressable>
+              </View>
+            </View>
           ))
         }
       </ScrollView>
@@ -3133,8 +3172,12 @@ const FILTER_INIT = { month: 'all', area: 'all', tech: 'all', service: 'all', cl
 // TELA: LANCAMENTO DE VENDAS (somente gestor)
 // ─────────────────────────────────────────
 
+const TECNICOS_LISTA = ['Erica', 'Cesar', 'Henrique', 'Leandro', 'Felipe'];
+
 function LancamentoVendasScreen({ onBack }) {
   const [mes,           setMes]           = useState('');
+  const [tecnico,       setTecnico]       = useState(TECNICOS_LISTA[0]);
+  const [showTecPicker, setShowTecPicker] = useState(false);
   const [dosesNovos,    setDosesNovos]    = useState('');
   const [dosesAtivos,   setDosesAtivos]   = useState('');
   const [fatNovos,      setFatNovos]      = useState('');
@@ -3149,7 +3192,10 @@ function LancamentoVendasScreen({ onBack }) {
     setLoadingLista(true);
     const res = await apiGetAllSales();
     if (res.ok && Array.isArray(res.data)) {
-      const sorted = [...res.data].sort((a, b) => b.mes.localeCompare(a.mes));
+      const sorted = [...res.data].sort((a, b) => {
+        const cmp = b.month.localeCompare(a.month);
+        return cmp !== 0 ? cmp : (a.technicianName || '').localeCompare(b.technicianName || '');
+      });
       setLista(sorted);
     } else {
       setLista([]);
@@ -3164,15 +3210,19 @@ function LancamentoVendasScreen({ onBack }) {
     if (!mes.match(/^\d{4}-\d{2}$/)) {
       setError('Mes invalido. Use o formato AAAA-MM, ex: 2026-05'); return;
     }
+    if (!tecnico) {
+      setError('Selecione o tecnico.'); return;
+    }
     const payload = {
-      mes,
+      month: mes,
+      technicianName: tecnico,
       dosesNovos:  parseInt(dosesNovos  || '0', 10),
       dosesAtivos: parseInt(dosesAtivos || '0', 10),
-      fatNovos:    parseFloat((fatNovos  || '0').replace(',', '.')),
-      fatAtivos:   parseFloat((fatAtivos || '0').replace(',', '.')),
+      faturamentoNovos:  parseFloat((fatNovos  || '0').replace(',', '.')),
+      faturamentoAtivos: parseFloat((fatAtivos || '0').replace(',', '.')),
     };
     if (isNaN(payload.dosesNovos) || isNaN(payload.dosesAtivos) ||
-        isNaN(payload.fatNovos)   || isNaN(payload.fatAtivos)) {
+        isNaN(payload.faturamentoNovos) || isNaN(payload.faturamentoAtivos)) {
       setError('Preencha os campos numericos corretamente.'); return;
     }
     setBusy(true);
@@ -3181,7 +3231,7 @@ function LancamentoVendasScreen({ onBack }) {
     if (!res.ok) {
       setError(res.error || 'Erro ao salvar.'); return;
     }
-    setSuccess(`Lancamento de ${mes} salvo com sucesso!`);
+    setSuccess(`Lancamento de ${mes} (${tecnico}) salvo com sucesso!`);
     setMes(''); setDosesNovos(''); setDosesAtivos(''); setFatNovos(''); setFatAtivos('');
     carregarLista();
   }
@@ -3193,15 +3243,61 @@ function LancamentoVendasScreen({ onBack }) {
     return n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 });
   }
 
+  // Agrupa itens da lista por mes para exibicao
+  const listaAgrupada = lista.reduce((acc, item) => {
+    const key = item.month;
+    if (!acc[key]) acc[key] = [];
+    acc[key].push(item);
+    return acc;
+  }, {});
+  const mesesOrdenados = Object.keys(listaAgrupada).sort((a, b) => b.localeCompare(a));
+
   return (
     <View style={[s.safeArea, { paddingTop: STATUS_BAR_HEIGHT }]}>
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
         <ScrollView contentContainerStyle={s.page}>
           <Back onPress={onBack} />
-          <PageTitle title="Lancamento de Vendas" sub="Registrar doses e faturamento mensal" />
+          <PageTitle title="Lancamento de Vendas" sub="Registrar doses e faturamento mensal por tecnico" />
 
           <Card>
             <Text style={s.sectionTitle}>Novo lancamento</Text>
+
+            {/* Picker de Tecnico */}
+            <Text style={{ fontSize: 13, color: C.muted, marginBottom: 4, marginTop: 4 }}>Tecnico</Text>
+            <Pressable
+              onPress={() => setShowTecPicker(true)}
+              style={{
+                borderWidth: 1, borderColor: C.border, borderRadius: 10,
+                paddingHorizontal: 14, paddingVertical: 12, marginBottom: 12,
+                backgroundColor: C.white, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
+              }}
+            >
+              <Text style={{ fontSize: 15, color: C.text }}>{tecnico || 'Selecione o tecnico'}</Text>
+              <Text style={{ color: C.muted, fontSize: 16 }}>▾</Text>
+            </Pressable>
+
+            {showTecPicker && (
+              <View style={{
+                borderWidth: 1, borderColor: C.border, borderRadius: 10,
+                backgroundColor: C.white, marginBottom: 12, overflow: 'hidden',
+              }}>
+                {TECNICOS_LISTA.map(nome => (
+                  <Pressable
+                    key={nome}
+                    onPress={() => { setTecnico(nome); setShowTecPicker(false); }}
+                    style={{
+                      paddingHorizontal: 14, paddingVertical: 12,
+                      backgroundColor: tecnico === nome ? C.greenLight : C.white,
+                      borderBottomWidth: 1, borderBottomColor: C.border,
+                    }}
+                  >
+                    <Text style={{ fontSize: 15, color: tecnico === nome ? C.green : C.text, fontWeight: tecnico === nome ? '700' : '400' }}>
+                      {nome}
+                    </Text>
+                  </Pressable>
+                ))}
+              </View>
+            )}
 
             <Input
               label="Mes (AAAA-MM)"
@@ -3250,23 +3346,30 @@ function LancamentoVendasScreen({ onBack }) {
             <Text style={s.sectionTitle}>Meses cadastrados</Text>
             {loadingLista
               ? <ActivityIndicator color={C.green} />
-              : lista.length === 0
+              : mesesOrdenados.length === 0
                 ? <Text style={s.muted}>Nenhum mes cadastrado ainda.</Text>
-                : lista.map(item => (
-                    <View key={item.mes} style={{ borderBottomWidth: 1, borderBottomColor: C.border, paddingVertical: 10 }}>
-                      <Text style={{ fontWeight: '700', color: C.greenDark, fontSize: 15, marginBottom: 4 }}>{item.mes}</Text>
-                      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
-                        <View style={{ backgroundColor: C.greenLight, borderRadius: 8, paddingHorizontal: 10, paddingVertical: 4 }}>
-                          <Text style={{ fontSize: 12, color: C.green, fontWeight: '700' }}>
-                            Novos: {item.dosesNovos ?? 0} doses · {_fmtValor(item.fatNovos)}
+                : mesesOrdenados.map(mesKey => (
+                    <View key={mesKey} style={{ borderBottomWidth: 1, borderBottomColor: C.border, paddingVertical: 10 }}>
+                      <Text style={{ fontWeight: '700', color: C.greenDark, fontSize: 15, marginBottom: 6 }}>{mesKey}</Text>
+                      {listaAgrupada[mesKey].map(item => (
+                        <View key={item.id} style={{ marginBottom: 8 }}>
+                          <Text style={{ fontSize: 13, fontWeight: '700', color: C.text, marginBottom: 4 }}>
+                            {item.technicianName}
                           </Text>
+                          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+                            <View style={{ backgroundColor: C.greenLight, borderRadius: 8, paddingHorizontal: 10, paddingVertical: 4 }}>
+                              <Text style={{ fontSize: 12, color: C.green, fontWeight: '700' }}>
+                                Novos: {item.dosesNovos ?? 0} doses · {_fmtValor(item.faturamentoNovos)}
+                              </Text>
+                            </View>
+                            <View style={{ backgroundColor: '#fff8e6', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 4 }}>
+                              <Text style={{ fontSize: 12, color: C.muted, fontWeight: '700' }}>
+                                Ativos: {item.dosesAtivos ?? 0} doses · {_fmtValor(item.faturamentoAtivos)}
+                              </Text>
+                            </View>
+                          </View>
                         </View>
-                        <View style={{ backgroundColor: '#fff8e6', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 4 }}>
-                          <Text style={{ fontSize: 12, color: C.muted, fontWeight: '700' }}>
-                            Ativos: {item.dosesAtivos ?? 0} doses · {_fmtValor(item.fatAtivos)}
-                          </Text>
-                        </View>
-                      </View>
+                      ))}
                     </View>
                   ))
             }
