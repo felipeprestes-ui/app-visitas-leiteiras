@@ -1635,10 +1635,11 @@ async function apiDeleteSchedule(localId) {
 
 // Envia lancamento de vendas (gestor) para o Supabase
 async function apiPostSales(data) {
+  const body = { ...data, id: data.id || Date.now().toString() + Math.random().toString(36).slice(2, 8) };
   return apiCall('/monthly_sales', {
     method: 'POST',
     headers: { 'Prefer': 'return=representation' },
-    body: JSON.stringify(data),
+    body: JSON.stringify(body),
   });
 }
 
