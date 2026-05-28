@@ -3403,6 +3403,9 @@ function LancamentoVendasScreen({ onBack }) {
       dosesAtivos: parseInt(dosesAtivos || '0', 10),
       faturamentoNovos:  parseFloat((fatNovos  || '0').replace(',', '.')),
       faturamentoAtivos: parseFloat((fatAtivos || '0').replace(',', '.')),
+      updatedBy: session?.name || 'Gestor',
+      updatedAt: new Date().toISOString(),
+      createdAt: new Date().toISOString(),
     };
     if (isNaN(payload.dosesNovos) || isNaN(payload.dosesAtivos) ||
         isNaN(payload.faturamentoNovos) || isNaN(payload.faturamentoAtivos)) {
