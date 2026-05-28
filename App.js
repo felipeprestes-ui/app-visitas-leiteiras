@@ -1606,22 +1606,9 @@ async function apiLogin(email, password) {
     const users = await res.json();
     if (!Array.isArray(users) || users.length === 0) return null;
     const user = users[0];
-    // Comparacao de senha: suporta texto puro ou hash bcrypt armazenado no banco
-    const storedPwd = user.password || user.senha || '';
-    let matched = false;
-    if (storedPwd === password) {
-      matched = true;
-    } else {
-      // Tenta comparar via bcrypt se a senha comecar com $2
-      try {
-        const bcrypt = require('bcryptjs');
-        matched = await bcrypt.compare(password, storedPwd);
-      } catch {
-        // bcryptjs nao disponivel; apenas compara texto puro
-        matched = false;
-      }
-    }
-    if (!matched) return null;
+    // Comparacao de senha: texto puro (as senhas no Supabase estao em texto puro)
+    const storedPwd = user.password || '';
+    if (storedPwd !== password) return null;
     // Normaliza campos para o formato de sessao local
     return {
       id:    user.id,
