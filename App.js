@@ -153,12 +153,14 @@ const USERS = [
 ];
 
 // ─────────────────────────────────────────
-// CONFIGURACAO DA API
+// CONFIGURACAO DA API (Supabase)
 // ─────────────────────────────────────────
 
-// URL base da API backend. Deixe vazio ('') para modo totalmente offline.
-// Exemplo: 'https://minha-api.onrender.com' ou 'http://192.168.1.100:3000'
-const API_BASE_URL = 'https://app-visitas-leiteiras-api.onrender.com';
+// URL base do Supabase REST. Deixe vazio ('') para modo totalmente offline.
+const API_BASE_URL = 'https://egmradntktqzpuedxqhg.supabase.co/rest/v1';
+
+// Chave anonima do Supabase (publica, segura para usar no cliente)
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVnbXJhZG50a3RxenB1ZWR4cWhnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk5MTcwMTMsImV4cCI6MjA5NTQ5MzAxM30.f2mnogv5_EHVgEU-wUktMfVn7i28sf_vLhl1Baimtnk';
 
 // Chaves AsyncStorage compartilhadas por todos os usuarios no mesmo dispositivo.
 // KEY.VISITS (@vl/visits) armazena visitas de todos os tecnicos sem separacao por usuario,
@@ -1553,19 +1555,27 @@ function openGoogleMaps(lat, lng) {
 }
 
 // ─────────────────────────────────────────
-// CAMADA DE API
+// CAMADA DE API (Supabase)
 // ─────────────────────────────────────────
 
-// Retorna true se a API está configurada e acessível (best-effort)
+// Retorna true se a API está configurada
 function hasApi() { return Boolean(API_BASE_URL && API_BASE_URL.trim()); }
 
-// Requisição autenticada genérica. Retorna { ok, data } ou { ok: false, error }
+// Headers obrigatorios para toda requisicao ao Supabase REST
+function supabaseHeaders(extra = {}) {
+  return {
+    'Content-Type': 'application/json',
+    'apikey': SUPABASE_ANON_KEY,
+    'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+    ...extra,
+  };
+}
+
+// Requisição genérica ao Supabase. Retorna { ok, data } ou { ok: false, error }
 async function apiCall(path, options = {}) {
   if (!hasApi()) return { ok: false, error: 'API nao configurada' };
   try {
-    const token = await AsyncStorage.getItem(KEY.TOKEN);
-    const headers = { 'Content-Type': 'application/json', ...(options.headers || {}) };
-    if (token) headers['Authorization'] = `Bearer ${token}`;
+    const headers = supabaseHeaders(options.headers || {});
     const res = await fetch(`${API_BASE_URL}${path}`, {
       ...options,
       headers,
@@ -1573,159 +1583,350 @@ async function apiCall(path, options = {}) {
     const text = await res.text();
     let data;
     try { data = JSON.parse(text); } catch { data = text; }
-    if (!res.ok) return { ok: false, error: (data && data.error) || `HTTP ${res.status}` };
+    if (!res.ok) {
+      const msg = (data && (data.message || data.error || data.hint)) || `HTTP ${res.status}`;
+      return { ok: false, error: msg };
+    }
     return { ok: true, data };
   } catch (err) {
     return { ok: false, error: err.message || 'Sem conexao' };
   }
 }
 
-// Login via API. Persiste token e retorna dados do usuario, ou null em caso de falha.
+// Login via Supabase: busca usuario na tabela User por email e compara senha em texto puro.
+// Retorna objeto do usuario ou null em caso de falha.
 async function apiLogin(email, password) {
   if (!hasApi()) return null;
-  const result = await apiCall('/auth/login', {
-    method: 'POST',
-    body: JSON.stringify({ email, password }),
-  });
-  if (result.ok && result.data && result.data.token) {
-    await AsyncStorage.setItem(KEY.TOKEN, result.data.token);
-    return result.data.user;
+  try {
+    const res = await fetch(
+      `${API_BASE_URL}/User?email=eq.${encodeURIComponent(email)}&select=*`,
+      { headers: supabaseHeaders() }
+    );
+    if (!res.ok) return null;
+    const users = await res.json();
+    if (!Array.isArray(users) || users.length === 0) return null;
+    const user = users[0];
+    // Comparacao de senha: suporta texto puro ou hash bcrypt armazenado no banco
+    const storedPwd = user.password || user.senha || '';
+    let matched = false;
+    if (storedPwd === password) {
+      matched = true;
+    } else {
+      // Tenta comparar via bcrypt se a senha comecar com $2
+      try {
+        const bcrypt = require('bcryptjs');
+        matched = await bcrypt.compare(password, storedPwd);
+      } catch {
+        // bcryptjs nao disponivel; apenas compara texto puro
+        matched = false;
+      }
+    }
+    if (!matched) return null;
+    // Normaliza campos para o formato de sessao local
+    return {
+      id:    user.id,
+      email: user.email,
+      name:  user.name || user.nome || '',
+      role:  user.role || user.perfil || 'tecnico',
+      area:  user.area || null,
+      areas: user.areas || null,
+    };
+  } catch {
+    return null;
   }
-  return null;
 }
 
-// Remove o token da API (logout)
+// Remove o token da API (logout) — Supabase usa anon key, nao ha token dinamico
 async function apiLogout() {
   try { await AsyncStorage.removeItem(KEY.TOKEN); } catch {}
 }
 
-// Remove uma agenda pelo id via API
-async function apiDeleteSchedule(id) {
-  return apiCall(`/schedules/${id}`, { method: 'DELETE' });
+// Remove uma agenda pelo localId via Supabase
+async function apiDeleteSchedule(localId) {
+  return apiCall(`/Schedule?local_id=eq.${encodeURIComponent(localId)}`, { method: 'DELETE' });
 }
 
-// Envia lancamento de vendas (gestor)
+// Envia lancamento de vendas (gestor) para o Supabase
 async function apiPostSales(data) {
-  return apiCall('/sales', { method: 'POST', body: JSON.stringify(data) });
+  return apiCall('/monthly_sales', {
+    method: 'POST',
+    headers: { 'Prefer': 'return=representation' },
+    body: JSON.stringify(data),
+  });
 }
 
-// Busca vendas de um mes especifico, ex: '2026-05'
+// Busca vendas de um mes especifico, ex: '2026-05' ou '8-2025'
 // technicianName opcional: filtra por tecnico
 async function apiGetSales(month, technicianName) {
-  const qs = technicianName ? `?technicianName=${encodeURIComponent(technicianName)}` : '';
-  return apiCall(`/sales/${month}${qs}`);
+  let qs = `?month=eq.${encodeURIComponent(month)}`;
+  if (technicianName) qs += `&technician_name=eq.${encodeURIComponent(technicianName)}`;
+  return apiCall(`/monthly_sales${qs}`);
 }
 
-// Busca todos os meses cadastrados
+// Busca todos os registros de vendas
 async function apiGetAllSales() {
-  return apiCall('/sales');
+  return apiCall('/monthly_sales?select=*');
 }
 
-// Sincroniza visitas: envia locais pendentes e recebe atualizacoes do servidor.
-// Retorna { ok, synced, received } ou { ok: false, error }
+// Sincroniza visitas: envia locais para Supabase e recebe registros do servidor.
+// Estrategia: upsert por local_id; recebe tudo do servidor para mesclar localmente.
 async function syncVisits() {
   if (!hasApi()) return { ok: false, error: 'API nao configurada' };
   const visits = await load(KEY.VISITS);
-  const lastSyncRaw = await AsyncStorage.getItem(KEY.LAST_SYNC + '_visits');
-  const lastSyncAt = lastSyncRaw || null;
 
-  const result = await apiCall('/visits/sync', {
-    method: 'POST',
-    body: JSON.stringify({ visits, lastSyncAt }),
-  });
-  if (!result.ok) return { ok: false, error: result.error };
-
-  const { serverVisits = [], syncedAt } = result.data;
-  // Mescla: server wins para items com localId coincidente
-  const localMap = {};
-  visits.forEach(v => { if (v.localId) localMap[v.localId] = v; });
-  const merged = [...visits];
-  for (const sv of serverVisits) {
-    if (sv.localId && localMap[sv.localId]) {
-      const idx = merged.findIndex(v => v.localId === sv.localId);
-      if (idx !== -1) merged[idx] = { ...merged[idx], ...sv };
-    } else if (sv.localId && !localMap[sv.localId]) {
-      merged.push(sv);
+  // Envia visitas locais que ainda nao foram sincronizadas (sem server_id)
+  const pending = visits.filter(v => !v.server_id);
+  let sent = 0;
+  for (const v of pending) {
+    const payload = {
+      local_id:        v.localId || v.id,
+      technician_name: v.technicianName,
+      client_name:     v.clientName,
+      service_type:    v.serviceType,
+      area:            v.area,
+      notes:           v.notes || '',
+      visit_date:      v.date || v.visitDate || new Date().toISOString(),
+      animals:         v.animals || null,
+      consultant:      v.consultant || null,
+      client_type:     v.clientType || null,
+      lat:             v.lat || null,
+      lng:             v.lng || null,
+    };
+    const res = await apiCall('/Visit', {
+      method: 'POST',
+      headers: { 'Prefer': 'return=representation' },
+      body: JSON.stringify(payload),
+    });
+    if (res.ok) {
+      const created = Array.isArray(res.data) ? res.data[0] : res.data;
+      if (created && created.id) {
+        const idx = visits.findIndex(x => (x.localId || x.id) === payload.local_id);
+        if (idx !== -1) visits[idx] = { ...visits[idx], server_id: created.id };
+      }
+      sent++;
     }
   }
-  await save(KEY.VISITS, merged);
-  if (syncedAt) await AsyncStorage.setItem(KEY.LAST_SYNC + '_visits', syncedAt);
-  return { ok: true, synced: result.data.created + result.data.updated, received: serverVisits.length };
+
+  // Recebe todas as visitas do servidor
+  const serverRes = await apiCall('/Visit?select=*');
+  const serverVisits = (serverRes.ok && Array.isArray(serverRes.data)) ? serverRes.data : [];
+
+  // Mescla: adiciona visitas do servidor que nao existem localmente
+  const localIds = new Set(visits.map(v => v.localId || v.id));
+  const serverOnlyIds = new Set(visits.filter(v => v.server_id).map(v => String(v.server_id)));
+  for (const sv of serverVisits) {
+    const svLocalId = sv.local_id;
+    const svServerId = String(sv.id);
+    if (!svLocalId && !serverOnlyIds.has(svServerId)) {
+      visits.push({
+        localId: `server-${sv.id}`,
+        server_id: sv.id,
+        technicianName: sv.technician_name,
+        clientName:     sv.client_name,
+        serviceType:    sv.service_type,
+        area:           sv.area,
+        notes:          sv.notes || '',
+        date:           sv.visit_date,
+        animals:        sv.animals,
+        consultant:     sv.consultant,
+        clientType:     sv.client_type,
+        lat:            sv.lat,
+        lng:            sv.lng,
+      });
+    } else if (svLocalId && !localIds.has(svLocalId)) {
+      visits.push({
+        localId: svLocalId,
+        server_id: sv.id,
+        technicianName: sv.technician_name,
+        clientName:     sv.client_name,
+        serviceType:    sv.service_type,
+        area:           sv.area,
+        notes:          sv.notes || '',
+        date:           sv.visit_date,
+        animals:        sv.animals,
+        consultant:     sv.consultant,
+        clientType:     sv.client_type,
+        lat:            sv.lat,
+        lng:            sv.lng,
+      });
+    }
+  }
+
+  await save(KEY.VISITS, visits);
+  const syncedAt = new Date().toISOString();
+  await AsyncStorage.setItem(KEY.LAST_SYNC + '_visits', syncedAt);
+  return { ok: true, synced: sent, received: serverVisits.length };
 }
 
 // Sincroniza agendamentos
 async function syncSchedules() {
   if (!hasApi()) return { ok: false, error: 'API nao configurada' };
   const schedules = await load(KEY.SCHEDULES);
-  const lastSyncRaw = await AsyncStorage.getItem(KEY.LAST_SYNC + '_schedules');
-  const lastSyncAt = lastSyncRaw || null;
 
-  const result = await apiCall('/schedules/sync', {
-    method: 'POST',
-    body: JSON.stringify({ schedules, lastSyncAt }),
-  });
-  if (!result.ok) return { ok: false, error: result.error };
-
-  const { serverSchedules = [], syncedAt } = result.data;
-  const localMap = {};
-  schedules.forEach(s => { if (s.localId) localMap[s.localId] = s; });
-  const merged = [...schedules];
-  for (const ss of serverSchedules) {
-    if (ss.localId && localMap[ss.localId]) {
-      const idx = merged.findIndex(s => s.localId === ss.localId);
-      if (idx !== -1) merged[idx] = { ...merged[idx], ...ss };
-    } else if (ss.localId && !localMap[ss.localId]) {
-      merged.push(ss);
+  const pending = schedules.filter(s => !s.server_id);
+  let sent = 0;
+  for (const s of pending) {
+    const payload = {
+      local_id:        s.localId || s.id,
+      technician_name: s.technicianName,
+      client_name:     s.clientName,
+      service_type:    s.serviceType,
+      area:            s.area,
+      notes:           s.notes || '',
+      scheduled_date:  s.date || s.scheduledDate || new Date().toISOString(),
+      consultant:      s.consultant || null,
+      client_type:     s.clientType || null,
+    };
+    const res = await apiCall('/Schedule', {
+      method: 'POST',
+      headers: { 'Prefer': 'return=representation' },
+      body: JSON.stringify(payload),
+    });
+    if (res.ok) {
+      const created = Array.isArray(res.data) ? res.data[0] : res.data;
+      if (created && created.id) {
+        const idx = schedules.findIndex(x => (x.localId || x.id) === payload.local_id);
+        if (idx !== -1) schedules[idx] = { ...schedules[idx], server_id: created.id };
+      }
+      sent++;
     }
   }
-  await save(KEY.SCHEDULES, merged);
-  if (syncedAt) await AsyncStorage.setItem(KEY.LAST_SYNC + '_schedules', syncedAt);
-  return { ok: true, synced: result.data.created + result.data.updated, received: serverSchedules.length };
+
+  const serverRes = await apiCall('/Schedule?select=*');
+  const serverSchedules = (serverRes.ok && Array.isArray(serverRes.data)) ? serverRes.data : [];
+
+  const localIds = new Set(schedules.map(s => s.localId || s.id));
+  const serverOnlyIds = new Set(schedules.filter(s => s.server_id).map(s => String(s.server_id)));
+  for (const ss of serverSchedules) {
+    const ssLocalId = ss.local_id;
+    const ssServerId = String(ss.id);
+    if (!ssLocalId && !serverOnlyIds.has(ssServerId)) {
+      schedules.push({
+        localId: `server-${ss.id}`,
+        server_id: ss.id,
+        technicianName: ss.technician_name,
+        clientName:     ss.client_name,
+        serviceType:    ss.service_type,
+        area:           ss.area,
+        notes:          ss.notes || '',
+        date:           ss.scheduled_date,
+        consultant:     ss.consultant,
+        clientType:     ss.client_type,
+      });
+    } else if (ssLocalId && !localIds.has(ssLocalId)) {
+      schedules.push({
+        localId: ssLocalId,
+        server_id: ss.id,
+        technicianName: ss.technician_name,
+        clientName:     ss.client_name,
+        serviceType:    ss.service_type,
+        area:           ss.area,
+        notes:          ss.notes || '',
+        date:           ss.scheduled_date,
+        consultant:     ss.consultant,
+        clientType:     ss.client_type,
+      });
+    }
+  }
+
+  await save(KEY.SCHEDULES, schedules);
+  await AsyncStorage.setItem(KEY.LAST_SYNC + '_schedules', new Date().toISOString());
+  return { ok: true, synced: sent, received: serverSchedules.length };
 }
 
 // Sincroniza clientes
 async function syncClients() {
   if (!hasApi()) return { ok: false, error: 'API nao configurada' };
   const clients = await load(KEY.CLIENTS);
-  const lastSyncRaw = await AsyncStorage.getItem(KEY.LAST_SYNC + '_clients');
-  const lastSyncAt = lastSyncRaw || null;
 
-  const result = await apiCall('/clients/sync', {
-    method: 'POST',
-    body: JSON.stringify({ clients, lastSyncAt }),
-  });
-  if (!result.ok) return { ok: false, error: result.error };
-
-  const { serverClients = [], syncedAt } = result.data;
-  const localMap = {};
-  clients.forEach(c => { if (c.localId) localMap[c.localId] = c; });
-  const merged = [...clients];
-  for (const sc of serverClients) {
-    if (sc.localId && localMap[sc.localId]) {
-      const idx = merged.findIndex(c => c.localId === sc.localId);
-      if (idx !== -1) merged[idx] = { ...merged[idx], ...sc };
-    } else if (sc.localId && !localMap[sc.localId]) {
-      merged.push(sc);
+  const pending = clients.filter(c => !c.server_id);
+  let sent = 0;
+  for (const c of pending) {
+    const payload = {
+      local_id:        c.localId || c.id,
+      name:            c.name,
+      technician_name: c.technicianName,
+      area:            c.area,
+      client_type:     c.type || c.clientType || null,
+      phone:           c.phone || null,
+      notes:           c.notes || '',
+    };
+    const res = await apiCall('/Client', {
+      method: 'POST',
+      headers: { 'Prefer': 'return=representation' },
+      body: JSON.stringify(payload),
+    });
+    if (res.ok) {
+      const created = Array.isArray(res.data) ? res.data[0] : res.data;
+      if (created && created.id) {
+        const idx = clients.findIndex(x => (x.localId || x.id) === payload.local_id);
+        if (idx !== -1) clients[idx] = { ...clients[idx], server_id: created.id };
+      }
+      sent++;
     }
   }
-  await save(KEY.CLIENTS, merged);
-  if (syncedAt) await AsyncStorage.setItem(KEY.LAST_SYNC + '_clients', syncedAt);
-  return { ok: true, synced: result.data.created + result.data.updated, received: serverClients.length };
+
+  const serverRes = await apiCall('/Client?select=*');
+  const serverClients = (serverRes.ok && Array.isArray(serverRes.data)) ? serverRes.data : [];
+
+  const localIds = new Set(clients.map(c => c.localId || c.id));
+  const serverOnlyIds = new Set(clients.filter(c => c.server_id).map(c => String(c.server_id)));
+  for (const sc of serverClients) {
+    const scLocalId = sc.local_id;
+    const scServerId = String(sc.id);
+    if (!scLocalId && !serverOnlyIds.has(scServerId)) {
+      clients.push({
+        localId: `server-${sc.id}`,
+        server_id: sc.id,
+        name:           sc.name,
+        technicianName: sc.technician_name,
+        area:           sc.area,
+        type:           sc.client_type,
+        phone:          sc.phone,
+        notes:          sc.notes || '',
+      });
+    } else if (scLocalId && !localIds.has(scLocalId)) {
+      clients.push({
+        localId: scLocalId,
+        server_id: sc.id,
+        name:           sc.name,
+        technicianName: sc.technician_name,
+        area:           sc.area,
+        type:           sc.client_type,
+        phone:          sc.phone,
+        notes:          sc.notes || '',
+      });
+    }
+  }
+
+  await save(KEY.CLIENTS, clients);
+  await AsyncStorage.setItem(KEY.LAST_SYNC + '_clients', new Date().toISOString());
+  return { ok: true, synced: sent, received: serverClients.length };
 }
 
-// Carrega tecnicos do servidor e mescla com os locais
+// Carrega usuarios/tecnicos do servidor (tabela User) e mescla com os locais
 async function syncTechs() {
   if (!hasApi()) return { ok: false, error: 'API nao configurada' };
-  const result = await apiCall('/techs');
+  const result = await apiCall('/User?select=*');
   if (!result.ok) return { ok: false, error: result.error };
-  const serverTechs = Array.isArray(result.data) ? result.data : [];
-  if (serverTechs.length > 0) {
+  const serverUsers = Array.isArray(result.data) ? result.data : [];
+  if (serverUsers.length > 0) {
+    const serverTechs = serverUsers.map(u => ({
+      id:        u.id ? String(u.id) : `server-user-${u.email}`,
+      name:      u.name || u.nome || '',
+      area:      u.area || null,
+      areas:     u.areas || null,
+      email:     u.email || '',
+      phone:     u.phone || u.telefone || '',
+      login:     u.login || '',
+      createdAt: u.created_at || u.createdAt || new Date().toISOString(),
+    }));
     const local = await load(KEY.TECHS);
     const serverIds = new Set(serverTechs.map(t => t.id));
     const onlyLocal = local.filter(t => !serverIds.has(t.id));
     await save(KEY.TECHS, [...serverTechs, ...onlyLocal]);
   }
-  return { ok: true, received: serverTechs.length };
+  return { ok: true, received: serverUsers.length };
 }
 
 // Sincronizacao completa (visitas + agendas + clientes + tecnicos)
@@ -1983,14 +2184,13 @@ function LoginScreen({ onLogin }) {
           name: apiUser.name,
           role: apiUser.role,
           area: apiUser.area || null,
-          areas: null, // servidor nao tem campo areas; ajuste se necessario
+          areas: apiUser.areas || null,
         };
         setBusy(false);
         await AsyncStorage.setItem(KEY.SESSION, JSON.stringify(sessionUser));
         onLogin(sessionUser);
-        // Sincroniza dados em background apos login (token ja foi salvo por apiLogin)
-        const savedToken = await AsyncStorage.getItem(KEY.TOKEN);
-        if (savedToken) syncAll().catch(() => {});
+        // Sincroniza dados em background apos login via Supabase
+        syncAll().catch(() => {});
         return;
       }
       // Falha na API: cai para fallback local sem mostrar erro de rede
@@ -2078,11 +2278,6 @@ function HomeScreen({ session, go, onLogout }) {
   async function handleSync() {
     if (!hasApi()) {
       Alert.alert('API nao configurada', 'Defina API_BASE_URL no codigo para habilitar a sincronizacao.');
-      return;
-    }
-    const token = await AsyncStorage.getItem(KEY.TOKEN);
-    if (!token) {
-      Alert.alert('Nao autenticado', 'Faca login com sua conta online para sincronizar.');
       return;
     }
     setSyncStatus('syncing');
