@@ -1662,7 +1662,7 @@ async function apiPostSales(data) {
 // technicianName opcional: filtra por tecnico
 async function apiGetSales(month, technicianName) {
   let qs = `?month=eq.${encodeURIComponent(month)}`;
-  if (technicianName) qs += `&technician_name=eq.${encodeURIComponent(technicianName)}`;
+  if (technicianName) qs += `&technicianName=eq.${encodeURIComponent(technicianName)}`;
   return apiCall(`/monthly_sales${qs}`);
 }
 
