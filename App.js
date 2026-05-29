@@ -3412,14 +3412,22 @@ function LancamentoVendasScreen({ onBack }) {
       setError('Preencha os campos numericos corretamente.'); return;
     }
     setBusy(true);
-    const res = await apiPostSales(payload);
-    setBusy(false);
-    if (!res.ok) {
-      setError(res.error || 'Erro ao salvar.'); return;
+    try {
+      const res = await apiPostSales(payload);
+      if (!res.ok) {
+        setError(res.error || JSON.stringify(res.data) || 'Erro ao salvar.');
+        console.log('Erro ao salvar:', res);
+        return;
+      }
+      setSuccess(`Lancamento de ${mes} (${tecnico}) salvo com sucesso!`);
+      setMes(''); setDosesNovos(''); setDosesAtivos(''); setFatNovos(''); setFatAtivos('');
+      carregarLista();
+    } catch (err) {
+      setError('Erro inesperado: ' + err.message);
+      console.log('Erro inesperado:', err);
+    } finally {
+      setBusy(false);
     }
-    setSuccess(`Lancamento de ${mes} (${tecnico}) salvo com sucesso!`);
-    setMes(''); setDosesNovos(''); setDosesAtivos(''); setFatNovos(''); setFatAtivos('');
-    carregarLista();
   }
 
   function _fmtValor(v) {
