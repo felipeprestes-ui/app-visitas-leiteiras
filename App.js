@@ -1635,12 +1635,27 @@ async function apiDeleteSchedule(localId) {
 
 // Envia lancamento de vendas (gestor) para o Supabase
 async function apiPostSales(data) {
-  const body = { ...data, id: data.id || Date.now().toString() + Math.random().toString(36).slice(2, 8) };
-  return apiCall('/monthly_sales', {
-    method: 'POST',
-    headers: { 'Prefer': 'return=representation' },
-    body: JSON.stringify(body),
-  });
+  try {
+    const body = { 
+      ...data, 
+      id: data.id || Date.now().toString() + Math.random().toString(36).slice(2, 8) 
+    };
+    const res = await fetch(`${API_BASE_URL}/monthly_sales`, {
+      method: 'POST',
+      headers: {
+        ...supabaseHeaders(),
+        'Prefer': 'return=minimal'
+      },
+      body: JSON.stringify(body),
+    });
+    if (!res.ok) {
+      const text = await res.text();
+      return { ok: false, error: text || `HTTP ${res.status}` };
+    }
+    return { ok: true };
+  } catch (err) {
+    return { ok: false, error: err.message || 'Erro de rede' };
+  }
 }
 
 // Busca vendas de um mes especifico, ex: '2026-05' ou '8-2025'
@@ -3389,7 +3404,6 @@ function LancamentoVendasScreen({ onBack }) {
   useEffect(() => { carregarLista(); }, [carregarLista]);
 
   async function handleSalvar() {
-    Alert.alert('DEBUG', 'handleSalvar chamado');
     setError(''); setSuccess('');
     if (!mes.match(/^\d{4}-\d{2}$/)) {
       setError('Mes invalido. Use o formato AAAA-MM, ex: 2026-05'); return;
@@ -3416,8 +3430,7 @@ function LancamentoVendasScreen({ onBack }) {
     try {
       const res = await apiPostSales(payload);
       if (!res.ok) {
-        setError(res.error || JSON.stringify(res.data) || 'Erro ao salvar.');
-        console.log('Erro ao salvar:', res);
+        setError(res.error || 'Erro ao salvar.'); 
         return;
       }
       setSuccess(`Lancamento de ${mes} (${tecnico}) salvo com sucesso!`);
@@ -3425,7 +3438,6 @@ function LancamentoVendasScreen({ onBack }) {
       carregarLista();
     } catch (err) {
       setError('Erro inesperado: ' + err.message);
-      console.log('Erro inesperado:', err);
     } finally {
       setBusy(false);
     }
@@ -3534,7 +3546,7 @@ function LancamentoVendasScreen({ onBack }) {
             {!!error   && <View style={s.errorBox}><Text style={s.errorText}>{error}</Text></View>}
             {!!success && <View style={[s.errorBox, { backgroundColor: '#e8f5e9' }]}><Text style={[s.errorText, { color: '#2e7d32' }]}>{success}</Text></View>}
 
-            <Btn label={busy ? 'Salvando...' : 'Salvar'} onPress={() => { Alert.alert('DEBUG', 'Botao clicado'); handleSalvar(); }} disabled={busy} />
+            <Btn label={busy ? 'Salvando...' : 'Salvar'} onPress={handleSalvar} disabled={busy} />
           </Card>
 
           <Card>
