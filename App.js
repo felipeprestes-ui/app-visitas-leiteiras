@@ -3389,6 +3389,7 @@ function LancamentoVendasScreen({ onBack }) {
   useEffect(() => { carregarLista(); }, [carregarLista]);
 
   async function handleSalvar() {
+    Alert.alert('DEBUG', 'handleSalvar chamado');
     setError(''); setSuccess('');
     if (!mes.match(/^\d{4}-\d{2}$/)) {
       setError('Mes invalido. Use o formato AAAA-MM, ex: 2026-05'); return;
@@ -3533,7 +3534,7 @@ function LancamentoVendasScreen({ onBack }) {
             {!!error   && <View style={s.errorBox}><Text style={s.errorText}>{error}</Text></View>}
             {!!success && <View style={[s.errorBox, { backgroundColor: '#e8f5e9' }]}><Text style={[s.errorText, { color: '#2e7d32' }]}>{success}</Text></View>}
 
-            <Btn label={busy ? 'Salvando...' : 'Salvar'} onPress={handleSalvar} disabled={busy} />
+            <Btn label={busy ? 'Salvando...' : 'Salvar'} onPress={() => { Alert.alert('DEBUG', 'Botao clicado'); handleSalvar(); }} disabled={busy} />
           </Card>
 
           <Card>
