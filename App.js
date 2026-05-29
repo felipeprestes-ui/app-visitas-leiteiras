@@ -3372,7 +3372,7 @@ const FILTER_INIT = { month: 'all', area: 'all', tech: 'all', service: 'all', cl
 
 const TECNICOS_LISTA = ['Erica', 'Cesar', 'Henrique', 'Leandro', 'Felipe'];
 
-function LancamentoVendasScreen({ onBack }) {
+function LancamentoVendasScreen({ onBack, session }) {
   const [mes,           setMes]           = useState('');
   const [tecnico,       setTecnico]       = useState(TECNICOS_LISTA[0]);
   const [showTecPicker, setShowTecPicker] = useState(false);
@@ -4237,7 +4237,7 @@ export default function App() {
   if (screen === 'dashboard')    return <DashboardScreen onBack={back} go={go} />;
   if (screen === 'vendas-gestor') return <VendasGestorScreen onBack={back} />;
   if (screen === 'vendas-tecnico') return <VendasTecnicoScreen session={session} onBack={back} />;
-  if (screen === 'lancamento-vendas') return <LancamentoVendasScreen onBack={back} />;
+  if (screen === 'lancamento-vendas') return <LancamentoVendasScreen onBack={back} session={session} />;
   if (screen === 'change-password') return <ChangePasswordScreen session={session} onBack={back} onChanged={() => saved('home')} />;
 
   return <HomeScreen session={session} go={go} onLogout={logout} />;
