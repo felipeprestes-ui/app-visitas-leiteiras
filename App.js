@@ -2094,28 +2094,40 @@ function SalesCardTecnico({ session }) {
   useEffect(() => {
     (async () => {
       setLoading(true);
-      const now = new Date();
-      const yyyy = now.getFullYear();
-      const mm   = String(now.getMonth() + 1).padStart(2, '0');
-      const mesKey = `${yyyy}-${mm}`;
+      try {
+        // Buscar TODAS as vendas e filtrar pelo mes e tecnico
+        const now = new Date();
+        const yyyy = now.getFullYear();
+        const mm   = String(now.getMonth() + 1).padStart(2, '0');
+        const mesKey = `${yyyy}-${mm}`;
 
-      const res = await apiGetSales(mesKey, technicianName);
-      if (res.ok && res.data && Array.isArray(res.data) && res.data.length > 0) {
-        setData(res.data[0]);
-        setFromCache(false);
-        try { await AsyncStorage.setItem(KEY.SALES_CURRENT, JSON.stringify(res.data[0])); } catch {}
-      } else if (res.ok && res.data && !Array.isArray(res.data)) {
-        setData(res.data);
-        setFromCache(false);
-        try { await AsyncStorage.setItem(KEY.SALES_CURRENT, JSON.stringify(res.data)); } catch {}
-      } else {
-        // fallback cache
+        const res = await apiGetAllSales();
+        if (res.ok && res.data) {
+          const records = Array.isArray(res.data) ? res.data : [res.data];
+          const filtered = records.filter(r => r.month === mesKey && r.technicianName === technicianName);
+          if (filtered.length > 0) {
+            setData(filtered[0]);
+            setFromCache(false);
+            try { await AsyncStorage.setItem(KEY.SALES_CURRENT, JSON.stringify(filtered[0])); } catch {}
+          } else {
+            setData(null);
+            setFromCache(false);
+          }
+        } else {
+          // fallback cache
+          try {
+            const raw = await AsyncStorage.getItem(KEY.SALES_CURRENT);
+            if (raw) { setData(JSON.parse(raw)); setFromCache(true); }
+          } catch {}
+        }
+      } catch (e) {
         try {
           const raw = await AsyncStorage.getItem(KEY.SALES_CURRENT);
           if (raw) { setData(JSON.parse(raw)); setFromCache(true); }
         } catch {}
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     })();
   }, [technicianName]);
 
