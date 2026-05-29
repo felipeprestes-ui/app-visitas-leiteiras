@@ -2100,7 +2100,11 @@ function SalesCardTecnico({ session }) {
       const mesKey = `${yyyy}-${mm}`;
 
       const res = await apiGetSales(mesKey, technicianName);
-      if (res.ok && res.data && !Array.isArray(res.data)) {
+      if (res.ok && res.data && Array.isArray(res.data) && res.data.length > 0) {
+        setData(res.data[0]);
+        setFromCache(false);
+        try { await AsyncStorage.setItem(KEY.SALES_CURRENT, JSON.stringify(res.data[0])); } catch {}
+      } else if (res.ok && res.data && !Array.isArray(res.data)) {
         setData(res.data);
         setFromCache(false);
         try { await AsyncStorage.setItem(KEY.SALES_CURRENT, JSON.stringify(res.data)); } catch {}
