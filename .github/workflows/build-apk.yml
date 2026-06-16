@@ -1,0 +1,93 @@
+name: "Build APK Android"
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: "Build APK Android"
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: "Baixar codigo"
+        uses: actions/checkout@v4
+
+      - name: "Restaurar package.json do app mobile"
+        run: |
+          cat > package.json << 'EOF'
+          {
+            "name": "app-visitas-leiteiras",
+            "version": "1.0.0",
+            "main": "index.js",
+            "scripts": {
+              "start": "expo start",
+              "android": "expo run:android",
+              "ios": "expo run:ios"
+            },
+            "dependencies": {
+              "@react-native-async-storage/async-storage": "1.23.1",
+              "expo": "~51.0.28",
+              "expo-constants": "~16.0.2",
+              "expo-file-system": "~17.0.1",
+              "expo-linking": "~6.3.1",
+              "expo-location": "~17.0.1",
+              "expo-print": "~13.0.1",
+              "expo-sharing": "~12.0.1",
+              "expo-splash-screen": "~0.27.5",
+              "expo-status-bar": "~1.12.1",
+              "react": "18.2.0",
+              "react-native": "0.74.5"
+            },
+            "devDependencies": {
+              "@babel/core": "^7.24.0"
+            },
+            "private": true
+          }
+          EOF
+
+      - name: "Liminar conflitos de versão"
+        run: |
+          # Remove eas-cli das dependências se existir
+          npm uninstall eas-cli 2>/dev/null || true
+          # Limpa cache
+          npm cache clean --force 2>/dev/null || true
+
+      - name: "Criar index.js"
+        run: |
+          cat > index.js << 'EOF'
+          import { registerRootComponent } from 'expo';
+          import App from './App';
+
+          registerRootComponent(App);
+          EOF
+
+      - name: "Verificar App.js"
+        run: |
+          if [ ! -f App.js ]; then
+            echo "ERRO: App.js nao encontrado na raiz"
+            exit 1
+          fi
+          echo "App.js encontrado: $(wc -c < App.js) bytes"
+
+      - name: "Configurar Node.js 20"
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: "Instalar dependencias"
+        run: npm install --no-package-lock
+
+      - name: "Configurar Expo / EAS CLI"
+        uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: "Build APK (EAS)"
+        run: |
+          EAS_BIN=$(find /opt/hostedtoolcache/eas-cli -name "eas" -type f -path "*/node_modules/.bin/eas" | head -1)
+          echo "Using EAS at: $EAS_BIN"
+          $EAS_BIN build \
+            --platform android \
+            --profile preview \
+            --non-interactive

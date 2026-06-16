@@ -1,0 +1,49 @@
+# Objetivo
+Corrigir o erro CRITICO identificado no APK Android:
+Invariant Violation: "main" has not been registered.
+
+# Causa Raiz
+O package.json tem "main": "App.js", mas em builds de release Android com Expo SDK 51, o app PRECISA ser registrado explicitamente com registerRootComponent(App).
+
+O erro ocorre porque:
+1. O App.js so tem export default function App()
+2. O Expo runtime em release build espera que o componente raiz seja registrado via registerRootComponent
+3. Sem isso, o app crasha imediatamente com "main has not been registered"
+
+# Correcao Necessaria
+
+## Opcao A (recomendada): Criar arquivo index.js
+Criar standalone/index.js com:
+```javascript
+import { registerRootComponent } from 'expo';
+import App from './App';
+
+registerRootComponent(App);
+```
+
+E atualizar standalone/package.json:
+```json
+{
+  "main": "index.js",
+  ...
+}
+```
+
+## Opcao B: Modificar App.js
+Adicionar no final do standalone/App.js:
+```javascript
+import { registerRootComponent } from 'expo';
+registerRootComponent(App);
+```
+
+# IMPORTANTE
+- O usuario NAO tem Node.js/Git instalado
+- Todo o processo e via navegador (GitHub + Expo EAS Build)
+- Precisamos da solucao mais simples e confiavel
+- A correcao deve funcionar com Expo SDK 51 + React Native 0.74.5
+
+# Instrucoes
+1. Escolha a melhor opcao (A ou B) baseado na compatibilidade com Expo SDK 51
+2. Aplique a correcao no arquivo apropriado
+3. Verifique se expo esta no package.json (deve estar)
+4. Relate qual opcao foi escolhida e por que

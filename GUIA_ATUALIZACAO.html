@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CRV Lagoa - Atualização Portal + App</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f5f7fa; color: #333; line-height: 1.6; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+        header { background: linear-gradient(135deg, #1a3c7a 0%, #2d5aa0 100%); color: white; padding: 30px; border-radius: 12px; margin-bottom: 30px; text-align: center; }
+        header h1 { font-size: 28px; margin-bottom: 10px; }
+        header p { opacity: 0.9; font-size: 16px; }
+        .section { background: white; border-radius: 12px; padding: 25px; margin-bottom: 25px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+        .section h2 { color: #1a3c7a; font-size: 22px; margin-bottom: 15px; display: flex; align-items: center; gap: 10px; }
+        .section h3 { color: #2d5aa0; font-size: 18px; margin: 20px 0 10px 0; }
+        .badge { display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: bold; text-transform: uppercase; }
+        .badge-portal { background: #e3f2fd; color: #1565c0; }
+        .badge-app { background: #e8f5e9; color: #2e7d32; }
+        .badge-sql { background: #fff3e0; color: #ef6c00; }
+        .step { background: #f8f9fa; border-left: 4px solid #1a3c7a; padding: 15px; margin: 15px 0; border-radius: 0 8px 8px 0; }
+        .step-number { display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; background: #1a3c7a; color: white; border-radius: 50%; font-weight: bold; margin-right: 10px; font-size: 14px; }
+        .code-block { background: #1e1e1e; color: #d4d4d4; padding: 20px; border-radius: 8px; overflow-x: auto; font-family: 'Consolas', 'Monaco', monospace; font-size: 13px; line-height: 1.5; margin: 15px 0; position: relative; }
+        .code-block .copy-btn { position: absolute; top: 10px; right: 10px; background: #4a4a4a; color: white; border: none; padding: 5px 15px; border-radius: 4px; cursor: pointer; font-size: 12px; }
+        .code-block .copy-btn:hover { background: #5a5a5a; }
+        .code-block pre { margin: 0; white-space: pre-wrap; word-wrap: break-word; }
+        .warning { background: #fff3cd; border: 1px solid #ffc107; color: #856404; padding: 15px; border-radius: 8px; margin: 15px 0; }
+        .success { background: #d4edda; border: 1px solid #28a745; color: #155724; padding: 15px; border-radius: 8px; margin: 15px 0; }
+        .link-btn { display: inline-block; background: #1a3c7a; color: white; padding: 10px 20px; border-radius: 6px; text-decoration: none; font-weight: 500; margin: 5px 5px 5px 0; transition: background 0.2s; }
+        .link-btn:hover { background: #2d5aa0; }
+        .link-btn.secondary { background: #6c757d; }
+        .link-btn.secondary:hover { background: #5a6268; }
+        table { width: 100%; border-collapse: collapse; margin: 15px 0; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #dee2e6; }
+        th { background: #f8f9fa; font-weight: 600; color: #1a3c7a; }
+        tr:hover { background: #f8f9fa; }
+        .checklist { list-style: none; }
+        .checklist li { padding: 8px 0; display: flex; align-items: center; gap: 10px; }
+        .checklist li::before { content: "☐"; font-size: 20px; color: #1a3c7a; }
+        .highlight { background: #fff3cd; padding: 2px 6px; border-radius: 4px; font-weight: 500; }
+        footer { text-align: center; padding: 30px; color: #6c757d; font-size: 14px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🐄 CRV Lagoa - Atualização Completa</h1>
+            <p>Portal Web + App Mobile - Passo a passo detalhado</p>
+        </header>
+
+        <!-- RESUMO DAS CORRECOES -->
+        <div class="section">
+            <h2>📋 Resumo das Correções</h2>
+            
+            <h3><span class="badge badge-portal">Portal Web</span></h3>
+            <table>
+                <tr><th>Problema</th><th>Correção</th></tr>
+                <tr><td>Nova visita: erro "null id"</td><td>Gera UUID automaticamente no código</td></tr>
+                <tr><td>Nova venda: erro "null id"</td><td>Gera UUID automaticamente no código</td></tr>
+                <tr><td>Editar técnico: não salva</td><td>Remove campo 'areas' e normaliza área para 3 dígitos</td></tr>
+                <tr><td>PDF sem gráficos</td><td>Adiciona html2canvas + gráficos recharts</td></tr>
+            </table>
+
+            <h3><span class="badge badge-app">App Mobile</span></h3>
+            <table>
+                <tr><th>Problema</th><th>Correção</th></tr>
+                <tr><td>Visitas antigas não sincronizam</td><td>Envia TODAS as visitas, não apenas pendentes</td></tr>
+                <tr><td>Nome cliente vazio na visita</td><td>Preenche automaticamente com nome da propriedade</td></tr>
+                <tr><td>Agenda sem nome do técnico</td><td>Adicionado "Técnico: {nome}" no card</td></tr>
+                <tr><td>Gestor vê "todos os meses"</td><td>Filtro padrão agora é mês atual</td></tr>
+            </table>
+        </div>
+
+        <!-- PARTE 1: SUPABASE SQL -->
+        <div class="section">
+            <h2>🗄️ PARTE 1: Configurar Supabase (SQL)</h2>
+            <p>Execute este SQL no <strong>SQL Editor</strong> do Supabase antes de tudo:</p>
+            
+            <div class="code-block">
+                <button class="copy-btn" onclick="copyCode(this)">Copiar</button>
+                <pre>-- Gerar id automaticamente na tabela Visit
+ALTER TABLE "Visit" ALTER COLUMN "id" SET DEFAULT gen_random_uuid();
+
+-- Liberar colunas de vendas
+ALTER TABLE "monthly_sales" ALTER COLUMN "updatedAt" DROP NOT NULL;
+ALTER TABLE "monthly_sales" ALTER COLUMN "updatedAt" SET DEFAULT now();
+ALTER TABLE "monthly_sales" ALTER COLUMN "createdAt" DROP NOT NULL;
+ALTER TABLE "monthly_sales" ALTER COLUMN "createdAt" SET DEFAULT now();</pre>
+            </div>
+
+            <div class="success">
+                <strong>✅ Resultado esperado:</strong> Mensagem "Success" com 0 rows (ou similar). Isso libera o banco para aceitar novos registros sem erros.
+            </div>
+        </div>
+
+        <!-- PARTE 2: PORTAL WEB -->
+        <div class="section">
+            <h2>🌐 PARTE 2: Atualizar Portal Web (3 arquivos)</h2>
+            
+            <h3>Arquivo 1: src/lib/supabase.ts</h3>
+            <div class="step">
+                <span class="step-number">1</span>
+                <strong>Acesse:</strong> <a href="https://github.com/felipeprestes-ui/app-visitas-leiteiras/edit/main/src/lib/supabase.ts" class="link-btn" target="_blank">Abrir no GitHub</a>
+            </div>
+            <div class="step">
+                <span class="step-number">2</span>
+                <strong>Selecione tudo</strong> (Ctrl+A) e <strong>apague</strong>
+            </div>
+            <div class="step">
+                <span class="step-number">3</span>
+                <strong>Cole o código abaixo:</strong>
+            </div>
+
+            <div class="code-block">
+                <button class="copy-btn" onclick="copyCode(this)">Copiar</button>
+                <pre>import type { Visit, MonthlySale, TechUser } from '@/types/portal';
+
+const API_BASE_URL =
+  process.env.NEXT_PUBLIC_SUPABASE_URL ||
+  'https://egmradntktqzpuedxqhg.supabase.co/rest/v1';
+
+const SUPABASE_ANON_KEY =
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVnbXJhZG50a3RxenB1ZWR4cWhnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk5MTcwMTMsImV4cCI6MjA5NTQ5MzAxM30.f2mnogv5_EHVgEU-wUktMfVn7i28sf_vLhl1Baimtnk';
+
+export function supabaseHeaders(extra: Record&lt;string, string&gt; = {}): Record&lt;string, string&gt; {
+  return {
+    'Content-Type': 'application/json',
+    apikey: SUPABASE_ANON_KEY,
+    Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+    ...extra,
+  };
+}
+
+export interface ApiResult&lt;T&gt; {
+  ok: boolean;
+  data?: T;
+  error?: string;
+}
+
+export async function supabaseFetch&lt;T&gt;(
+  path: string,
+  options: RequestInit &amp; { headers?: Record&lt;string, string&gt; } = {}
+): Promise&lt;ApiResult&lt;T&gt;&gt; {
+  try {
+    const headers = supabaseHeaders(options.headers || {});
+    const res = await fetch(`${API_BASE_URL}${path}`, {
+      ...options,
+      headers,
+    });
+    const text = await res.text();
+    let data: unknown;
+    try {
+      data = JSON.parse(text);
+    } catch {
+      data = text;
+    }
+    if (!res.ok) {
+      const errData = data as Record&lt;string, unknown&gt; | null;
+      const msg =
+        (errData &amp;&amp; (errData.message || errData.error || errData.hint)) ||
+        `HTTP ${res.status}`;
+      return { ok: false, error: msg as string };
+    }
+    return { ok: true, data: data as T };
+  } catch (err) {
+    return {
+      ok: false,
+      error: (err as Error).message || 'Sem conexao',
+    };
+  }
+}
+
+// ── Helpers: map Supabase columns → Portal columns ────────────────────────
+
+export function mapSupabaseToVisit(raw: Record&lt;string, unknown&gt;): Visit {
+  return {
+    id: String(raw.id || ''),
+    technician_name: String(raw.techName || raw.technician_name || ''),
+    client_name: String(raw.client_name || raw.clientName || ''),
+    service_type: String(raw.objetivo || raw.service_type || raw.serviceType || ''),
+    area: String(raw.areas || raw.area || '').trim().padStart(3, '0'),
+    client_type: String(raw.tipo || raw.client_type || raw.clientType || ''),
+    animals: (raw.mudas as number) ?? (raw.animals as number) ?? (raw.animalCount as number) ?? null,
+    deal_closed: Boolean(raw.deal_closed || raw.dealClosed),
+    herd_size: (raw.animaisAcasalados as number) ?? (raw.animaisColeta as number) ?? (raw.herd_size as number) ?? (raw.herdSize as number) ?? null,
+    consultant: String(raw.consultant || raw.CONSULTOR || ''),
+    notes: String(raw.notes || ''),
+    date: String(raw.date || raw.visitDate || raw.visit_date || raw.visited_at || ''),
+    local_id: (raw.local_id as string) || null,
+    lat: (raw.lat as number) ?? null,
+    lng: (raw.lng as number) ?? null,
+  };
+}
+
+// ── Visits ──────────────────────────────────────────────────────────────
+
+export async function fetchVisits(params: Record&lt;string, string&gt; = {}): Promise&lt;Visit[]&gt; {
+  const base: Record&lt;string, string&gt; = { select: '*', order: 'date.desc' };
+  const converted: Record&lt;string, string&gt; = {};
+  for (const [k, v] of Object.entries({ ...base, ...params })) {
+    const realKey = k.startsWith('visit_date') ? k.replace('visit_date', 'date') : k;
+    const finalKey = realKey.replace(/_\d+$/, '');
+    const finalVal = v.replace(/visit_date/g, 'date');
+    converted[finalKey] = finalVal;
+  }
+  const parts: string[] = [];
+  for (const [k, v] of Object.entries(converted)) {
+    parts.push(`${k}=${v}`);
+  }
+  const res = await supabaseFetch&lt;Record&lt;string, unknown&gt;[]&gt;(`/Visit?${parts.join('&amp;')}`);
+  if (!res.ok || !Array.isArray(res.data)) return [];
+  return res.data.map(mapSupabaseToVisit);
+}
+
+export async function upsertVisit(payload: Partial&lt;Visit&gt;): Promise&lt;ApiResult&lt;Visit&gt;&gt; {
+  const method = payload.id ? 'PATCH' : 'POST';
+  const path = payload.id ? `/Visit?id=eq.${payload.id}` : '/Visit';
+  const body = { ...payload };
+  if (method === 'POST') {
+    delete body.id;
+    // Gera UUID automatico para insercao nova (Supabase exige id NOT NULL)
+    body.local_id = body.local_id || crypto.randomUUID?.() || 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c =&gt; {
+      const r = Math.random() * 16 | 0;
+      return (c === 'x' ? r : (r &amp; 0x3 | 0x8)).toString(16);
+    });
+  }
+
+  // Map portal fields back to Supabase columns (ONLY columns that exist in Supabase)
+  const mapped = {
+    id: body.local_id, // Usa local_id como id primario
+    techName: body.technician_name,
+    areas: body.area,
+    objetivo: body.service_type,
+    tipo: body.client_type,
+    mudas: body.animals,
+    animaisAcasalados: body.herd_size,
+    deal_closed: body.deal_closed,
+    consultant: body.consultant,
+    notes: body.notes,
+    date: body.date,
+    client_name: body.client_name,
+    local_id: body.local_id,
+    lat: body.lat,
+    lng: body.lng,
+  };
+
+  return supabaseFetch&lt;Visit&gt;(path, {
+    method,
+    headers: { Prefer: 'return=representation' },
+    body: JSON.stringify(mapped),
+  });
+}
+
+export async function deleteVisit(id: string): Promise&lt;ApiResult&lt;void&gt;&gt; {
+  return supabaseFetch(`/Visit?id=eq.${encodeURIComponent(id)}`, {
+    method: 'DELETE'
+  });
+}
+
+// ── Sales ───────────────────────────────────────────────────────────────
+
+export async function fetchSales(params: Record&lt;string, string&gt; = {}): Promise&lt;MonthlySale[]&gt; {
+  const base: Record&lt;string, string&gt; = { select: '*', order: 'month.desc' };
+  const merged = { ...base, ...params };
+  const parts: string[] = [];
+  for (const [k, v] of Object.entries(merged)) {
+    parts.push(`${k}=${v}`);
+  }
+  const res = await supabaseFetch&lt;MonthlySale[]&gt;(`/monthly_sales?${parts.join('&amp;')}`);
+  return res.ok &amp;&amp; Array.isArray(res.data) ? res.data : [];
+}
+
+export async function upsertSale(payload: Partial&lt;MonthlySale&gt;): Promise&lt;ApiResult&lt;MonthlySale&gt;&gt; {
+  const body = { ...payload };
+  // Gera UUID automatico se for insercao nova sem id
+  if (!body.id) {
+    body.id = crypto.randomUUID?.() || 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c =&gt; {
+      const r = Math.random() * 16 | 0;
+      return (c === 'x' ? r : (r &amp; 0x3 | 0x8)).toString(16);
+    });
+  }
+  return supabaseFetch&lt;MonthlySale&gt;('/monthly_sales?on_conflict=month,technicianName', {
+    method: 'POST',
+    headers: { Prefer: 'resolution=merge-duplicates,return=representation' },
+    body: JSON.stringify(body),
+  });
+}
+
+export async function deleteSale(id: string): Promise&lt;ApiResult&lt;void&gt;&gt; {
+  return supabaseFetch(`/monthly_sales?id=eq.${encodeURIComponent(id)}`, {
+    method: 'DELETE'
+  });
+}
+
+// ── Users ────────────────────────────────────────────────────────────
+
+export async function fetchUsers(params: Record&lt;string, string&gt; = {}): Promise&lt;TechUser[]&gt; {
+  const base: Record&lt;string, string&gt; = { select: '*', order: 'name.asc' };
+  const merged = { ...base, ...params };
+  const parts: string[] = [];
+  for (const [k, v] of Object.entries(merged)) {
+    parts.push(`${k}=${v}`);
+  }
+  const res = await supabaseFetch&lt;TechUser[]&gt;(`/User?${parts.join('&amp;')}`);
+  return res.ok &amp;&amp; Array.isArray(res.data) ? res.data : [];
+}
+
+export async function upsertUser(payload: Partial&lt;TechUser&gt;): Promise&lt;ApiResult&lt;TechUser&gt;&gt; {
+  const method = payload.id ? 'PATCH' : 'POST';
+  const path = payload.id ? `/User?id=eq.${payload.id}` : '/User';
+  const body = { ...payload };
+  if (method === 'POST') delete body.id;
+  // Removemos 'areas' que pode nao existir no Supabase e normalizamos area
+  if ((body as Record&lt;string, unknown&gt;).areas !== undefined) delete (body as Record&lt;string, unknown&gt;).areas;
+  if (body.area) body.area = String(body.area).trim().padStart(3, '0');
+  return supabaseFetch&lt;TechUser&gt;(path, {
+    method,
+    headers: { Prefer: 'return=representation' },
+    body: JSON.stringify(body),
+  });
+}
+
+export async function deleteUser(id: string): Promise&lt;ApiResult&lt;void&gt;&gt; {
+  return supabaseFetch(`/User?id=eq.${encodeURIComponent(id)}`, {
+    method: 'DELETE'
+  });
+}
+
+export async function loginUser(email: string, password: string): Promise&lt;TechUser | null&gt; {
+  const res = await supabaseFetch&lt;TechUser[]&gt;(
+    `/User?email=eq.${encodeURIComponent(email)}&amp;select=*`
+  );
+  if (!res.ok || !Array.isArray(res.data) || res.data.length === 0) return null;
+  const user = res.data[0];
+  const storedPwd = (user as unknown as Record&lt;string, string&gt;).password || '';
+  if (storedPwd !== password) return null;
+  return user;
+}</pre>
+            </div>
+
+            <div class="step">
+                <span class="step-number">4</span>
+                <strong>Commit:</strong> Mensagem "Fix: gera id automatico + corrige tecnicos" → Clique <strong>"Commit changes"</strong>
+            </div>
+
+            <h3>Arquivo 2: apps/web/package.json</h3>
+            <div class="step">
+                <span class="step-number">1</span>
+                <strong>Acesse:</strong> <a href="https://github.com/felipeprestes-ui/app-visitas-leiteiras/edit/main/apps/web/package.json" class="link-btn" target="_blank">Abrir no GitHub</a>
+            </div>
+            <div class="step">
+                <span class="step-number">2</span>
+                <strong>Adicione esta linha</strong> após <code>"date-fns": "^3.6.0",</code>:
+            </div>
+
+            <div class="code-block">
+                <button class="copy-btn" onclick="copyCode(this)">Copiar</button>
+                <pre>    "html2canvas": "^1.4.1",</pre>
+            </div>
+
+            <div class="step">
+                <span class="step-number">3</span>
+                <strong>Commit:</strong> "Add html2canvas para PDF com graficos"
+            </div>
+
+            <h3>Arquivo 3: apps/web/src/app/relatorios/RelatoriosClient.tsx</h3>
+            <div class="warning">
+                <strong>⚠️ Arquivo muito grande para colar aqui.</strong><br>
+                Opções:
+                <ol>
+                    <li>Baixe o arquivo do meu PC: <code>C:\Users\prestesf\Projects\app-visitas-leiteiras\apps\web\src\app\relatorios\RelatoriosClient.tsx</code></li>
+                    <li>Faça upload direto no GitHub (Add file → Upload files)</li>
+                </ol>
+            </div>
+        </div>
+
+        <!-- PARTE 3: APP MOBILE -->
+        <div class="section">
+            <h2>📱 PARTE 3: Atualizar App Mobile (APK)</h2>
+            
+            <h3>Passo 1: Subir App.js no GitHub</h3>
+            <div class="step">
+                <span class="step-number">1</span>
+                <strong>Acesse:</strong> <a href="https://github.com/felipeprestes-ui/app-visitas-leiteiras" class="link-btn" target="_blank">Repositório GitHub</a>
+            </div>
+            <div class="step">
+                <span class="step-number">2</span>
+                Clique em <strong>"Add file" → "Upload files"</strong>
+            </div>
+            <div class="step">
+                <span class="step-number">3</span>
+                Selecione o arquivo: <code>C:\Users\prestesf\Projects\app-visitas-leiteiras\standalone\App.js</code>
+            </div>
+            <div class="step">
+                <span class="step-number">4</span>
+                <strong>Commit:</strong> "Correcao app: sincronizacao forcada + nome tecnico + filtro mes"
+            </div>
+
+            <h3>Passo 2: Gerar APK</h3>
+            <div class="step">
+                <span class="step-number">1</span>
+                <strong>Acesse:</strong> <a href="https://github.com/felipeprestes-ui/app-visitas-leiteiras/actions" class="link-btn" target="_blank">GitHub Actions</a>
+            </div>
+            <div class="step">
+                <span class="step-number">2</span>
+                Procure o workflow <strong>"Build APK"</strong> ou <strong>"Build Android"</strong>
+            </div>
+            <div class="step">
+                <span class="step-number">3</span>
+                Clique em <strong>"Run workflow"</strong> → <strong>"Run workflow"</strong>
+            </div>
+            <div class="step">
+                <span class="step-number">4</span>
+                Aguarde ~5 minutos até ficar ✅ verde
+            </div>
+            <div class="step">
+                <span class="step-number">5</span>
+                Baixe a APK na aba <strong>"Artifacts"</strong>
+            </div>
+
+            <h3>Passo 3: Distribuir aos Técnicos</h3>
+            <div class="success">
+                <strong>📲 Envie a APK via WhatsApp/Slack</strong><br>
+                Instruções para os técnicos:
+                <ol>
+                    <li>Instalar a APK nova (por cima do app antigo)</li>
+                    <li>Abrir o app</li>
+                    <li>Apertar <strong>"Sincronizar agora"</strong></li>
+                    <li>Verificar se aparece "OK" verde</li>
+                </ol>
+            </div>
+        </div>
+
+        <!-- PARTE 4: VERIFICAR -->
+        <div class="section">
+            <h2>✅ PARTE 4: Verificar Deploy</h2>
+            
+            <div class="step">
+                <span class="step-number">1</span>
+                Acesse: <a href="https://github.com/felipeprestes-ui/app-visitas-leiteiras/actions" class="link-btn" target="_blank">GitHub Actions</a>
+            </div>
+            <div class="step">
+                <span class="step-number">2</span>
+                Aguarde todos os workflows ficarem ✅ <strong>verdes</strong>
+            </div>
+            <div class="step">
+                <span class="step-number">3</span>
+                Teste o portal: <a href="https://felipeprestes-ui.github.io/app-visitas-leiteiras/login" class="link-btn" target="_blank">Abrir Portal</a>
+            </div>
+
+            <h3>Testes a fazer:</h3>
+            <ul class="checklist">
+                <li>Lançar nova visita → não deve dar erro</li>
+                <li>Lançar nova venda → não deve dar erro</li>
+                <li>Editar técnico → deve salvar</li>
+                <li>Exportar PDF → deve conter gráficos</li>
+                <li>Visitas antigas aparecem → deve mostrar dados dos meses anteriores</li>
+            </ul>
+        </div>
+
+        <!-- CHECKLIST FINAL -->
+        <div class="section">
+            <h2>📋 Checklist Final</h2>
+            <ul class="checklist">
+                <li>Executar SQL no Supabase</li>
+                <li>Subir src/lib/supabase.ts no GitHub</li>
+                <li>Subir apps/web/package.json no GitHub</li>
+                <li>Subir apps/web/src/app/relatorios/RelatoriosClient.tsx no GitHub</li>
+                <li>Aguardar deploy do portal web</li>
+                <li>Subir standalone/App.js no GitHub</li>
+                <li>Gerar APK nova</li>
+                <li>Enviar APK aos técnicos</li>
+                <li>Técnicos instalam e sincronizam</li>
+                <li>Verificar visitas antigas no portal</li>
+            </ul>
+        </div>
+
+        <footer>
+            <p>CRV Lagoa - Sistema de Visitas Leiteiras</p>
+            <p style="margin-top: 10px; font-size: 12px;">Atualizado em: 10/06/2026</p>
+        </footer>
+    </div>
+
+    <script>
+        function copyCode(btn) {
+            const codeBlock = btn.parentElement.querySelector('pre');
+            const text = codeBlock.innerText;
+            navigator.clipboard.writeText(text).then(() => {
+                btn.textContent = 'Copiado!';
+                setTimeout(() => btn.textContent = 'Copiar', 2000);
+            });
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,153 @@
+================================================================================
+COMO SUBIR O PORTAL NO GITHUB (upload manual via web)
+URL DO REPOSITORIO: https://github.com/felipeprestes-ui/app-visitas-leiteiras
+================================================================================
+
+PASSO 1: Acesse o repositorio no navegador
+  https://github.com/felipeprestes-ui/app-visitas-leiteiras
+
+PASSO 2: Para CADA arquivo abaixo, faca:
+  - Clique em "Add file" -> "Create new file"
+  - Cole o CAMINHO COMPLETO no campo do nome do arquivo (ex: apps/web/package.json)
+  - Cole o CONTEUDO abaixo
+  - Digite a mensagem de commit: "feat: adiciona portal web gestor"
+  - Clique "Commit new file"
+
+PASSO 3: Ative o GitHub Pages
+  - Va em Settings -> Pages
+  - Em "Build and deployment" -> Source: selecione "GitHub Actions"
+
+PASSO 4: Aguarde 2-3 minutos
+  - Acesse: https://felipeprestes-ui.github.io/app-visitas-leiteiras/
+
+LOGIN:
+  Email: gestor@crv4all.com.br
+  Senha: Luisa@0510
+
+================================================================================
+ARQUIVO: apps/web/package.json
+================================================================================
+
+{"name":"crv-lagoa-portal","private":true,"version":"0.1.0","scripts":{"dev":"next dev","build":"next build","start":"next start","typecheck":"tsc --noEmit"},"dependencies":{"date-fns":"^3.6.0","jspdf":"^2.5.1","jspdf-autotable":"^3.8.2","lucide-react":"^0.400.0","next":"^14.2.0","react":"^18.3.1","react-dom":"^18.3.1","recharts":"^2.12.7"},"devDependencies":{"@types/node":"^20","@types/react":"^18","@types/react-dom":"^18","autoprefixer":"^10.4.19","postcss":"^8.4.38","tailwindcss":"^3.4.4","typescript":"^5"}}
+
+================================================================================
+ARQUIVO: apps/web/next.config.js
+================================================================================
+
+/** @type {import('next').NextConfig} */
+const path = require('path');
+const nextConfig = {
+  output: 'export',
+  distDir: 'dist',
+  trailingSlash: true,
+  reactStrictMode: true,
+  images: { unoptimized: true },
+  webpack(config) {
+    config.resolve.alias['@'] = path.join(__dirname, 'src');
+    return config;
+  },
+};
+module.exports = nextConfig;
+
+================================================================================
+ARQUIVO: apps/web/tsconfig.json
+================================================================================
+
+{"compilerOptions":{"jsx":"preserve","lib":["dom","dom.iterable","es2021"],"allowJs":false,"noEmit":true,"incremental":true,"plugins":[{"name":"next"}],"paths":{"@/*":["./src/*"]}},"include":["src","next-env.d.ts",".next/types/**/*.ts"],"exclude":["node_modules"]}
+
+================================================================================
+ARQUIVO: apps/web/postcss.config.js
+================================================================================
+
+module.exports = { plugins: { tailwindcss: {}, autoprefixer: {} } };
+
+================================================================================
+ARQUIVO: apps/web/next-env.d.ts
+================================================================================
+
+/// <reference types="next" />
+/// <reference types="next/image-types/global" />
+
+================================================================================
+ARQUIVO: apps/web/.env.local
+================================================================================
+
+NEXT_PUBLIC_SUPABASE_URL=https://egmradntktqzpuedxqhg.supabase.co/rest/v1
+NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVnbXJhZG50a3RxenB1ZWR4cWhnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk5MTcwMTMsImV4cCI6MjA5NTQ5MzAxM30.f2mnogv5_EHVgEU-wUktMfVn7i28sf_vLhl1Baimtnk
+
+================================================================================
+ARQUIVO: apps/web/tailwind.config.js
+================================================================================
+
+/** @type {import('tailwindcss').Config} */
+module.exports = {
+  content: [
+    './src/pages/**/*.{js,ts,jsx,tsx,mdx}',
+    './src/components/**/*.{js,ts,jsx,tsx,mdx}',
+    './src/app/**/*.{js,ts,jsx,tsx,mdx}',
+  ],
+  theme: {
+    extend: {
+      colors: {
+        primary: { DEFAULT: '#1a3c7a', dark: '#0d1f4a', light: '#eef2fb' },
+        gold: { DEFAULT: '#d4a843', dark: '#b8912e', light: '#fdf4dc' },
+        border: '#c5d0e8',
+        muted: '#4a5c82',
+      },
+    },
+  },
+  plugins: [],
+};
+
+================================================================================
+ARQUIVO: .github/workflows/deploy-web.yml
+================================================================================
+
+name: Build & Deploy Web Portal
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: apps/web/package.json
+      - name: Install & Build
+        working-directory: apps/web
+        run: |
+          npm install
+          npm run build
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: apps/web/dist
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

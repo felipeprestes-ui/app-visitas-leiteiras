@@ -1,0 +1,2838 @@
+============================================================
+PORTAL WEB CRV LAGOA - TODOS OS ARQUIVOS PARA github.dev
+============================================================
+
+INSTRUCOES:
+1. No github.dev, clique 'Novo Arquivo' (Ctrl+N)
+2. No campo de nome, cole o caminho completo (ex: src/app/layout.tsx)
+3. Cole o conteudo entre ====== ARQUIVO ... ======
+4. Ctrl+S para salvar
+5. Repita para cada arquivo abaixo
+6. Quando terminar, va em Source Control (↩️) e commit
+
+
+============================================================
+ARQUIVO: package.json
+============================================================
+
+{
+  "name": "crv-lagoa-portal",
+  "private": true,
+  "version": "0.1.0",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "date-fns": "^3.6.0",
+    "jspdf": "^2.5.1",
+    "jspdf-autotable": "^3.8.2",
+    "lucide-react": "^0.400.0",
+    "next": "^14.2.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "recharts": "^2.12.7"
+  },
+  "devDependencies": {
+    "@types/node": "^20",
+    "@types/react": "^18",
+    "@types/react-dom": "^18",
+    "autoprefixer": "^10.4.19",
+    "postcss": "^8.4.38",
+    "tailwindcss": "^3.4.4",
+    "typescript": "^5"
+  }
+}
+
+
+============================================================
+ARQUIVO: next.config.js
+============================================================
+
+/** @type {import('next').NextConfig} */
+const path = require('path');
+
+const nextConfig = {
+  output: 'export',
+  distDir: 'dist',
+  trailingSlash: true,
+  reactStrictMode: true,
+  images: {
+    unoptimized: true,
+  },
+  webpack(config) {
+    config.resolve.alias['@'] = path.join(__dirname, 'src');
+    return config;
+  },
+};
+
+module.exports = nextConfig;
+
+
+============================================================
+ARQUIVO: tsconfig.json
+============================================================
+
+{
+  "compilerOptions": {
+    "jsx": "preserve",
+    "lib": ["dom", "dom.iterable", "es2021"],
+    "allowJs": false,
+    "noEmit": true,
+    "incremental": true,
+    "plugins": [{ "name": "next" }],
+    "paths": {
+      "@/*": ["./src/*"]
+    }
+  },
+  "include": ["src", "next-env.d.ts", ".next/types/**/*.ts"],
+  "exclude": ["node_modules"]
+}
+
+
+============================================================
+ARQUIVO: postcss.config.js
+============================================================
+
+module.exports = {
+  plugins: {
+    tailwindcss: {},
+    autoprefixer: {},
+  },
+};
+
+
+============================================================
+ARQUIVO: tailwind.config.js
+============================================================
+
+/** @type {import('tailwindcss').Config} */
+module.exports = {
+  content: [
+    './src/pages/**/*.{js,ts,jsx,tsx,mdx}',
+    './src/components/**/*.{js,ts,jsx,tsx,mdx}',
+    './src/app/**/*.{js,ts,jsx,tsx,mdx}',
+  ],
+  theme: {
+    extend: {
+      colors: {
+        primary: {
+          DEFAULT: '#1a3c7a',
+          dark: '#0d1f4a',
+          light: '#eef2fb',
+        },
+        gold: {
+          DEFAULT: '#d4a843',
+          dark: '#b8912e',
+          light: '#fdf4dc',
+        },
+        border: '#c5d0e8',
+        muted: '#4a5c82',
+      },
+    },
+  },
+  plugins: [],
+};
+
+
+============================================================
+ARQUIVO: next-env.d.ts
+============================================================
+
+/// <reference types="next" />
+/// <reference types="next/image-types/global" />
+
+// NOTE: This file should not be edited
+// see https://nextjs.org/docs/basic-features/typescript for more information.
+
+
+============================================================
+ARQUIVO: .env.local
+============================================================
+
+NEXT_PUBLIC_SUPABASE_URL=https://egmradntktqzpuedxqhg.supabase.co/rest/v1
+NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVnbXJhZG50a3RxenB1ZWR4cWhnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk5MTcwMTMsImV4cCI6MjA5NTQ5MzAxM30.f2mnogv5_EHVgEU-wUktMfVn7i28sf_vLhl1Baimtnk
+
+
+============================================================
+ARQUIVO: .gitignore
+============================================================
+
+# Next.js
+/.next/
+/dist/
+/out/
+
+# Node
+node_modules/
+*.log
+
+# Vercel
+.vercel/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+
+============================================================
+ARQUIVO: src/app/layout.tsx
+============================================================
+
+import type { Metadata } from 'next';
+import './globals.css';
+
+export const metadata: Metadata = {
+  title: 'CRV LAGOA — Portal Gestor',
+  description: 'Portal de gestao de visitas leiteiras',
+};
+
+export default function RootLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <html lang="pt-BR">
+      <body>{children}</body>
+    </html>
+  );
+}
+
+
+============================================================
+ARQUIVO: src/app/page.tsx
+============================================================
+
+'use client';
+
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+
+export default function RootPage() {
+  const router = useRouter();
+
+  useEffect(() => {
+    router.push('/login');
+  }, [router]);
+
+  return (
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+    </div>
+  );
+}
+
+
+============================================================
+ARQUIVO: src/app/globals.css
+============================================================
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --primary: #1a3c7a;
+  --primary-dark: #0d1f4a;
+  --primary-light: #eef2fb;
+  --gold: #d4a843;
+}
+
+body {
+  @apply bg-gray-50 text-gray-900;
+  font-family: system-ui, -apple-system, sans-serif;
+}
+
+/* Form field utilities */
+.field-label {
+  @apply block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wide;
+}
+.field-input {
+  @apply w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  @apply bg-gray-100;
+}
+::-webkit-scrollbar-thumb {
+  @apply bg-gray-300 rounded;
+}
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-gray-400;
+}
+
+
+============================================================
+ARQUIVO: src/types/portal.ts
+============================================================
+
+export interface Visit {
+  id: string;
+  technician_name: string;
+  client_name: string;
+  service_type: string;
+  area: string;
+  client_type: string;
+  animals: number | null;
+  deal_closed: boolean;
+  herd_size: number | null;
+  consultant: string | null;
+  notes: string;
+  visit_date: string;
+  local_id?: string | null;
+  lat?: number | null;
+  lng?: number | null;
+}
+
+export interface MonthlySale {
+  id: string;
+  month: string;
+  technicianName: string;
+  dosesNovos: number;
+  dosesAtivos: number;
+  faturamentoNovos: number;
+  faturamentoAtivos: number;
+  meta: number;
+  updatedBy?: string;
+}
+
+export interface TechUser {
+  id: string;
+  name: string;
+  email: string;
+  area: string | null;
+  areas: string[] | null;
+  role: string;
+  phone?: string | null;
+  active?: boolean;
+  login?: string;
+  password?: string;
+  createdAt?: string;
+}
+
+export interface GestorSession {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+}
+
+export type ClientType = 'B' | 'C' | 'Conexao Leite' | 'KAM' | 'Lagoa+';
+export type ServiceType =
+  | 'Clarifide Go'
+  | 'Curso IA'
+  | 'Coleta Herd'
+  | 'Entrega Herd'
+  | 'Indicacao Touro'
+  | 'Prospec'
+  | 'Prospec Lagoa+'
+  | 'SireMatch'
+  | 'Visita Lagoa+'
+  | 'Venda Herd';
+
+export const AREAS = ['011', '012', '013', '014', '015', '018', '019', '020'] as const;
+
+export const CLIENT_TYPES: ClientType[] = ['B', 'C', 'Conexao Leite', 'KAM', 'Lagoa+'];
+
+export const SERVICE_TYPES: ServiceType[] = [
+  'Clarifide Go',
+  'Curso IA',
+  'Coleta Herd',
+  'Entrega Herd',
+  'Indicacao Touro',
+  'Prospec',
+  'Prospec Lagoa+',
+  'SireMatch',
+  'Visita Lagoa+',
+  'Venda Herd',
+];
+
+export const MONTHS = [
+  { label: 'Set/25', value: '8-2025' },
+  { label: 'Out/25', value: '9-2025' },
+  { label: 'Nov/25', value: '10-2025' },
+  { label: 'Dez/25', value: '11-2025' },
+  { label: 'Jan/26', value: '0-2026' },
+  { label: 'Fev/26', value: '1-2026' },
+  { label: 'Mar/26', value: '2-2026' },
+  { label: 'Abr/26', value: '3-2026' },
+  { label: 'Mai/26', value: '4-2026' },
+  { label: 'Jun/26', value: '5-2026' },
+];
+
+export const CONSULTORES: Record<string, string[]> = {
+  '011': ['ELVIS G S LOPES','FERNANDO HENRIQ','FRANCISCO HENRI','FREDERICO ARANT','GIVANILDO JACIN','JEFFERSON','JEFFERSON DOS S','JOAO MACHADO','JUAREZ','JUSCELIO RAIMUN','LEANDRO VILELLA','LEONARDO TUFI','LUCAS DUARTE','LUCAS GONCALVES','LUCAS SIQUEIRA','LUIS HUMBERTO R','MURILO CANEDO','PAULO GARCIA SI','PAULO SOUSA','RAFAEL AUGUSTO','RICARDO BONATO','VILTON MODESTO','VINICIUS JOSE','VINICIUS MARTIN','VIRGILIO RODRIG','WILLY JOSE DE','WILSON VAGNER V'],
+  '012': ['ANNY QUEIROZ SI','BRUNO FONSECA','CARLOS (SP)','CEZAR','EDUARDO SOARES','FABIO PACHECO','FELIPE SCARDUA','FERNANDO MOREIR','HUGO LEONARDO','JOAO ANT GUEDES','JOAO PEDRO MELO','JOSE RAIMUNDO','LEONARDO SOARES','LUCAS VALERIANO','LUCIANO FERREIR','LUIS HENRIQUE','MARIO CEZAR','MAYCON CEZAR','MIGUEL HADDAD','RODRIGO LIMA','RODRIGO PIVARI','RONALD DIAS TRO','VITOR','WLADIMIR LEON'],
+  '013': ['ALEXANDRE MAZZO','DALTON LUIZ DE','FELIPE GUIZELIN','FERNANDO MANICA','JOSE ROB RANGEL','JOSE ROSA FILHO','LEANDRO PAVANEL','LEONARDO GODOY','MARCEL BERTONHA','MARINA PIPERAS','MARLON COSTA','NAUR SOUZA','OSVADO DE LAB.J','PAULO CEZAR OLI','PAULO SERGIO G','RAFAEL BRUNO','RAFAEL JOSE DE','RENATA','VALSAIR DE MATO','VINICIUS GABRIE','WILSON MARIANO'],
+  '014': ['ALESSANDRO MAGN','ALEXANDRE TENOR','ANGELO ANTONELL','BRUNO CERQUEIRA','CELIO THEODORO','DARLAN DORIGHET','ELMO','ELTON MATOS','EVERTON DO PATR','FERNANDO F.','FRANCISCO OCTAV','GABRYEL TEIXEIR','GENILDO BORGES','ITAMAR','JAIR MILANEZI','JALMIR DANIEL S','JOAO DIOGO NETO','JORGE GOMES','JOSE A TENORIO','JOSE C BAMBINI','JOSE CLAUDIO','JUAREZ PEDRO DO','LAIR GABRIEL','MARCOS FIEL','NATALIA ANTONEL','PAULO GUSTAVO','ROBERTO GREG.','ROBSON RODRIGUE','RODOLFO REIS AL','SINARA MARTINS','THIAGO NOGUEIRA','UZIEL AMARAL','VALTER ALMEIDA','VITOR ALMEIDA'],
+  '015': ['ALEXANDRE CEZER','ANDRE SOLEK MAC','CLAITON','DENILSON SEIDEL','EDUARDO MONT.','EDUARDO TOSHIHI','EMERSON HENRI','EVANDRO TELLES','FABIO (PR)','FILIPE ROPELATO','GUILHERME ROCHA','JEAN MICHEL ROT','KEVELAN ALMEIDA','KOURBANY LUIZ C','LAUDEMIR','LOURIAN TELEGIN','RAFAEL RUZA','RONALDO ROSA','VINICIUS MUCHIN'],
+  '018': ['ALEX BRANDALISE','ANDRES HAURERS','DARLAN CARLETI','DIEGO BORBA MUL','EDUARDO LUIZ','EVANDRO','FRANCIANO','FREDERICO DE ME','FREDERICO GUERR','GUILHERME RODRI','HUGO FILHO','JOAO THOMAZ','LEANDRO GRAFF','LUCAS RUAS','LUCIANO WEBER','LUIS PANIZ','LUIZ AUGUSTO','LUIZ FELIPE','MARCELO BECKER','MARIANY DA PAIX','MAURICIO PINTO','RENAN MARSARO','RENAN MOROSSINO','RICARDO MOREIRA','RODRIGO BORGES'],
+  '019': ['ADRIANO BOLOGNE','ADRIELLY LOPES','ALEXANDRE LOUZA','ANDRE HENRIQUE','BRENO DIAS','CASSIO ROBERTO','DANIEL GUSTAVO','EDIVALDO BATIST','EDIVAN','EVANILDO NUNES','FABER MONTEIRO','FABRICIO GARCES','GUSTAVO HENRIQU','IGOR/PAULO','IODOMIR CARVALH','ISMAEL DOS SANT','MAYLON DIOGO','MOACIIR DUARTE','NICOLE COLUCCI','PAULO HENRIQUE','RAI DAMASCENO E','RAYCON ROBERTO','RODRIGO ALMEIDA','WAGNER PESCA'],
+  '020': ['ALOYSIO FRANCA','ANDERSON JOSE','ANDRE CARREIRA','ARTHUR NEGRAO','CLAUDIO FELIPE','DIEGO MOURA','EDUARDO FURTADO','FELIPE NAIS','GILMAR','GUSTAVO AMERICO','GUSTAVO ANDRADE','JALES','JULIANO MACHADO','JUNIOR ALVES','LUCAS DE SOUSA','LUCIANO ILTON','LUIZ HARLITON C','MARCELO CARNEIR','MARCOS VINICIUS','MAX MARIANO','OLICIO BATISTA','PAULO BARROS','PAULO NASCIPE','RAAFAEL VERNER H','ROBSON DA SILVA','RUBENS RUDRIGUE','THAYMISSON LIRA','THIAGO RESENDE'],
+};
+
+
+============================================================
+ARQUIVO: src/hooks/useAuth.ts
+============================================================
+
+'use client';
+
+import { useState, useEffect, useCallback } from 'react';
+
+export const SESSION_KEY = 'vl_portal_session';
+
+export interface GestorSession {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+}
+
+export function getSession(): GestorSession | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    const raw = localStorage.getItem(SESSION_KEY);
+    if (!raw) return null;
+    return JSON.parse(raw) as GestorSession;
+  } catch {
+    return null;
+  }
+}
+
+export function setSession(session: GestorSession) {
+  if (typeof window !== 'undefined') {
+    localStorage.setItem(SESSION_KEY, JSON.stringify(session));
+  }
+}
+
+export function clearSession() {
+  if (typeof window !== 'undefined') {
+    localStorage.removeItem(SESSION_KEY);
+  }
+}
+
+export function useAuth() {
+  const [session, setSessionState] = useState<GestorSession | null>(null);
+
+  useEffect(() => {
+    setSessionState(getSession());
+  }, []);
+
+  const login = useCallback((session: GestorSession) => {
+    setSession(session);
+    setSessionState(session);
+  }, []);
+
+  const logout = useCallback(() => {
+    clearSession();
+    setSessionState(null);
+  }, []);
+
+  return { session, login, logout };
+}
+
+
+============================================================
+ARQUIVO: src/lib/supabase.ts
+============================================================
+
+import type { Visit, MonthlySale, TechUser } from '@/types/portal';
+
+const API_BASE_URL =
+  process.env.NEXT_PUBLIC_SUPABASE_URL ||
+  'https://egmradntktqzpuedxqhg.supabase.co/rest/v1';
+
+const SUPABASE_ANON_KEY =
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVnbXJhZG50a3RxenB1ZWR4cWhnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk5MTcwMTMsImV4cCI6MjA5NTQ5MzAxM30.f2mnogv5_EHVgEU-wUktMfVn7i28sf_vLhl1Baimtnk';
+
+export function supabaseHeaders(extra: Record<string, string> = {}): Record<string, string> {
+  return {
+    'Content-Type': 'application/json',
+    apikey: SUPABASE_ANON_KEY,
+    Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+    ...extra,
+  };
+}
+
+export interface ApiResult<T = unknown> {
+  ok: boolean;
+  data?: T;
+  error?: string;
+}
+
+export async function supabaseFetch<T = unknown>(
+  path: string,
+  options: RequestInit & { headers?: Record<string, string> } = {}
+): Promise<ApiResult<T>> {
+  try {
+    const headers = supabaseHeaders(options.headers || {});
+    const res = await fetch(`${API_BASE_URL}${path}`, {
+      ...options,
+      headers,
+    });
+    const text = await res.text();
+    let data: unknown;
+    try {
+      data = JSON.parse(text);
+    } catch {
+      data = text;
+    }
+    if (!res.ok) {
+      const errData = data as Record<string, string> | null;
+      const msg =
+        (errData && (errData.message || errData.error || errData.hint)) ||
+        `HTTP ${res.status}`;
+      return { ok: false, error: msg };
+    }
+    return { ok: true, data: data as T };
+  } catch (err) {
+    return { ok: false, error: (err as Error).message || 'Sem conexao' };
+  }
+}
+
+// ── Visits ───────────────────────────────────────────────────────────────────
+
+export async function fetchVisits(params: Record<string, string> = {}): Promise<Visit[]> {
+  // Build query string manually to support Supabase operators like visit_date=gte.X&visit_date=lte.Y
+  const base: Record<string, string> = { select: '*', order: 'visit_date.desc' };
+  const merged = { ...base, ...params };
+  const parts: string[] = [];
+  for (const [k, v] of Object.entries(merged)) {
+    // keys ending in _N (e.g. visit_date_2) map to their base key — enables duplicate filter params
+    const realKey = k.replace(/_\d+$/, '');
+    parts.push(`${realKey}=${v}`);
+  }
+  const res = await supabaseFetch<Visit[]>(`/Visit?${parts.join('&')}`);
+  return res.ok && Array.isArray(res.data) ? res.data : [];
+}
+
+export async function upsertVisit(payload: Partial<Visit>): Promise<ApiResult<Visit>> {
+  const method = payload.id ? 'PATCH' : 'POST';
+  const path = payload.id ? `/Visit?id=eq.${payload.id}` : '/Visit';
+  const body = { ...payload };
+  if (method === 'POST') delete body.id;
+  return supabaseFetch<Visit>(path, {
+    method,
+    headers: { Prefer: 'return=representation' },
+    body: JSON.stringify(body),
+  });
+}
+
+export async function deleteVisit(id: string): Promise<ApiResult> {
+  return supabaseFetch(`/Visit?id=eq.${encodeURIComponent(id)}`, { method: 'DELETE' });
+}
+
+// ── Monthly Sales ─────────────────────────────────────────────────────────────
+
+export async function fetchSales(params: Record<string, string> = {}): Promise<MonthlySale[]> {
+  const base: Record<string, string> = { select: '*', order: 'month.desc,technicianName.asc' };
+  const merged = { ...base, ...params };
+  const parts: string[] = [];
+  for (const [k, v] of Object.entries(merged)) {
+    parts.push(`${k}=${v}`);
+  }
+  const res = await supabaseFetch<MonthlySale[]>(`/monthly_sales?${parts.join('&')}`);
+  return res.ok && Array.isArray(res.data) ? res.data : [];
+}
+
+export async function upsertSale(payload: Partial<MonthlySale>): Promise<ApiResult<MonthlySale>> {
+  return supabaseFetch<MonthlySale>('/monthly_sales?on_conflict=month,technicianName', {
+    method: 'POST',
+    headers: { Prefer: 'resolution=merge-duplicates,return=representation' },
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function deleteSale(id: string): Promise<ApiResult> {
+  return supabaseFetch(`/monthly_sales?id=eq.${encodeURIComponent(id)}`, { method: 'DELETE' });
+}
+
+// ── Users / Técnicos ──────────────────────────────────────────────────────────
+
+export async function fetchUsers(params: Record<string, string> = {}): Promise<TechUser[]> {
+  const base: Record<string, string> = { select: '*', order: 'name.asc' };
+  const merged = { ...base, ...params };
+  const parts: string[] = [];
+  for (const [k, v] of Object.entries(merged)) {
+    parts.push(`${k}=${v}`);
+  }
+  const res = await supabaseFetch<TechUser[]>(`/User?${parts.join('&')}`);
+  return res.ok && Array.isArray(res.data) ? res.data : [];
+}
+
+export async function upsertUser(payload: Partial<TechUser>): Promise<ApiResult<TechUser>> {
+  const method = payload.id ? 'PATCH' : 'POST';
+  const path = payload.id ? `/User?id=eq.${payload.id}` : '/User';
+  const body = { ...payload };
+  if (method === 'POST') delete body.id;
+  return supabaseFetch<TechUser>(path, {
+    method,
+    headers: { Prefer: 'return=representation' },
+    body: JSON.stringify(body),
+  });
+}
+
+export async function deleteUser(id: string): Promise<ApiResult> {
+  return supabaseFetch(`/User?id=eq.${encodeURIComponent(id)}`, { method: 'DELETE' });
+}
+
+export async function loginUser(email: string, password: string): Promise<TechUser | null> {
+  const res = await supabaseFetch<TechUser[]>(
+    `/User?email=eq.${encodeURIComponent(email)}&select=*`
+  );
+  if (!res.ok || !Array.isArray(res.data) || res.data.length === 0) return null;
+  const user = res.data[0];
+  const storedPwd = (user as unknown as Record<string, string>).password || '';
+  if (storedPwd !== password) return null;
+  return user;
+}
+
+
+============================================================
+ARQUIVO: src/components/ui/LoadingSpinner.tsx
+============================================================
+
+export function LoadingSpinner({ size = 'md' }: { size?: 'sm' | 'md' | 'lg' }) {
+  const s = { sm: 'h-4 w-4', md: 'h-8 w-8', lg: 'h-12 w-12' }[size];
+  return (
+    <div className="flex items-center justify-center py-8">
+      <div className={`${s} animate-spin rounded-full border-2 border-gray-200 border-t-primary`} />
+    </div>
+  );
+}
+
+
+============================================================
+ARQUIVO: src/components/ui/KpiCard.tsx
+============================================================
+
+import { LucideIcon } from 'lucide-react';
+
+interface KpiCardProps {
+  title: string;
+  value: string | number;
+  sub?: string;
+  icon: LucideIcon;
+  accent?: 'primary' | 'gold' | 'green' | 'red';
+}
+
+const accentMap = {
+  primary: 'bg-primary text-white',
+  gold: 'bg-gold text-white',
+  green: 'bg-emerald-500 text-white',
+  red: 'bg-red-500 text-white',
+};
+
+export function KpiCard({ title, value, sub, icon: Icon, accent = 'primary' }: KpiCardProps) {
+  return (
+    <div className="bg-white rounded-xl border border-gray-200 p-4 flex items-start gap-4 shadow-sm hover:shadow-md transition-shadow">
+      <div className={`rounded-lg p-2.5 flex-shrink-0 ${accentMap[accent]}`}>
+        <Icon size={20} />
+      </div>
+      <div className="min-w-0">
+        <p className="text-xs text-gray-500 font-medium uppercase tracking-wide truncate">{title}</p>
+        <p className="text-2xl font-bold text-gray-800 mt-0.5 leading-tight">{value}</p>
+        {sub && <p className="text-xs text-gray-500 mt-0.5">{sub}</p>}
+      </div>
+    </div>
+  );
+}
+
+
+============================================================
+ARQUIVO: src/components/ui/Modal.tsx
+============================================================
+
+'use client';
+
+import { useEffect, useRef } from 'react';
+import { X } from 'lucide-react';
+
+interface ModalProps {
+  open: boolean;
+  onClose: () => void;
+  title: string;
+  children: React.ReactNode;
+  size?: 'sm' | 'md' | 'lg' | 'xl';
+}
+
+const sizeMap = {
+  sm: 'max-w-md',
+  md: 'max-w-lg',
+  lg: 'max-w-2xl',
+  xl: 'max-w-4xl',
+};
+
+export function Modal({ open, onClose, title, children, size = 'md' }: ModalProps) {
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    if (open) document.addEventListener('keydown', handler);
+    return () => document.removeEventListener('keydown', handler);
+  }, [open, onClose]);
+
+  if (!open) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-black/50" onClick={onClose} />
+      <div
+        ref={ref}
+        className={`relative bg-white rounded-xl shadow-2xl w-full ${sizeMap[size]} max-h-[90vh] flex flex-col`}
+      >
+        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-200">
+          <h2 className="text-base font-semibold text-gray-800">{title}</h2>
+          <button
+            onClick={onClose}
+            className="p-1 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
+          >
+            <X size={18} />
+          </button>
+        </div>
+        <div className="overflow-y-auto flex-1 px-5 py-4">{children}</div>
+      </div>
+    </div>
+  );
+}
+
+
+============================================================
+ARQUIVO: src/components/ui/ConfirmDialog.tsx
+============================================================
+
+'use client';
+
+import { Modal } from './Modal';
+
+interface ConfirmDialogProps {
+  open: boolean;
+  title: string;
+  message: string;
+  confirmLabel?: string;
+  onConfirm: () => void;
+  onCancel: () => void;
+  danger?: boolean;
+}
+
+export function ConfirmDialog({
+  open,
+  title,
+  message,
+  confirmLabel = 'Confirmar',
+  onConfirm,
+  onCancel,
+  danger = true,
+}: ConfirmDialogProps) {
+  return (
+    <Modal open={open} onClose={onCancel} title={title} size="sm">
+      <p className="text-sm text-gray-600 mb-5">{message}</p>
+      <div className="flex justify-end gap-3">
+        <button
+          onClick={onCancel}
+          className="px-4 py-2 text-sm border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
+        >
+          Cancelar
+        </button>
+        <button
+          onClick={onConfirm}
+          className={`px-4 py-2 text-sm rounded-lg text-white font-medium transition-colors ${
+            danger ? 'bg-red-600 hover:bg-red-700' : 'bg-primary hover:bg-primary-dark'
+          }`}
+        >
+          {confirmLabel}
+        </button>
+      </div>
+    </Modal>
+  );
+}
+
+
+============================================================
+ARQUIVO: src/components/ui/Pagination.tsx
+============================================================
+
+interface PaginationProps {
+  page: number;
+  pageCount: number;
+  onPage: (p: number) => void;
+}
+
+export function Pagination({ page, pageCount, onPage }: PaginationProps) {
+  if (pageCount <= 1) return null;
+  const pages = Array.from({ length: Math.min(pageCount, 7) }, (_, i) => {
+    if (pageCount <= 7) return i + 1;
+    if (page <= 4) return i + 1;
+    if (page >= pageCount - 3) return pageCount - 6 + i;
+    return page - 3 + i;
+  });
+
+  return (
+    <div className="flex items-center justify-center gap-1 mt-4">
+      <button
+        disabled={page === 1}
+        onClick={() => onPage(page - 1)}
+        className="px-2 py-1 text-sm rounded border border-gray-200 text-gray-600 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed"
+      >
+        ‹
+      </button>
+      {pages.map((p) => (
+        <button
+          key={p}
+          onClick={() => onPage(p)}
+          className={`px-3 py-1 text-sm rounded border transition-colors ${
+            p === page
+              ? 'bg-primary text-white border-primary'
+              : 'border-gray-200 text-gray-600 hover:bg-gray-50'
+          }`}
+        >
+          {p}
+        </button>
+      ))}
+      <button
+        disabled={page === pageCount}
+        onClick={() => onPage(page + 1)}
+        className="px-2 py-1 text-sm rounded border border-gray-200 text-gray-600 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed"
+      >
+        ›
+      </button>
+    </div>
+  );
+}
+
+
+============================================================
+ARQUIVO: src/components/layout/Sidebar.tsx
+============================================================
+
+'use client';
+
+import Link from 'next/link';
+import { usePathname, useRouter } from 'next/navigation';
+import {
+  LayoutDashboard,
+  MapPin,
+  TrendingUp,
+  Users,
+  FileText,
+  LogOut,
+  Menu,
+  X,
+} from 'lucide-react';
+import { useState } from 'react';
+import { clearSession } from '@/hooks/useAuth';
+
+const navItems = [
+  { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+  { href: '/visitas', label: 'Visitas', icon: MapPin },
+  { href: '/vendas', label: 'Vendas', icon: TrendingUp },
+  { href: '/tecnicos', label: 'Técnicos', icon: Users },
+  { href: '/relatorios', label: 'Relatórios', icon: FileText },
+];
+
+export function Sidebar({ userName }: { userName?: string }) {
+  const pathname = usePathname();
+  const router = useRouter();
+  const [mobileOpen, setMobileOpen] = useState(false);
+
+  function handleLogout() {
+    clearSession();
+    router.push('/login');
+    router.refresh();
+  }
+
+  const NavLinks = () => (
+    <nav className="flex-1 px-3 py-4 space-y-1">
+      {navItems.map(({ href, label, icon: Icon }) => {
+        const active = pathname === href || pathname.startsWith(href + '/');
+        return (
+          <Link
+            key={href}
+            href={href}
+            onClick={() => setMobileOpen(false)}
+            className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+              active
+                ? 'bg-white text-primary shadow-sm'
+                : 'text-blue-100 hover:bg-primary-dark hover:text-white'
+            }`}
+          >
+            <Icon size={18} />
+            {label}
+          </Link>
+        );
+      })}
+    </nav>
+  );
+
+  return (
+    <>
+      {/* Desktop Sidebar */}
+      <aside className="hidden lg:flex flex-col w-56 bg-primary min-h-screen fixed left-0 top-0 z-30">
+        <div className="px-4 py-5 border-b border-primary-dark">
+          <div className="text-white font-bold text-lg leading-tight">CRV LAGOA</div>
+          <div className="text-blue-200 text-xs mt-0.5">Portal Gestor</div>
+        </div>
+        <NavLinks />
+        <div className="px-3 py-4 border-t border-primary-dark">
+          {userName && (
+            <div className="text-blue-200 text-xs px-3 mb-2 truncate">{userName}</div>
+          )}
+          <button
+            onClick={handleLogout}
+            className="flex items-center gap-3 w-full px-3 py-2 rounded-lg text-sm text-blue-100 hover:bg-red-600 hover:text-white transition-colors"
+          >
+            <LogOut size={16} />
+            Sair
+          </button>
+        </div>
+      </aside>
+
+      {/* Mobile top bar */}
+      <div className="lg:hidden fixed top-0 left-0 right-0 z-30 bg-primary px-4 py-3 flex items-center justify-between">
+        <span className="text-white font-bold">CRV LAGOA</span>
+        <button onClick={() => setMobileOpen(!mobileOpen)} className="text-white">
+          {mobileOpen ? <X size={22} /> : <Menu size={22} />}
+        </button>
+      </div>
+
+      {/* Mobile drawer */}
+      {mobileOpen && (
+        <div className="lg:hidden fixed inset-0 z-20">
+          <div
+            className="absolute inset-0 bg-black/50"
+            onClick={() => setMobileOpen(false)}
+          />
+          <div className="absolute left-0 top-0 bottom-0 w-56 bg-primary flex flex-col pt-14">
+            <NavLinks />
+            <div className="px-3 py-4 border-t border-primary-dark">
+              <button
+                onClick={handleLogout}
+                className="flex items-center gap-3 w-full px-3 py-2 rounded-lg text-sm text-blue-100 hover:bg-red-600 hover:text-white transition-colors"
+              >
+                <LogOut size={16} />
+                Sair
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
+
+
+============================================================
+ARQUIVO: src/components/layout/AppShell.tsx
+============================================================
+
+'use client';
+
+import { useAuth } from '@/hooks/useAuth';
+import { Sidebar } from './Sidebar';
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+
+export function AppShell({ children }: { children: React.ReactNode }) {
+  const { session } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!session && typeof window !== 'undefined') {
+      router.push('/login');
+    }
+  }, [session, router]);
+
+  if (!session) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-3" />
+          <p className="text-muted text-sm">Redirecionando...</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex min-h-screen bg-gray-50">
+      <Sidebar userName={session?.name} />
+      <main className="flex-1 lg:ml-56 pt-14 lg:pt-0 min-h-screen">
+        <div className="p-4 md:p-6 max-w-[1400px] mx-auto">{children}</div>
+      </main>
+    </div>
+  );
+}
+
+
+============================================================
+ARQUIVO: src/features/dashboard/types.ts
+============================================================
+
+export type DashboardFilter = {
+  technicianId?: string;
+  clientId?: string;
+  startDate?: string;
+  endDate?: string;
+};
+
+============================================================
+ARQUIVO: src/features/dashboard/mock-data.ts
+============================================================
+
+export const dashboardSummary = {
+  totalVisits: 0,
+  totalClosedDeals: 0,
+  byService: [],
+  byClientType: [],
+  byTechnician: []
+};
+
+============================================================
+ARQUIVO: src/app/dashboard/page.tsx
+============================================================
+
+import { AppShell } from '@/components/layout/AppShell';
+import { DashboardClient } from './DashboardClient';
+
+export default function DashboardPage() {
+  return (
+    <AppShell>
+      <DashboardClient />
+    </AppShell>
+  );
+}
+
+
+============================================================
+ARQUIVO: src/app/dashboard/DashboardClient.tsx
+============================================================
+
+'use client';
+
+import { useEffect, useState, useCallback } from 'react';
+import { format, startOfMonth, endOfMonth, subMonths } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
+import {
+  AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer
+} from 'recharts';
+import {
+  MapPin, TrendingUp, Users, CheckCircle2, Target, Activity,
+  Plus, FileText
+} from 'lucide-react';
+import Link from 'next/link';
+import { fetchVisits, fetchSales, fetchUsers } from '@/lib/supabase';
+import { KpiCard } from '@/components/ui/KpiCard';
+import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
+import type { Visit, MonthlySale } from '@/types/portal';
+
+function fmtBRL(n: number) {
+  return n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+}
+
+interface MonthlyChartData {
+  mes: string;
+  visitas: number;
+}
+
+export function DashboardClient() {
+  const [loading, setLoading] = useState(true);
+  const [visits, setVisits] = useState<Visit[]>([]);
+  const [sales, setSales] = useState<MonthlySale[]>([]);
+  const [techCount, setTechCount] = useState(0);
+  const [chartData, setChartData] = useState<MonthlyChartData[]>([]);
+
+  const today = new Date();
+  const monthStart = format(startOfMonth(today), 'yyyy-MM-dd');
+  const monthEnd = format(endOfMonth(today), 'yyyy-MM-dd');
+  const currentMonth = format(today, 'M-yyyy'); // format used in App.js e.g. "5-2026"
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    try {
+      const [visitsMonth, allSales, users] = await Promise.all([
+        fetchVisits({ 'visit_date': `gte.${monthStart}`, 'visit_date_2': `lte.${monthEnd}` }),
+        fetchSales({ 'month': `eq.${currentMonth}` }),
+        fetchUsers({ 'role': 'eq.tecnico' }),
+      ]);
+      setVisits(visitsMonth);
+      setSales(allSales);
+      setTechCount(users.length);
+
+      // Build chart: last 12 months — fetch all visits then group
+      const allVisits = await fetchVisits({ 'select': 'visit_date', 'limit': '5000' });
+      const countByMonth: Record<string, number> = {};
+      for (const v of allVisits) {
+        if (!v.visit_date) continue;
+        const d = new Date(v.visit_date);
+        const key = `${d.getMonth()}-${d.getFullYear()}`;
+        countByMonth[key] = (countByMonth[key] || 0) + 1;
+      }
+      const chart: MonthlyChartData[] = [];
+      for (let i = 11; i >= 0; i--) {
+        const d = subMonths(today, i);
+        const label = format(d, 'MMM/yy', { locale: ptBR });
+        const key = `${d.getMonth()}-${d.getFullYear()}`;
+        chart.push({ mes: label, visitas: countByMonth[key] || 0 });
+      }
+      setChartData(chart);
+    } finally {
+      setLoading(false);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => { load(); }, [load]);
+
+  const totalVisits = visits.length;
+  const closedDeals = visits.filter((v) => v.deal_closed).length;
+  const convRate = totalVisits > 0 ? Math.round((closedDeals / totalVisits) * 100) : 0;
+  const totalAnimais = visits.reduce((s, v) => s + (v.animals || 0), 0);
+
+  const dosesNovos = sales.reduce((s, x) => s + (Number(x.dosesNovos) || 0), 0);
+  const dosesAtivos = sales.reduce((s, x) => s + (Number(x.dosesAtivos) || 0), 0);
+  const totalMeta = sales.reduce((s, x) => s + (Number(x.meta) || 0), 0);
+  const pctMeta = totalMeta > 0 ? Math.round((dosesNovos / totalMeta) * 100) : 0;
+  const fatNovos = sales.reduce((s, x) => s + (Number(x.faturamentoNovos) || 0), 0);
+
+  if (loading) return <LoadingSpinner />;
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div>
+          <h1 className="text-xl font-bold text-gray-800">Dashboard</h1>
+          <p className="text-sm text-gray-500">
+            {format(today, 'MMMM yyyy', { locale: ptBR })} — dados em tempo real
+          </p>
+        </div>
+        {/* Quick actions */}
+        <div className="flex gap-2 flex-wrap">
+          <Link
+            href="/visitas?new=1"
+            className="flex items-center gap-1.5 bg-primary text-white text-sm px-3 py-2 rounded-lg hover:bg-primary-dark transition-colors"
+          >
+            <Plus size={15} /> Lançar Visita
+          </Link>
+          <Link
+            href="/vendas?new=1"
+            className="flex items-center gap-1.5 bg-gold text-white text-sm px-3 py-2 rounded-lg hover:bg-gold-dark transition-colors"
+          >
+            <TrendingUp size={15} /> Lançar Vendas
+          </Link>
+          <Link
+            href="/relatorios"
+            className="flex items-center gap-1.5 bg-gray-700 text-white text-sm px-3 py-2 rounded-lg hover:bg-gray-800 transition-colors"
+          >
+            <FileText size={15} /> Exportar
+          </Link>
+        </div>
+      </div>
+
+      {/* KPI Grid */}
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+        <KpiCard title="Visitas no Mês" value={totalVisits} icon={MapPin} accent="primary" />
+        <KpiCard title="Negócios Fechados" value={closedDeals} icon={CheckCircle2} accent="green" />
+        <KpiCard title="Taxa Conversão" value={`${convRate}%`} icon={Activity} accent="primary" />
+        <KpiCard title="Doses Novas" value={dosesNovos} icon={TrendingUp} accent="gold" />
+        <KpiCard title="Doses Ativas" value={dosesAtivos} icon={TrendingUp} accent="primary" />
+        <KpiCard
+          title="Meta do Mês"
+          value={`${pctMeta}%`}
+          sub={`${dosesNovos}/${totalMeta} doses`}
+          icon={Target}
+          accent={pctMeta >= 80 ? 'green' : pctMeta >= 50 ? 'gold' : 'red'}
+        />
+        <KpiCard title="Técnicos Ativos" value={techCount} icon={Users} accent="primary" />
+        <KpiCard
+          title="Animais Acasalados"
+          value={totalAnimais.toLocaleString('pt-BR')}
+          icon={Activity}
+          accent="primary"
+        />
+      </div>
+
+      {/* Faturamento */}
+      <div className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
+        <h2 className="text-sm font-semibold text-gray-700 mb-1">Faturamento Novos (mês)</h2>
+        <p className="text-3xl font-bold text-primary">{fmtBRL(fatNovos)}</p>
+      </div>
+
+      {/* Chart */}
+      {chartData.length > 0 && (
+        <div className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
+          <h2 className="text-sm font-semibold text-gray-700 mb-4">
+            Evolução de Visitas — Últimos 12 Meses
+          </h2>
+          <ResponsiveContainer width="100%" height={220}>
+            <AreaChart data={chartData} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
+              <defs>
+                <linearGradient id="visitasGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#1a3c7a" stopOpacity={0.15} />
+                  <stop offset="95%" stopColor="#1a3c7a" stopOpacity={0} />
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+              <XAxis dataKey="mes" tick={{ fontSize: 11 }} />
+              <YAxis tick={{ fontSize: 11 }} />
+              <Tooltip
+                contentStyle={{ fontSize: 12, border: '1px solid #e5e7eb', borderRadius: 8 }}
+              />
+              <Area
+                type="monotone"
+                dataKey="visitas"
+                stroke="#1a3c7a"
+                strokeWidth={2}
+                fill="url(#visitasGrad)"
+              />
+            </AreaChart>
+          </ResponsiveContainer>
+        </div>
+      )}
+    </div>
+  );
+}
+
+
+============================================================
+ARQUIVO: src/app/login/page.tsx
+============================================================
+
+'use client';
+
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { setSession } from '@/hooks/useAuth';
+
+// Local user store matching standalone App.js (gestor only)
+const LOCAL_USERS = [
+  { id: 'local-gestor-1', email: 'gestor@crv4all.com.br', password: 'Luisa@0510', name: 'Felipe Prestes', role: 'gestor' },
+];
+
+const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://egmradntktqzpuedxqhg.supabase.co/rest/v1';
+const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVnbXJhZG50a3RxenB1ZWR4cWhnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk5MTcwMTMsImV4cCI6MjA5NTQ5MzAxM30.f2mnogv5_EHVgEU-wUktMfVn7i28sf_vLhl1Baimtnk';
+
+function supabaseHeaders(): Record<string, string> {
+  return {
+    'Content-Type': 'application/json',
+    apikey: SUPABASE_ANON_KEY,
+    Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+  };
+}
+
+export default function LoginPage() {
+  const router = useRouter();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  async function loginUser(email: string, password: string): Promise<{ ok: boolean; name?: string; error?: string }> {
+    const e = email.trim().toLowerCase();
+    const p = password;
+
+    // 1. Check local hardcoded gestors
+    const local = LOCAL_USERS.find(
+      (u) => u.email.toLowerCase() === e && u.password === p && u.role === 'gestor'
+    );
+    if (local) {
+      return { ok: true, name: local.name };
+    }
+
+    // 2. Fallback: query Supabase /User table for gestor
+    try {
+      const supaRes = await fetch(
+        `${SUPABASE_URL}/User?email=eq.${encodeURIComponent(e)}&select=id,name,email,role,password`,
+        { headers: supabaseHeaders() }
+      );
+      if (supaRes.ok) {
+        const users = await supaRes.json();
+        if (Array.isArray(users) && users.length > 0) {
+          const user = users[0] as { id: string; name: string; email: string; role: string; password?: string };
+          const storedPwd = user.password || '';
+          if (storedPwd === p && user.role === 'gestor') {
+            return { ok: true, name: user.name };
+          }
+        }
+      }
+    } catch {
+      // Supabase unavailable — fall through
+    }
+
+    return { ok: false, error: 'Email ou senha invalidos, ou usuario nao e gestor' };
+  }
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setError('');
+    setLoading(true);
+    try {
+      const result = await loginUser(email, password);
+      if (!result.ok) {
+        setError(result.error || 'Erro ao fazer login');
+      } else {
+        // Create session
+        const session = { id: 'session-' + Date.now(), name: result.name || 'Gestor', email, role: 'gestor' };
+        setSession(session);
+        router.push('/dashboard');
+        router.refresh();
+      }
+    } catch {
+      setError('Erro de conexao. Tente novamente.');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <div className="min-h-screen bg-primary-light flex items-center justify-center p-4">
+      <div className="w-full max-w-sm">
+        {/* Logo */}
+        <div className="text-center mb-8">
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-primary rounded-2xl shadow-lg mb-4">
+            <span className="text-white font-bold text-xl">CRV</span>
+          </div>
+          <h1 className="text-2xl font-bold text-primary">CRV LAGOA</h1>
+          <p className="text-muted text-sm mt-1">Portal de Gestao</p>
+        </div>
+
+        {/* Card */}
+        <div className="bg-white rounded-2xl shadow-xl p-7">
+          <h2 className="text-lg font-semibold text-gray-800 mb-5">Acesso do Gestor</h2>
+
+          {error && (
+            <div className="mb-4 bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg px-4 py-3">
+              {error}
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <label className="block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wide">
+                Email
+              </label>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="gestor@crv4all.com.br"
+                required
+                className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wide">
+                Senha
+              </label>
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="••••••"
+                required
+                className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition"
+              />
+            </div>
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full bg-primary hover:bg-primary-dark text-white font-semibold py-2.5 rounded-lg text-sm transition-colors disabled:opacity-60 disabled:cursor-not-allowed mt-2"
+            >
+              {loading ? 'Entrando...' : 'Entrar'}
+            </button>
+          </form>
+        </div>
+
+        <p className="text-center text-xs text-muted mt-4">
+          Acesso exclusivo para gestores
+        </p>
+      </div>
+    </div>
+  );
+}
+
+
+============================================================
+ARQUIVO: src/app/visitas/page.tsx
+============================================================
+
+'use client';
+
+import { Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
+import { AppShell } from '@/components/layout/AppShell';
+import { VisitasClient } from './VisitasClient';
+
+function VisitasContent() {
+  const searchParams = useSearchParams();
+  const initialNew = searchParams.get('new') === '1';
+  return <VisitasClient initialNew={initialNew} />;
+}
+
+export default function VisitasPage() {
+  return (
+    <AppShell>
+      <Suspense fallback={
+        <div className="flex items-center justify-center h-64">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+        </div>
+      }>
+        <VisitasContent />
+      </Suspense>
+    </AppShell>
+  );
+}
+
+
+============================================================
+ARQUIVO: src/app/visitas/VisitasClient.tsx
+============================================================
+
+'use client';
+
+import { useEffect, useState, useCallback } from 'react';
+import { format } from 'date-fns';
+import { Plus, Pencil, Trash2, Eye, Search } from 'lucide-react';
+import { fetchVisits, upsertVisit, deleteVisit, fetchUsers } from '@/lib/supabase';
+import { Pagination } from '@/components/ui/Pagination';
+import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
+import { Modal } from '@/components/ui/Modal';
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
+import type { Visit, TechUser } from '@/types/portal';
+import { AREAS, CLIENT_TYPES, SERVICE_TYPES, CONSULTORES, MONTHS } from '@/types/portal';
+
+const PAGE_SIZE = 50;
+
+function fmtDate(d: string) {
+  if (!d) return '—';
+  try { return format(new Date(d), 'dd/MM/yyyy'); } catch { return d; }
+}
+
+const emptyForm = (): Partial<Visit> => ({
+  technician_name: '',
+  client_name: '',
+  service_type: '',
+  area: '',
+  client_type: '',
+  animals: null,
+  herd_size: null,
+  deal_closed: false,
+  consultant: '',
+  notes: '',
+  visit_date: format(new Date(), 'yyyy-MM-dd'),
+});
+
+export function VisitasClient({ initialNew }: { initialNew?: boolean }) {
+  const [visits, setVisits] = useState<Visit[]>([]);
+  const [filtered, setFiltered] = useState<Visit[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(1);
+  const [techList, setTechList] = useState<TechUser[]>([]);
+
+  // Filters
+  const [filterMonth, setFilterMonth] = useState('');
+  const [filterTech, setFilterTech] = useState('');
+  const [searchClient, setSearchClient] = useState('');
+
+  // Modal
+  const [modalOpen, setModalOpen] = useState(initialNew || false);
+  const [detailOpen, setDetailOpen] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [editTarget, setEditTarget] = useState<Visit | null>(null);
+  const [detailTarget, setDetailTarget] = useState<Visit | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<Visit | null>(null);
+  const [form, setForm] = useState<Partial<Visit>>(emptyForm());
+  const [saving, setSaving] = useState(false);
+  const [formError, setFormError] = useState('');
+
+  const loadData = useCallback(async () => {
+    setLoading(true);
+    const [v, users] = await Promise.all([
+      fetchVisits({ limit: '2000' }),
+      fetchUsers(),
+    ]);
+    setVisits(v);
+    setTechList(users);
+    setLoading(false);
+  }, []);
+
+  useEffect(() => { loadData(); }, [loadData]);
+
+  // Apply filters
+  useEffect(() => {
+    let list = [...visits];
+    if (filterMonth) {
+      list = list.filter((v) => {
+        if (!v.visit_date) return false;
+        const d = new Date(v.visit_date);
+        return `${d.getMonth()}-${d.getFullYear()}` === filterMonth;
+      });
+    }
+    if (filterTech) {
+      list = list.filter((v) =>
+        v.technician_name?.toLowerCase().includes(filterTech.toLowerCase())
+      );
+    }
+    if (searchClient) {
+      const q = searchClient.toLowerCase();
+      list = list.filter((v) => v.client_name?.toLowerCase().includes(q));
+    }
+    setFiltered(list);
+    setPage(1);
+  }, [visits, filterMonth, filterTech, searchClient]);
+
+  const pageCount = Math.ceil(filtered.length / PAGE_SIZE);
+  const pageData = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+
+  // Unique technician names from loaded visits
+  const techNames = Array.from(
+    new Set([...visits.map((v) => v.technician_name), ...techList.map((t) => t.name)])
+  )
+    .filter(Boolean)
+    .sort();
+
+  function openNew() {
+    setEditTarget(null);
+    setForm(emptyForm());
+    setFormError('');
+    setModalOpen(true);
+  }
+
+  function openEdit(v: Visit) {
+    setEditTarget(v);
+    setForm({
+      id: v.id,
+      technician_name: v.technician_name,
+      client_name: v.client_name,
+      service_type: v.service_type,
+      area: v.area,
+      client_type: v.client_type,
+      animals: v.animals,
+      herd_size: v.herd_size,
+      deal_closed: v.deal_closed,
+      consultant: v.consultant,
+      notes: v.notes,
+      visit_date: v.visit_date ? v.visit_date.substring(0, 10) : '',
+    });
+    setFormError('');
+    setModalOpen(true);
+  }
+
+  async function handleSave() {
+    if (!form.technician_name || !form.client_name || !form.visit_date) {
+      setFormError('Preencha: técnico, cliente e data.');
+      return;
+    }
+    setSaving(true);
+    setFormError('');
+    const payload: Partial<Visit> = {
+      ...form,
+      animals: form.animals ? Number(form.animals) : null,
+      herd_size: form.herd_size ? Number(form.herd_size) : null,
+      deal_closed: Boolean(form.deal_closed),
+    };
+    const res = await upsertVisit(payload);
+    setSaving(false);
+    if (!res.ok) {
+      setFormError(res.error || 'Erro ao salvar');
+      return;
+    }
+    setModalOpen(false);
+    await loadData();
+  }
+
+  async function handleDelete() {
+    if (!deleteTarget) return;
+    await deleteVisit(deleteTarget.id);
+    setDeleteOpen(false);
+    setDeleteTarget(null);
+    await loadData();
+  }
+
+  const consultoresForArea = form.area ? (CONSULTORES[form.area] || []) : [];
+
+  return (
+    <div className="space-y-4">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <h1 className="text-xl font-bold text-gray-800">Gerenciar Visitas</h1>
+        <button
+          onClick={openNew}
+          className="flex items-center gap-2 bg-primary text-white text-sm px-4 py-2 rounded-lg hover:bg-primary-dark transition-colors"
+        >
+          <Plus size={16} /> Nova Visita
+        </button>
+      </div>
+
+      {/* Filters */}
+      <div className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
+        <div className="flex flex-wrap gap-3">
+          <select
+            value={filterMonth}
+            onChange={(e) => setFilterMonth(e.target.value)}
+            className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+          >
+            <option value="">Todos os meses</option>
+            {MONTHS.map((m) => (
+              <option key={m.value} value={m.value}>{m.label}</option>
+            ))}
+          </select>
+
+          <select
+            value={filterTech}
+            onChange={(e) => setFilterTech(e.target.value)}
+            className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+          >
+            <option value="">Todos os técnicos</option>
+            {techNames.map((n) => <option key={n} value={n}>{n}</option>)}
+          </select>
+
+          <div className="relative flex-1 min-w-[180px]">
+            <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+            <input
+              value={searchClient}
+              onChange={(e) => setSearchClient(e.target.value)}
+              placeholder="Buscar cliente..."
+              className="w-full pl-8 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+            />
+          </div>
+        </div>
+        <p className="text-xs text-gray-500 mt-2">
+          {filtered.length} visita{filtered.length !== 1 ? 's' : ''} encontrada{filtered.length !== 1 ? 's' : ''}
+        </p>
+      </div>
+
+      {/* Table */}
+      <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+        {loading ? (
+          <LoadingSpinner />
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="bg-primary-light border-b border-gray-200">
+                  <th className="text-left px-4 py-3 text-xs font-semibold text-primary uppercase tracking-wide">Data</th>
+                  <th className="text-left px-4 py-3 text-xs font-semibold text-primary uppercase tracking-wide">Técnico</th>
+                  <th className="text-left px-4 py-3 text-xs font-semibold text-primary uppercase tracking-wide hidden md:table-cell">Área</th>
+                  <th className="text-left px-4 py-3 text-xs font-semibold text-primary uppercase tracking-wide">Cliente</th>
+                  <th className="text-left px-4 py-3 text-xs font-semibold text-primary uppercase tracking-wide hidden lg:table-cell">Tipo</th>
+                  <th className="text-left px-4 py-3 text-xs font-semibold text-primary uppercase tracking-wide hidden lg:table-cell">Serviço</th>
+                  <th className="text-center px-4 py-3 text-xs font-semibold text-primary uppercase tracking-wide hidden md:table-cell">Animais</th>
+                  <th className="text-center px-4 py-3 text-xs font-semibold text-primary uppercase tracking-wide">Fechado</th>
+                  <th className="text-center px-4 py-3 text-xs font-semibold text-primary uppercase tracking-wide">Ações</th>
+                </tr>
+              </thead>
+              <tbody>
+                {pageData.length === 0 ? (
+                  <tr>
+                    <td colSpan={9} className="text-center py-10 text-gray-400">
+                      Nenhuma visita encontrada
+                    </td>
+                  </tr>
+                ) : (
+                  pageData.map((v, i) => (
+                    <tr key={v.id || i} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
+                      <td className="px-4 py-3 text-gray-700 whitespace-nowrap">{fmtDate(v.visit_date)}</td>
+                      <td className="px-4 py-3 text-gray-700 max-w-[140px] truncate" title={v.technician_name}>{v.technician_name}</td>
+                      <td className="px-4 py-3 text-gray-500 hidden md:table-cell">{v.area}</td>
+                      <td className="px-4 py-3 text-gray-700 max-w-[160px] truncate" title={v.client_name}>{v.client_name}</td>
+                      <td className="px-4 py-3 text-gray-500 hidden lg:table-cell">{v.client_type}</td>
+                      <td className="px-4 py-3 text-gray-500 hidden lg:table-cell max-w-[120px] truncate" title={v.service_type}>{v.service_type}</td>
+                      <td className="px-4 py-3 text-gray-500 text-center hidden md:table-cell">{v.animals ?? '—'}</td>
+                      <td className="px-4 py-3 text-center">
+                        {v.deal_closed ? (
+                          <span className="inline-block w-2 h-2 rounded-full bg-emerald-500" title="Fechado" />
+                        ) : (
+                          <span className="inline-block w-2 h-2 rounded-full bg-gray-300" title="Não fechado" />
+                        )}
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="flex items-center justify-center gap-1">
+                          <button
+                            onClick={() => { setDetailTarget(v); setDetailOpen(true); }}
+                            className="p-1 rounded text-gray-400 hover:text-primary hover:bg-primary-light transition-colors"
+                            title="Detalhes"
+                          >
+                            <Eye size={15} />
+                          </button>
+                          <button
+                            onClick={() => openEdit(v)}
+                            className="p-1 rounded text-gray-400 hover:text-gold hover:bg-gold-light transition-colors"
+                            title="Editar"
+                          >
+                            <Pencil size={15} />
+                          </button>
+                          <button
+                            onClick={() => { setDeleteTarget(v); setDeleteOpen(true); }}
+                            className="p-1 rounded text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors"
+                            title="Excluir"
+                          >
+                            <Trash2 size={15} />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        )}
+        <div className="px-4 pb-4">
+          <Pagination page={page} pageCount={pageCount} onPage={setPage} />
+        </div>
+      </div>
+
+      {/* New/Edit Modal */}
+      <Modal
+        open={modalOpen}
+        onClose={() => setModalOpen(false)}
+        title={editTarget ? 'Editar Visita' : 'Nova Visita'}
+        size="lg"
+      >
+        {formError && (
+          <div className="mb-3 bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg px-3 py-2">
+            {formError}
+          </div>
+        )}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label className="field-label">Data *</label>
+            <input
+              type="date"
+              value={form.visit_date || ''}
+              onChange={(e) => setForm({ ...form, visit_date: e.target.value })}
+              className="field-input"
+            />
+          </div>
+
+          <div>
+            <label className="field-label">Área</label>
+            <select
+              value={form.area || ''}
+              onChange={(e) => setForm({ ...form, area: e.target.value, consultant: '' })}
+              className="field-input"
+            >
+              <option value="">Selecione</option>
+              {AREAS.map((a) => <option key={a} value={a}>{a}</option>)}
+            </select>
+          </div>
+
+          <div>
+            <label className="field-label">Consultor</label>
+            <select
+              value={form.consultant || ''}
+              onChange={(e) => setForm({ ...form, consultant: e.target.value })}
+              className="field-input"
+            >
+              <option value="">Selecione</option>
+              {consultoresForArea.map((c) => <option key={c} value={c}>{c}</option>)}
+            </select>
+          </div>
+
+          <div>
+            <label className="field-label">Técnico *</label>
+            <input
+              list="tech-list"
+              value={form.technician_name || ''}
+              onChange={(e) => setForm({ ...form, technician_name: e.target.value })}
+              placeholder="Nome do técnico"
+              className="field-input"
+            />
+            <datalist id="tech-list">
+              {techNames.map((n) => <option key={n} value={n} />)}
+            </datalist>
+          </div>
+
+          <div className="sm:col-span-2">
+            <label className="field-label">Cliente *</label>
+            <input
+              value={form.client_name || ''}
+              onChange={(e) => setForm({ ...form, client_name: e.target.value })}
+              placeholder="Nome do cliente / fazenda"
+              className="field-input"
+            />
+          </div>
+
+          <div>
+            <label className="field-label">Tipo Cliente</label>
+            <select
+              value={form.client_type || ''}
+              onChange={(e) => setForm({ ...form, client_type: e.target.value })}
+              className="field-input"
+            >
+              <option value="">Selecione</option>
+              {CLIENT_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
+            </select>
+          </div>
+
+          <div>
+            <label className="field-label">Tipo Serviço</label>
+            <select
+              value={form.service_type || ''}
+              onChange={(e) => setForm({ ...form, service_type: e.target.value })}
+              className="field-input"
+            >
+              <option value="">Selecione</option>
+              {SERVICE_TYPES.map((s) => <option key={s} value={s}>{s}</option>)}
+            </select>
+          </div>
+
+          <div>
+            <label className="field-label">Animais Acasalados</label>
+            <input
+              type="number"
+              value={form.animals ?? ''}
+              onChange={(e) => setForm({ ...form, animals: e.target.value ? Number(e.target.value) : null })}
+              placeholder="0"
+              min={0}
+              className="field-input"
+            />
+          </div>
+
+          <div>
+            <label className="field-label">Rebanho (Herd Size)</label>
+            <input
+              type="number"
+              value={form.herd_size ?? ''}
+              onChange={(e) => setForm({ ...form, herd_size: e.target.value ? Number(e.target.value) : null })}
+              placeholder="0"
+              min={0}
+              className="field-input"
+            />
+          </div>
+
+          <div className="sm:col-span-2">
+            <label className="field-label">Notas</label>
+            <textarea
+              value={form.notes || ''}
+              onChange={(e) => setForm({ ...form, notes: e.target.value })}
+              placeholder="Observações..."
+              rows={2}
+              className="field-input resize-none"
+            />
+          </div>
+
+          <div className="sm:col-span-2 flex items-center gap-2">
+            <input
+              type="checkbox"
+              id="deal-closed"
+              checked={Boolean(form.deal_closed)}
+              onChange={(e) => setForm({ ...form, deal_closed: e.target.checked })}
+              className="w-4 h-4 accent-primary"
+            />
+            <label htmlFor="deal-closed" className="text-sm text-gray-700 font-medium">
+              Negócio Fechado
+            </label>
+          </div>
+        </div>
+
+        <div className="flex justify-end gap-3 mt-5 pt-4 border-t border-gray-200">
+          <button
+            onClick={() => setModalOpen(false)}
+            className="px-4 py-2 text-sm border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
+          >
+            Cancelar
+          </button>
+          <button
+            onClick={handleSave}
+            disabled={saving}
+            className="px-5 py-2 text-sm bg-primary text-white rounded-lg hover:bg-primary-dark disabled:opacity-60 transition-colors"
+          >
+            {saving ? 'Salvando...' : editTarget ? 'Atualizar' : 'Salvar'}
+          </button>
+        </div>
+      </Modal>
+
+      {/* Detail Modal */}
+      <Modal
+        open={detailOpen}
+        onClose={() => setDetailOpen(false)}
+        title="Detalhes da Visita"
+        size="md"
+      >
+        {detailTarget && (
+          <div className="space-y-3 text-sm">
+            {([
+              ['Data', fmtDate(detailTarget.visit_date)],
+              ['Técnico', detailTarget.technician_name],
+              ['Área', detailTarget.area],
+              ['Consultor', detailTarget.consultant || '—'],
+              ['Cliente', detailTarget.client_name],
+              ['Tipo Cliente', detailTarget.client_type],
+              ['Serviço', detailTarget.service_type],
+              ['Animais', detailTarget.animals ?? '—'],
+              ['Rebanho', detailTarget.herd_size ?? '—'],
+              ['Negócio Fechado', detailTarget.deal_closed ? 'Sim' : 'Não'],
+              ['Notas', detailTarget.notes || '—'],
+            ] as [string, unknown][]).map(([label, val]) => (
+              <div key={label} className="flex gap-2">
+                <span className="font-semibold text-gray-600 w-32 flex-shrink-0">{label}:</span>
+                <span className="text-gray-800">{String(val)}</span>
+              </div>
+            ))}
+          </div>
+        )}
+      </Modal>
+
+      {/* Delete Confirm */}
+      <ConfirmDialog
+        open={deleteOpen}
+        title="Excluir Visita"
+        message={`Confirma a exclusão da visita de "${deleteTarget?.technician_name}" para "${deleteTarget?.client_name}"? Esta ação é irreversível.`}
+        confirmLabel="Excluir"
+        onConfirm={handleDelete}
+        onCancel={() => { setDeleteOpen(false); setDeleteTarget(null); }}
+      />
+    </div>
+  );
+}
+
+
+============================================================
+ARQUIVO: src/app/vendas/page.tsx
+============================================================
+
+'use client';
+
+import { Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
+import { AppShell } from '@/components/layout/AppShell';
+import { VendasClient } from './VendasClient';
+
+function VendasContent() {
+  const searchParams = useSearchParams();
+  const initialNew = searchParams.get('new') === '1';
+  return <VendasClient initialNew={initialNew} />;
+}
+
+export default function VendasPage() {
+  return (
+    <AppShell>
+      <Suspense fallback={
+        <div className="flex items-center justify-center h-64">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+        </div>
+      }>
+        <VendasContent />
+      </Suspense>
+    </AppShell>
+  );
+}
+
+
+============================================================
+ARQUIVO: src/app/vendas/VendasClient.tsx
+============================================================
+
+'use client';
+
+import { useEffect, useState, useCallback } from 'react';
+import { Plus, Pencil, Trash2, TrendingUp } from 'lucide-react';
+import { fetchSales, upsertSale, deleteSale, fetchUsers } from '@/lib/supabase';
+import { Modal } from '@/components/ui/Modal';
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
+import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
+import type { MonthlySale, TechUser } from '@/types/portal';
+import { MONTHS } from '@/types/portal';
+
+function fmtBRL(n: number) {
+  return n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+}
+
+const CURRENT_MONTH = MONTHS[MONTHS.length - 1]?.value || '';
+
+const emptyForm = (): Partial<MonthlySale> => ({
+  technicianName: '',
+  month: CURRENT_MONTH,
+  dosesNovos: 0,
+  dosesAtivos: 0,
+  faturamentoNovos: 0,
+  faturamentoAtivos: 0,
+  meta: 0,
+});
+
+export function VendasClient({ initialNew }: { initialNew?: boolean }) {
+  const [sales, setSales] = useState<MonthlySale[]>([]);
+  const [filtered, setFiltered] = useState<MonthlySale[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [techs, setTechs] = useState<TechUser[]>([]);
+
+  const [filterMonth, setFilterMonth] = useState('');
+  const [filterTech, setFilterTech] = useState('');
+
+  const [modalOpen, setModalOpen] = useState(initialNew || false);
+  const [editTarget, setEditTarget] = useState<MonthlySale | null>(null);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<MonthlySale | null>(null);
+  const [form, setForm] = useState<Partial<MonthlySale>>(emptyForm());
+  const [saving, setSaving] = useState(false);
+  const [formError, setFormError] = useState('');
+
+  const loadData = useCallback(async () => {
+    setLoading(true);
+    const [s, users] = await Promise.all([fetchSales(), fetchUsers()]);
+    setSales(s);
+    setTechs(users);
+    setLoading(false);
+  }, []);
+
+  useEffect(() => { loadData(); }, [loadData]);
+
+  useEffect(() => {
+    let list = [...sales];
+    if (filterMonth) list = list.filter((s) => s.month === filterMonth);
+    if (filterTech) list = list.filter((s) =>
+      s.technicianName?.toLowerCase().includes(filterTech.toLowerCase())
+    );
+    setFiltered(list);
+  }, [sales, filterMonth, filterTech]);
+
+  // KPI totals for filtered month
+  const totDN = filtered.reduce((s, x) => s + (Number(x.dosesNovos) || 0), 0);
+  const totDA = filtered.reduce((s, x) => s + (Number(x.dosesAtivos) || 0), 0);
+  const totFN = filtered.reduce((s, x) => s + (Number(x.faturamentoNovos) || 0), 0);
+  const totFA = filtered.reduce((s, x) => s + (Number(x.faturamentoAtivos) || 0), 0);
+  const totMeta = filtered.reduce((s, x) => s + (Number(x.meta) || 0), 0);
+
+  const techNames = Array.from(
+    new Set([...sales.map((s) => s.technicianName), ...techs.map((t) => t.name)])
+  ).filter(Boolean).sort();
+
+  function openNew() {
+    setEditTarget(null);
+    setForm(emptyForm());
+    setFormError('');
+    setModalOpen(true);
+  }
+
+  function openEdit(s: MonthlySale) {
+    setEditTarget(s);
+    setForm({ ...s });
+    setFormError('');
+    setModalOpen(true);
+  }
+
+  // Auto-fill meta when tech+month changes
+  async function autoFillMeta(techName: string, month: string) {
+    if (!techName || !month) return;
+    const existing = sales.find((s) => s.technicianName === techName && s.month === month);
+    if (existing) {
+      setForm((prev) => ({ ...prev, meta: existing.meta, id: existing.id }));
+    }
+  }
+
+  async function handleSave() {
+    if (!form.technicianName || !form.month) {
+      setFormError('Preencha: técnico e mês.');
+      return;
+    }
+    setSaving(true);
+    setFormError('');
+    const payload: Partial<MonthlySale> = {
+      ...form,
+      dosesNovos: Number(form.dosesNovos || 0),
+      dosesAtivos: Number(form.dosesAtivos || 0),
+      faturamentoNovos: Number(form.faturamentoNovos || 0),
+      faturamentoAtivos: Number(form.faturamentoAtivos || 0),
+      meta: Number(form.meta || 0),
+      updatedBy: 'gestor',
+    };
+    const res = await upsertSale(payload);
+    setSaving(false);
+    if (!res.ok) {
+      setFormError(res.error || 'Erro ao salvar');
+      return;
+    }
+    setModalOpen(false);
+    await loadData();
+  }
+
+  async function handleDelete() {
+    if (!deleteTarget) return;
+    await deleteSale(deleteTarget.id);
+    setDeleteOpen(false);
+    setDeleteTarget(null);
+    await loadData();
+  }
+
+  const monthLabel = (v: string) => MONTHS.find((m) => m.value === v)?.label || v;
+
+  return (
+    <div className="space-y-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <h1 className="text-xl font-bold text-gray-800">Gerenciar Vendas / Metas</h1>
+        <button
+          onClick={openNew}
+          className="flex items-center gap-2 bg-gold text-white text-sm px-4 py-2 rounded-lg hover:bg-gold-dark transition-colors"
+        >
+          <Plus size={16} /> Lançar Vendas do Mês
+        </button>
+      </div>
+
+      {/* Filters */}
+      <div className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm flex flex-wrap gap-3">
+        <select
+          value={filterMonth}
+          onChange={(e) => setFilterMonth(e.target.value)}
+          className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+        >
+          <option value="">Todos os meses</option>
+          {MONTHS.map((m) => <option key={m.value} value={m.value}>{m.label}</option>)}
+        </select>
+
+        <select
+          value={filterTech}
+          onChange={(e) => setFilterTech(e.target.value)}
+          className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+        >
+          <option value="">Todos os técnicos</option>
+          {techNames.map((n) => <option key={n} value={n}>{n}</option>)}
+        </select>
+      </div>
+
+      {/* KPI totals */}
+      {filtered.length > 0 && (
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+          {[
+            { label: 'Doses Novos', value: totDN },
+            { label: 'Doses Ativos', value: totDA },
+            { label: 'Fat. Novos', value: fmtBRL(totFN) },
+            { label: 'Fat. Ativos', value: fmtBRL(totFA) },
+            { label: 'Meta Total', value: totMeta },
+          ].map(({ label, value }) => (
+            <div key={label} className="bg-white rounded-xl border border-gray-200 p-3 shadow-sm flex flex-col items-start">
+              <p className="text-xs text-gray-500 uppercase tracking-wide">{label}</p>
+              <p className="text-lg font-bold text-primary mt-0.5">{value}</p>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Table */}
+      <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+        {loading ? (
+          <LoadingSpinner />
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="bg-primary-light border-b border-gray-200">
+                  {['Técnico', 'Mês', 'Doses Nov.', 'Doses At.', 'Fat. Nov.', 'Fat. At.', 'Meta', '% Meta', 'Ações'].map((h) => (
+                    <th key={h} className="text-left px-4 py-3 text-xs font-semibold text-primary uppercase tracking-wide whitespace-nowrap">
+                      {h}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {filtered.length === 0 ? (
+                  <tr>
+                    <td colSpan={9} className="text-center py-10 text-gray-400">
+                      Nenhum lançamento encontrado
+                    </td>
+                  </tr>
+                ) : (
+                  filtered.map((s, i) => {
+                    const pct = s.meta > 0 ? Math.round((s.dosesNovos / s.meta) * 100) : 0;
+                    return (
+                      <tr key={s.id || i} className="border-b border-gray-100 hover:bg-gray-50">
+                        <td className="px-4 py-3 font-medium text-gray-700">{s.technicianName}</td>
+                        <td className="px-4 py-3 text-gray-500">{monthLabel(s.month)}</td>
+                        <td className="px-4 py-3 text-right">{s.dosesNovos}</td>
+                        <td className="px-4 py-3 text-right">{s.dosesAtivos}</td>
+                        <td className="px-4 py-3 text-right">{fmtBRL(s.faturamentoNovos)}</td>
+                        <td className="px-4 py-3 text-right">{fmtBRL(s.faturamentoAtivos)}</td>
+                        <td className="px-4 py-3 text-right">{s.meta}</td>
+                        <td className="px-4 py-3 text-right">
+                          <span className={`font-semibold ${pct >= 100 ? 'text-emerald-600' : pct >= 50 ? 'text-gold-dark' : 'text-red-500'}`}>
+                            {pct}%
+                          </span>
+                        </td>
+                        <td className="px-4 py-3">
+                          <div className="flex items-center gap-1">
+                            <button onClick={() => openEdit(s)} className="p-1 rounded text-gray-400 hover:text-gold hover:bg-gold-light transition-colors" title="Editar">
+                              <Pencil size={15} />
+                            </button>
+                            <button onClick={() => { setDeleteTarget(s); setDeleteOpen(true); }} className="p-1 rounded text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors" title="Excluir">
+                              <Trash2 size={15} />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
+      {/* Modal */}
+      <Modal open={modalOpen} onClose={() => setModalOpen(false)} title={editTarget ? 'Editar Lançamento' : 'Lançar Vendas do Mês'} size="md">
+        {formError && (
+          <div className="mb-3 bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg px-3 py-2">{formError}</div>
+        )}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label className="field-label">Técnico *</label>
+            <select
+              value={form.technicianName || ''}
+              onChange={async (e) => {
+                setForm({ ...form, technicianName: e.target.value });
+                await autoFillMeta(e.target.value, form.month || '');
+              }}
+              className="field-input"
+            >
+              <option value="">Selecione</option>
+              {techNames.map((n) => <option key={n} value={n}>{n}</option>)}
+            </select>
+          </div>
+
+          <div>
+            <label className="field-label">Mês *</label>
+            <select
+              value={form.month || ''}
+              onChange={async (e) => {
+                setForm({ ...form, month: e.target.value });
+                await autoFillMeta(form.technicianName || '', e.target.value);
+              }}
+              className="field-input"
+            >
+              <option value="">Selecione</option>
+              {MONTHS.map((m) => <option key={m.value} value={m.value}>{m.label}</option>)}
+            </select>
+          </div>
+
+          {[
+            { key: 'dosesNovos', label: 'Doses Novos' },
+            { key: 'dosesAtivos', label: 'Doses Ativos' },
+            { key: 'faturamentoNovos', label: 'Fat. Novos (R$)' },
+            { key: 'faturamentoAtivos', label: 'Fat. Ativos (R$)' },
+            { key: 'meta', label: 'Meta (doses)' },
+          ].map(({ key, label }) => (
+            <div key={key}>
+              <label className="field-label">{label}</label>
+              <input
+                type="number"
+                step={key.startsWith('fat') ? '0.01' : '1'}
+                value={(form as Record<string, unknown>)[key] as number ?? 0}
+                onChange={(e) => setForm({ ...form, [key]: parseFloat(e.target.value) || 0 })}
+                min={0}
+                className="field-input"
+              />
+            </div>
+          ))}
+        </div>
+
+        <div className="flex justify-end gap-3 mt-5 pt-4 border-t border-gray-200">
+          <button onClick={() => setModalOpen(false)} className="px-4 py-2 text-sm border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">Cancelar</button>
+          <button
+            onClick={handleSave}
+            disabled={saving}
+            className="px-5 py-2 text-sm bg-gold text-white rounded-lg hover:bg-gold-dark disabled:opacity-60 transition-colors"
+          >
+            {saving ? 'Salvando...' : editTarget ? 'Atualizar' : 'Salvar'}
+          </button>
+        </div>
+      </Modal>
+
+      <ConfirmDialog
+        open={deleteOpen}
+        title="Excluir Lançamento"
+        message={`Excluir o lançamento de "${deleteTarget?.technicianName}" em ${monthLabel(deleteTarget?.month || '')}?`}
+        confirmLabel="Excluir"
+        onConfirm={handleDelete}
+        onCancel={() => { setDeleteOpen(false); setDeleteTarget(null); }}
+      />
+    </div>
+  );
+}
+
+
+============================================================
+ARQUIVO: src/app/relatorios/page.tsx
+============================================================
+
+import { AppShell } from '@/components/layout/AppShell';
+import { RelatoriosClient } from './RelatoriosClient';
+
+export default function RelatoriosPage() {
+  return (
+    <AppShell>
+      <RelatoriosClient />
+    </AppShell>
+  );
+}
+
+
+============================================================
+ARQUIVO: src/app/relatorios/RelatoriosClient.tsx
+============================================================
+
+'use client';
+
+import { useEffect, useState, useCallback } from 'react';
+import { format } from 'date-fns';
+import { FileDown, Table2 } from 'lucide-react';
+import { fetchVisits, fetchSales, fetchUsers } from '@/lib/supabase';
+import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
+import type { Visit, MonthlySale, TechUser } from '@/types/portal';
+import { MONTHS } from '@/types/portal';
+
+function fmtBRL(n: number) {
+  return n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+}
+
+interface TechRow {
+  nome: string;
+  area: string;
+  email: string;
+  visitas: number;
+  negFechados: number;
+  taxaNeg: number;
+  totalAnimais: number;
+  topServico: string;
+  dosesNovos: number;
+  dosesAtivos: number;
+  totalDoses: number;
+  fatNovos: number;
+  fatAtivos: number;
+  totalFat: number;
+  meta: number;
+  pctMeta: number;
+}
+
+function buildRows(
+  visits: Visit[],
+  sales: MonthlySale[],
+  techUsers: TechUser[]
+): TechRow[] {
+  const techNames = Array.from(new Set([
+    ...visits.map((v) => v.technician_name),
+    ...sales.map((s) => s.technicianName),
+    ...techUsers.map((u) => u.name),
+  ])).filter(Boolean).sort();
+
+  return techNames.map((nome) => {
+    const techVisits = visits.filter((v) => v.technician_name === nome);
+    const techSales = sales.filter((s) => s.technicianName === nome);
+    const techUser = techUsers.find((u) => u.name === nome);
+
+    const negFechados = techVisits.filter((v) => v.deal_closed).length;
+    const taxaNeg = techVisits.length > 0 ? Math.round((negFechados / techVisits.length) * 100) : 0;
+    const totalAnimais = techVisits.reduce((s, v) => s + (v.animals || 0), 0);
+
+    // Top service
+    const svcCount: Record<string, number> = {};
+    techVisits.forEach((v) => { if (v.service_type) svcCount[v.service_type] = (svcCount[v.service_type] || 0) + 1; });
+    const topServico = Object.entries(svcCount).sort((a, b) => b[1] - a[1])[0]?.[0] || '—';
+
+    const dosesNovos = techSales.reduce((s, x) => s + (Number(x.dosesNovos) || 0), 0);
+    const dosesAtivos = techSales.reduce((s, x) => s + (Number(x.dosesAtivos) || 0), 0);
+    const fatNovos = techSales.reduce((s, x) => s + (Number(x.faturamentoNovos) || 0), 0);
+    const fatAtivos = techSales.reduce((s, x) => s + (Number(x.faturamentoAtivos) || 0), 0);
+    const meta = techSales.length > 0 ? techSales[techSales.length - 1].meta || 0 : 0;
+    const pctMeta = meta > 0 ? Math.round((dosesNovos / meta) * 100) : 0;
+
+    return {
+      nome,
+      area: techUser?.area || techVisits[0]?.area || '—',
+      email: techUser?.email || '—',
+      visitas: techVisits.length,
+      negFechados,
+      taxaNeg,
+      totalAnimais,
+      topServico,
+      dosesNovos,
+      dosesAtivos,
+      totalDoses: dosesNovos + dosesAtivos,
+      fatNovos,
+      fatAtivos,
+      totalFat: fatNovos + fatAtivos,
+      meta,
+      pctMeta,
+    };
+  });
+}
+
+function downloadCSV(rows: TechRow[], month: string) {
+  const monthLabel = MONTHS.find((m) => m.value === month)?.label || month || 'Todos';
+  const header = 'Técnico;Área;Email;Visitas;Neg.Fechados;Taxa%;Animais;Top Serviço;Doses Nov.;Doses At.;Total Doses;Fat.Nov.;Fat.At.;Total Fat.;Meta;%Meta\n';
+  const body = rows.map((r) =>
+    [r.nome, r.area, r.email, r.visitas, r.negFechados, `${r.taxaNeg}%`, r.totalAnimais, r.topServico,
+      r.dosesNovos, r.dosesAtivos, r.totalDoses, r.fatNovos.toFixed(2), r.fatAtivos.toFixed(2),
+      r.totalFat.toFixed(2), r.meta, `${r.pctMeta}%`].join(';')
+  ).join('\n');
+  const csv = '\uFEFF' + header + body; // BOM for Excel
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `relatorio_${monthLabel.replace('/', '-')}_${format(new Date(), 'yyyyMMdd')}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+async function downloadPDF(rows: TechRow[], month: string) {
+  const monthLabel = MONTHS.find((m) => m.value === month)?.label || month || 'Todos';
+  // Dynamic import to avoid SSR issues
+  const jsPDF = (await import('jspdf')).default;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { default: autoTable } = (await import('jspdf-autotable')) as any;
+
+  const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+
+  // Header
+  doc.setFillColor(26, 60, 122);
+  doc.rect(0, 0, 297, 20, 'F');
+  doc.setTextColor(255, 255, 255);
+  doc.setFontSize(14);
+  doc.setFont('helvetica', 'bold');
+  doc.text('CRV LAGOA — Relatório de Técnicos', 14, 13);
+  doc.setFontSize(10);
+  doc.setFont('helvetica', 'normal');
+  doc.text(`Mês: ${monthLabel}   Gerado em: ${format(new Date(), 'dd/MM/yyyy HH:mm')}`, 200, 13);
+
+  doc.setTextColor(0, 0, 0);
+
+  autoTable(doc, {
+    startY: 25,
+    head: [['Técnico', 'Área', 'Visitas', 'Neg.', 'Taxa%', 'Animais', 'Top Serviço', 'D.Nov', 'D.At', 'T.Doses', 'Fat.Nov.', 'Fat.At.', 'T.Fat.', 'Meta', '%Meta']],
+    body: rows.map((r) => [
+      r.nome, r.area, r.visitas, r.negFechados, `${r.taxaNeg}%`, r.totalAnimais, r.topServico,
+      r.dosesNovos, r.dosesAtivos, r.totalDoses,
+      fmtBRL(r.fatNovos), fmtBRL(r.fatAtivos), fmtBRL(r.totalFat),
+      r.meta, `${r.pctMeta}%`,
+    ]),
+    styles: { fontSize: 7, cellPadding: 2 },
+    headStyles: { fillColor: [26, 60, 122], textColor: 255, fontStyle: 'bold', fontSize: 7 },
+    alternateRowStyles: { fillColor: [238, 242, 251] },
+    didParseCell: (data) => {
+      if (data.section === 'body' && data.column.index === 14) {
+        const val = parseInt(String(data.cell.raw || '0'));
+        if (val >= 100) data.cell.styles.textColor = [5, 150, 105];
+        else if (val >= 50) data.cell.styles.textColor = [180, 130, 50];
+        else data.cell.styles.textColor = [220, 38, 38];
+      }
+    },
+  });
+
+  doc.save(`relatorio_${monthLabel.replace('/', '-')}_${format(new Date(), 'yyyyMMdd')}.pdf`);
+}
+
+export function RelatoriosClient() {
+  const [loading, setLoading] = useState(false);
+  const [filterMonth, setFilterMonth] = useState('');
+  const [filterTech, setFilterTech] = useState('');
+  const [rows, setRows] = useState<TechRow[]>([]);
+  const [loaded, setLoaded] = useState(false);
+
+  const loadData = useCallback(async () => {
+    setLoading(true);
+
+    const [visits, sales, users] = await Promise.all([
+      fetchVisits({ limit: '5000' }),
+      fetchSales(),
+      fetchUsers(),
+    ]);
+
+    // Filter by month
+    const visitsFiltered = filterMonth
+      ? visits.filter((v) => {
+          if (!v.visit_date) return false;
+          const d = new Date(v.visit_date);
+          return `${d.getMonth()}-${d.getFullYear()}` === filterMonth;
+        })
+      : visits;
+
+    const salesFiltered = filterMonth
+      ? sales.filter((s) => s.month === filterMonth)
+      : sales;
+
+    const techFiltered = filterTech
+      ? users.filter((u) => u.name.toLowerCase().includes(filterTech.toLowerCase()))
+      : users;
+
+    let r = buildRows(visitsFiltered, salesFiltered, filterTech ? techFiltered : users);
+    if (filterTech) r = r.filter((row) => row.nome.toLowerCase().includes(filterTech.toLowerCase()));
+
+    setRows(r);
+    setLoaded(true);
+    setLoading(false);
+  }, [filterMonth, filterTech]);
+
+  useEffect(() => { loadData(); }, [loadData]);
+
+  const techNames = Array.from(new Set(rows.map((r) => r.nome))).sort();
+
+  return (
+    <div className="space-y-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <h1 className="text-xl font-bold text-gray-800">Relatórios</h1>
+        <div className="flex gap-2">
+          <button
+            onClick={() => downloadCSV(rows, filterMonth)}
+            disabled={rows.length === 0}
+            className="flex items-center gap-2 bg-emerald-600 text-white text-sm px-4 py-2 rounded-lg hover:bg-emerald-700 disabled:opacity-50 transition-colors"
+          >
+            <FileDown size={16} /> Exportar CSV
+          </button>
+          <button
+            onClick={() => downloadPDF(rows, filterMonth)}
+            disabled={rows.length === 0}
+            className="flex items-center gap-2 bg-red-600 text-white text-sm px-4 py-2 rounded-lg hover:bg-red-700 disabled:opacity-50 transition-colors"
+          >
+            <FileDown size={16} /> Exportar PDF
+          </button>
+        </div>
+      </div>
+
+      {/* Filters */}
+      <div className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm flex flex-wrap gap-3">
+        <select
+          value={filterMonth}
+          onChange={(e) => setFilterMonth(e.target.value)}
+          className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+        >
+          <option value="">Todos os meses</option>
+          {MONTHS.map((m) => <option key={m.value} value={m.value}>{m.label}</option>)}
+        </select>
+
+        <select
+          value={filterTech}
+          onChange={(e) => setFilterTech(e.target.value)}
+          className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+        >
+          <option value="">Todos os técnicos</option>
+          {techNames.map((n) => <option key={n} value={n}>{n}</option>)}
+        </select>
+      </div>
+
+      {/* Summary KPIs */}
+      {loaded && rows.length > 0 && (
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          {[
+            { label: 'Total Visitas', value: rows.reduce((s, r) => s + r.visitas, 0) },
+            { label: 'Neg. Fechados', value: rows.reduce((s, r) => s + r.negFechados, 0) },
+            { label: 'Total Animais', value: rows.reduce((s, r) => s + r.totalAnimais, 0).toLocaleString('pt-BR') },
+            { label: 'Faturamento', value: fmtBRL(rows.reduce((s, r) => s + r.totalFat, 0)) },
+          ].map(({ label, value }) => (
+            <div key={label} className="bg-white rounded-xl border border-gray-200 p-3 shadow-sm">
+              <p className="text-xs text-gray-500 uppercase tracking-wide">{label}</p>
+              <p className="text-lg font-bold text-primary mt-0.5">{value}</p>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Preview Table */}
+      <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+        <div className="px-4 py-3 border-b border-gray-200 flex items-center gap-2">
+          <Table2 size={16} className="text-primary" />
+          <span className="text-sm font-semibold text-gray-700">
+            Preview — {rows.length} técnico{rows.length !== 1 ? 's' : ''}
+          </span>
+        </div>
+
+        {loading ? (
+          <LoadingSpinner />
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-xs">
+              <thead>
+                <tr className="bg-primary-light border-b border-gray-200">
+                  {['Técnico', 'Área', 'Visitas', 'Neg.', 'Taxa%', 'Animais', 'Top Serviço',
+                    'D.Nov', 'D.At', 'T.Doses', 'Fat.Nov.', 'Fat.At.', 'T.Fat.', 'Meta', '%Meta'].map((h) => (
+                    <th key={h} className="text-left px-3 py-2.5 text-xs font-semibold text-primary uppercase tracking-wide whitespace-nowrap">
+                      {h}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {rows.length === 0 ? (
+                  <tr>
+                    <td colSpan={15} className="text-center py-10 text-gray-400">
+                      Nenhum dado encontrado
+                    </td>
+                  </tr>
+                ) : (
+                  rows.map((r, i) => (
+                    <tr key={i} className="border-b border-gray-100 hover:bg-gray-50">
+                      <td className="px-3 py-2 font-medium text-gray-700 max-w-[140px] truncate" title={r.nome}>{r.nome}</td>
+                      <td className="px-3 py-2 text-gray-500">{r.area}</td>
+                      <td className="px-3 py-2 text-right">{r.visitas}</td>
+                      <td className="px-3 py-2 text-right">{r.negFechados}</td>
+                      <td className="px-3 py-2 text-right">{r.taxaNeg}%</td>
+                      <td className="px-3 py-2 text-right">{r.totalAnimais.toLocaleString('pt-BR')}</td>
+                      <td className="px-3 py-2 max-w-[100px] truncate" title={r.topServico}>{r.topServico}</td>
+                      <td className="px-3 py-2 text-right">{r.dosesNovos}</td>
+                      <td className="px-3 py-2 text-right">{r.dosesAtivos}</td>
+                      <td className="px-3 py-2 text-right font-medium">{r.totalDoses}</td>
+                      <td className="px-3 py-2 text-right">{fmtBRL(r.fatNovos)}</td>
+                      <td className="px-3 py-2 text-right">{fmtBRL(r.fatAtivos)}</td>
+                      <td className="px-3 py-2 text-right font-medium">{fmtBRL(r.totalFat)}</td>
+                      <td className="px-3 py-2 text-right">{r.meta}</td>
+                      <td className="px-3 py-2 text-right font-semibold">
+                        <span className={
+                          r.pctMeta >= 100 ? 'text-emerald-600' :
+                          r.pctMeta >= 50 ? 'text-yellow-600' : 'text-red-500'
+                        }>
+                          {r.pctMeta}%
+                        </span>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+
+============================================================
+ARQUIVO: src/app/tecnicos/page.tsx
+============================================================
+
+import { AppShell } from '@/components/layout/AppShell';
+import { TecnicosClient } from './TecnicosClient';
+
+export default function TecnicosPage() {
+  return (
+    <AppShell>
+      <TecnicosClient />
+    </AppShell>
+  );
+}
+
+
+============================================================
+ARQUIVO: src/app/tecnicos/TecnicosClient.tsx
+============================================================
+
+'use client';
+
+import { useEffect, useState, useCallback } from 'react';
+import { Plus, Pencil, Trash2, User } from 'lucide-react';
+import { fetchUsers, upsertUser, deleteUser } from '@/lib/supabase';
+import { Modal } from '@/components/ui/Modal';
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
+import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
+import type { TechUser } from '@/types/portal';
+import { AREAS } from '@/types/portal';
+
+const emptyForm = (): Partial<TechUser> => ({
+  name: '',
+  email: '',
+  area: '',
+  phone: '',
+  role: 'tecnico',
+  active: true,
+});
+
+export function TecnicosClient() {
+  const [techs, setTechs] = useState<TechUser[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [editTarget, setEditTarget] = useState<TechUser | null>(null);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<TechUser | null>(null);
+  const [form, setForm] = useState<Partial<TechUser>>(emptyForm());
+  const [saving, setSaving] = useState(false);
+  const [formError, setFormError] = useState('');
+
+  const loadData = useCallback(async () => {
+    setLoading(true);
+    const users = await fetchUsers();
+    setTechs(users);
+    setLoading(false);
+  }, []);
+
+  useEffect(() => { loadData(); }, [loadData]);
+
+  function openNew() {
+    setEditTarget(null);
+    setForm(emptyForm());
+    setFormError('');
+    setModalOpen(true);
+  }
+
+  function openEdit(t: TechUser) {
+    setEditTarget(t);
+    setForm({ id: t.id, name: t.name, email: t.email, area: t.area, phone: t.phone, role: t.role, active: t.active });
+    setFormError('');
+    setModalOpen(true);
+  }
+
+  async function handleSave() {
+    if (!form.name || !form.email) {
+      setFormError('Nome e email são obrigatórios.');
+      return;
+    }
+    setSaving(true);
+    setFormError('');
+    const res = await upsertUser({ ...form });
+    setSaving(false);
+    if (!res.ok) {
+      setFormError(res.error || 'Erro ao salvar');
+      return;
+    }
+    setModalOpen(false);
+    await loadData();
+  }
+
+  async function handleDelete() {
+    if (!deleteTarget) return;
+    await deleteUser(deleteTarget.id);
+    setDeleteOpen(false);
+    setDeleteTarget(null);
+    await loadData();
+  }
+
+  const roleLabel = (r: string) => r === 'gestor' ? 'Gestor' : 'Técnico';
+
+  return (
+    <div className="space-y-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <h1 className="text-xl font-bold text-gray-800">Gerenciar Técnicos</h1>
+        <button
+          onClick={openNew}
+          className="flex items-center gap-2 bg-primary text-white text-sm px-4 py-2 rounded-lg hover:bg-primary-dark transition-colors"
+        >
+          <Plus size={16} /> Adicionar Técnico
+        </button>
+      </div>
+
+      <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+        {loading ? (
+          <LoadingSpinner />
+        ) : techs.length === 0 ? (
+          <div className="text-center py-12 text-gray-400">Nenhum técnico cadastrado</div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="bg-primary-light border-b border-gray-200">
+                  {['Nome', 'Email', 'Área', 'Telefone', 'Perfil', 'Status', 'Ações'].map((h) => (
+                    <th key={h} className="text-left px-4 py-3 text-xs font-semibold text-primary uppercase tracking-wide">
+                      {h}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {techs.map((t, i) => (
+                  <tr key={t.id || i} className="border-b border-gray-100 hover:bg-gray-50">
+                    <td className="px-4 py-3 font-medium text-gray-700 flex items-center gap-2">
+                      <div className="w-7 h-7 rounded-full bg-primary-light flex items-center justify-center text-primary flex-shrink-0">
+                        <User size={13} />
+                      </div>
+                      {t.name}
+                    </td>
+                    <td className="px-4 py-3 text-gray-500">{t.email}</td>
+                    <td className="px-4 py-3 text-gray-500">{t.area || '—'}</td>
+                    <td className="px-4 py-3 text-gray-500">{t.phone || '—'}</td>
+                    <td className="px-4 py-3">
+                      <span className={`inline-block px-2 py-0.5 rounded text-xs font-medium ${
+                        t.role === 'gestor' ? 'bg-gold-light text-gold-dark' : 'bg-primary-light text-primary'
+                      }`}>
+                        {roleLabel(t.role)}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3">
+                      <span className={`inline-block w-2 h-2 rounded-full ${t.active !== false ? 'bg-emerald-500' : 'bg-gray-300'}`} />
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-1">
+                        <button onClick={() => openEdit(t)} className="p-1 rounded text-gray-400 hover:text-gold hover:bg-gold-light transition-colors" title="Editar">
+                          <Pencil size={15} />
+                        </button>
+                        <button onClick={() => { setDeleteTarget(t); setDeleteOpen(true); }} className="p-1 rounded text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors" title="Excluir">
+                          <Trash2 size={15} />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
+      <Modal open={modalOpen} onClose={() => setModalOpen(false)} title={editTarget ? 'Editar Técnico' : 'Novo Técnico'} size="md">
+        {formError && (
+          <div className="mb-3 bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg px-3 py-2">{formError}</div>
+        )}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="sm:col-span-2">
+            <label className="field-label">Nome *</label>
+            <input value={form.name || ''} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Nome completo" className="field-input" />
+          </div>
+          <div className="sm:col-span-2">
+            <label className="field-label">Email *</label>
+            <input type="email" value={form.email || ''} onChange={(e) => setForm({ ...form, email: e.target.value })} placeholder="email@crv4all.com.br" className="field-input" />
+          </div>
+          <div>
+            <label className="field-label">Área Principal</label>
+            <select value={form.area || ''} onChange={(e) => setForm({ ...form, area: e.target.value })} className="field-input">
+              <option value="">Selecione</option>
+              {AREAS.map((a) => <option key={a} value={a}>{a}</option>)}
+            </select>
+          </div>
+          <div>
+            <label className="field-label">Telefone</label>
+            <input value={form.phone || ''} onChange={(e) => setForm({ ...form, phone: e.target.value })} placeholder="(00) 00000-0000" className="field-input" />
+          </div>
+          <div>
+            <label className="field-label">Perfil</label>
+            <select value={form.role || 'tecnico'} onChange={(e) => setForm({ ...form, role: e.target.value })} className="field-input">
+              <option value="tecnico">Técnico</option>
+              <option value="gestor">Gestor</option>
+            </select>
+          </div>
+          <div className="flex items-center gap-2 pt-5">
+            <input type="checkbox" id="active" checked={form.active !== false} onChange={(e) => setForm({ ...form, active: e.target.checked })} className="w-4 h-4 accent-primary" />
+            <label htmlFor="active" className="text-sm text-gray-700 font-medium">Ativo</label>
+          </div>
+        </div>
+        <div className="flex justify-end gap-3 mt-5 pt-4 border-t border-gray-200">
+          <button onClick={() => setModalOpen(false)} className="px-4 py-2 text-sm border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">Cancelar</button>
+          <button onClick={handleSave} disabled={saving} className="px-5 py-2 text-sm bg-primary text-white rounded-lg hover:bg-primary-dark disabled:opacity-60 transition-colors">
+            {saving ? 'Salvando...' : editTarget ? 'Atualizar' : 'Adicionar'}
+          </button>
+        </div>
+      </Modal>
+
+      <ConfirmDialog
+        open={deleteOpen}
+        title="Excluir Técnico"
+        message={`Excluir o técnico "${deleteTarget?.name}" (${deleteTarget?.email})?`}
+        confirmLabel="Excluir"
+        onConfirm={handleDelete}
+        onCancel={() => { setDeleteOpen(false); setDeleteTarget(null); }}
+      />
+    </div>
+  );
+}
+

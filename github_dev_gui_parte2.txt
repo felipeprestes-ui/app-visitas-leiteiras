@@ -1,0 +1,798 @@
+============================================================
+PARTE 2 - ARQUIVOS DE CONFIGURACAO E METADADOS
+============================================================
+
+IMPORTANTE: No github.dev, voce so precisa digitar o caminho completo
+no campo de nome do arquivo. As pastas sao criadas automaticamente.
+
+Exemplo: digite "src/app/layout.tsx" e o arquivo e criado dentro da pasta
+src/app/ automaticamente.
+
+============================================================
+ARQUIVO 10: src/app/layout.tsx
+============================================================
+
+import type { Metadata } from 'next';
+import './globals.css';
+
+export const metadata: Metadata = {
+  title: 'CRV LAGOA - Portal Gestor',
+  description: 'Portal de gestao de visitas leiteiras',
+};
+
+export default function RootLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <html lang="pt-BR">
+      <body>{children}</body>
+    </html>
+  );
+}
+
+============================================================
+ARQUIVO 11: src/app/page.tsx
+============================================================
+
+'use client';
+
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+
+export default function RootPage() {
+  const router = useRouter();
+
+  useEffect(() => {
+    router.push('/login');
+  }, [router]);
+
+  return (
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+    </div>
+  );
+}
+
+============================================================
+ARQUIVO 12: src/app/globals.css
+============================================================
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --primary: #1a3c7a;
+  --primary-dark: #0d1f4a;
+  --primary-light: #eef2fb;
+  --gold: #d4a843;
+}
+
+body {
+  @apply bg-gray-50 text-gray-900;
+  font-family: system-ui, -apple-system, sans-serif;
+}
+
+.field-label {
+  @apply block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wide;
+}
+.field-input {
+  @apply w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition;
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  @apply bg-gray-100;
+}
+::-webkit-scrollbar-thumb {
+  @apply bg-gray-300 rounded;
+}
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-gray-400;
+}
+
+============================================================
+ARQUIVO 13: src/types/portal.ts
+============================================================
+
+export interface Visit {
+  id: string;
+  technician_name: string;
+  client_name: string;
+  service_type: string;
+  area: string;
+  client_type: string;
+  animals: number | null;
+  deal_closed: boolean;
+  herd_size: number | null;
+  consultant: string | null;
+  notes: string;
+  visit_date: string;
+  local_id?: string | null;
+  lat?: number | null;
+  lng?: number | null;
+}
+
+export interface MonthlySale {
+  id: string;
+  month: string;
+  technicianName: string;
+  dosesNovos: number;
+  dosesAtivos: number;
+  faturamentoNovos: number;
+  faturamentoAtivos: number;
+  meta: number;
+  updatedBy?: string;
+}
+
+export interface TechUser {
+  id: string;
+  name: string;
+  email: string;
+  area: string | null;
+  areas: string[] | null;
+  role: string;
+  phone?: string | null;
+  active?: boolean;
+  login?: string;
+  password?: string;
+  createdAt?: string;
+}
+
+export interface GestorSession {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+}
+
+export type ClientType = 'B' | 'C' | 'Conexao Leite' | 'KAM' | 'Lagoa+';
+export type ServiceType =
+  | 'Clarifide Go'
+  | 'Curso IA'
+  | 'Coleta Herd'
+  | 'Entrega Herd'
+  | 'Indicacao Touro'
+  | 'Prospec'
+  | 'Prospec Lagoa+'
+  | 'SireMatch'
+  | 'Visita Lagoa+'
+  | 'Venda Herd';
+
+export const AREAS = ['011', '012', '013', '014', '015', '018', '019', '020'] as const;
+
+export const CLIENT_TYPES: ClientType[] = ['B', 'C', 'Conexao Leite', 'KAM', 'Lagoa+'];
+
+export const SERVICE_TYPES: ServiceType[] = [
+  'Clarifide Go',
+  'Curso IA',
+  'Coleta Herd',
+  'Entrega Herd',
+  'Indicacao Touro',
+  'Prospec',
+  'Prospec Lagoa+',
+  'SireMatch',
+  'Visita Lagoa+',
+  'Venda Herd',
+];
+
+export const MONTHS = [
+  { label: 'Set/25', value: '8-2025' },
+  { label: 'Out/25', value: '9-2025' },
+  { label: 'Nov/25', value: '10-2025' },
+  { label: 'Dez/25', value: '11-2025' },
+  { label: 'Jan/26', value: '0-2026' },
+  { label: 'Fev/26', value: '1-2026' },
+  { label: 'Mar/26', value: '2-2026' },
+  { label: 'Abr/26', value: '3-2026' },
+  { label: 'Mai/26', value: '4-2026' },
+  { label: 'Jun/26', value: '5-2026' },
+];
+
+export const CONSULTORES: Record<string, string[]> = {
+  '011': ['ELVIS G S LOPES','FERNANDO HENRIQ','FRANCISCO HENRI','FREDERICO ARANT','GIVANILDO JACIN','JEFFERSON','JEFFERSON DOS S','JOAO MACHADO','JUAREZ','JUSCELIO RAIMUN','LEANDRO VILELLA','LEONARDO TUFI','LUCAS DUARTE','LUCAS GONCALVES','LUCAS SIQUEIRA','LUIS HUMBERTO R','MURILO CANEDO','PAULO GARCIA SI','PAULO SOUSA','RAFAEL AUGUSTO','RICARDO BONATO','VILTON MODESTO','VINICIUS JOSE','VINICIUS MARTIN','VIRGILIO RODRIG','WILLY JOSE DE','WILSON VAGNER V'],
+  '012': ['ANNY QUEIROZ SI','BRUNO FONSECA','CARLOS (SP)','CEZAR','EDUARDO SOARES','FABIO PACHECO','FELIPE SCARDUA','FERNANDO MOREIR','HUGO LEONARDO','JOAO ANT GUEDES','JOAO PEDRO MELO','JOSE RAIMUNDO','LEONARDO SOARES','LUCAS VALERIANO','LUCIANO FERREIR','LUIS HENRIQUE','MARIO CEZAR','MAYCON CEZAR','MIGUEL HADDAD','RODRIGO LIMA','RODRIGO PIVARI','RONALD DIAS TRO','VITOR','WLADIMIR LEON'],
+  '013': ['ALEXANDRE MAZZO','DALTON LUIZ DE','FELIPE GUIZELIN','FERNANDO MANICA','JOSE ROB RANGEL','JOSE ROSA FILHO','LEANDRO PAVANEL','LEONARDO GODOY','MARCEL BERTONHA','MARINA PIPERAS','MARLON COSTA','NAUR SOUZA','OSVADO DE LAB.J','PAULO CEZAR OLI','PAULO SERGIO G','RAFAEL BRUNO','RAFAEL JOSE DE','RENATA','VALSAIR DE MATO','VINICIUS GABRIE','WILSON MARIANO'],
+  '014': ['ALESSANDRO MAGN','ALEXANDRE TENOR','ANGELO ANTONELL','BRUNO CERQUEIRA','CELIO THEODORO','DARLAN DORIGHET','ELMO','ELTON MATOS','EVERTON DO PATR','FERNANDO F.','FRANCISCO OCTAV','GABRYEL TEIXEIR','GENILDO BORGES','ITAMAR','JAIR MILANEZI','JALMIR DANIEL S','JOAO DIOGO NETO','JORGE GOMES','JOSE A TENORIO','JOSE C BAMBINI','JOSE CLAUDIO','JUAREZ PEDRO DO','LAIR GABRIEL','MARCOS FIEL','NATALIA ANTONEL','PAULO GUSTAVO','ROBERTO GREG.','ROBSON RODRIGUE','RODOLFO REIS AL','SINARA MARTINS','THIAGO NOGUEIRA','UZIEL AMARAL','VALTER ALMEIDA','VITOR ALMEIDA'],
+  '015': ['ALEXANDRE CEZER','ANDRE SOLEK MAC','CLAITON','DENILSON SEIDEL','EDUARDO MONT.','EDUARDO TOSHIHI','EMERSON HENRI','EVANDRO TELLES','FABIO (PR)','FILIPE ROPELATO','GUILHERME ROCHA','JEAN MICHEL ROT','KEVELAN ALMEIDA','KOURBANY LUIZ C','LAUDEMIR','LOURIAN TELEGIN','RAFAEL RUZA','RONALDO ROSA','VINICIUS MUCHIN'],
+  '018': ['ALEX BRANDALISE','ANDRES HAURERS','DARLAN CARLETI','DIEGO BORBA MUL','EDUARDO LUIZ','EVANDRO','FRANCIANO','FREDERICO DE ME','FREDERICO GUERR','GUILHERME RODRI','HUGO FILHO','JOAO THOMAZ','LEANDRO GRAFF','LUCAS RUAS','LUCIANO WEBER','LUIS PANIZ','LUIZ AUGUSTO','LUIZ FELIPE','MARCELO BECKER','MARIANY DA PAIX','MAURICIO PINTO','RENAN MARSARO','RENAN MOROSSINO','RICARDO MOREIRA','RODRIGO BORGES'],
+  '019': ['ADRIANO BOLOGNE','ADRIELLY LOPES','ALEXANDRE LOUZA','ANDRE HENRIQUE','BRENO DIAS','CASSIO ROBERTO','DANIEL GUSTAVO','EDIVALDO BATIST','EDIVAN','EVANILDO NUNES','FABER MONTEIRO','FABRICIO GARCES','GUSTAVO HENRIQU','IGOR/PAULO','IODOMIR CARVALH','ISMAEL DOS SANT','MAYLON DIOGO','MOACIIR DUARTE','NICOLE COLUCCI','PAULO HENRIQUE','RAI DAMASCENO E','RAYCON ROBERTO','RODRIGO ALMEIDA','WAGNER PESCA'],
+  '020': ['ALOYSIO FRANCA','ANDERSON JOSE','ANDRE CARREIRA','ARTHUR NEGRAO','CLAUDIO FELIPE','DIEGO MOURA','EDUARDO FURTADO','FELIPE NAIS','GILMAR','GUSTAVO AMERICO','GUSTAVO ANDRADE','JALES','JULIANO MACHADO','JUNIOR ALVES','LUCAS DE SOUSA','LUCIANO ILTON','LUIZ HARLITON C','MARCELO CARNEIR','MARCOS VINICIUS','MAX MARIANO','OLICIO BATISTA','PAULO BARROS','PAULO NASCIPE','RAAFAEL VERNER H','ROBSON DA SILVA','RUBENS RUDRIGUE','THAYMISSON LIRA','THIAGO RESENDE'],
+};
+
+============================================================
+ARQUIVO 14: src/hooks/useAuth.ts
+============================================================
+
+'use client';
+
+import { useState, useEffect, useCallback } from 'react';
+
+export const SESSION_KEY = 'vl_portal_session';
+
+export interface GestorSession {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+}
+
+export function getSession(): GestorSession | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    const raw = localStorage.getItem(SESSION_KEY);
+    if (!raw) return null;
+    return JSON.parse(raw) as GestorSession;
+  } catch {
+    return null;
+  }
+}
+
+export function setSession(session: GestorSession) {
+  if (typeof window !== 'undefined') {
+    localStorage.setItem(SESSION_KEY, JSON.stringify(session));
+  }
+}
+
+export function clearSession() {
+  if (typeof window !== 'undefined') {
+    localStorage.removeItem(SESSION_KEY);
+  }
+}
+
+export function useAuth() {
+  const [session, setSessionState] = useState<GestorSession | null>(null);
+
+  useEffect(() => {
+    setSessionState(getSession());
+  }, []);
+
+  const login = useCallback((session: GestorSession) => {
+    setSession(session);
+    setSessionState(session);
+  }, []);
+
+  const logout = useCallback(() => {
+    clearSession();
+    setSessionState(null);
+  }, []);
+
+  return { session, login, logout };
+}
+
+============================================================
+ARQUIVO 15: src/lib/supabase.ts
+============================================================
+
+import type { Visit, MonthlySale, TechUser } from '@/types/portal';
+
+const API_BASE_URL =
+  process.env.NEXT_PUBLIC_SUPABASE_URL ||
+  'https://egmradntktqzpuedxqhg.supabase.co/rest/v1';
+
+const SUPABASE_ANON_KEY =
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVnbXJhZG50a3RxenB1ZWR4cWhnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk5MTcwMTMsImV4cCI6MjA5NTQ5MzAxM30.f2mnogv5_EHVgEU-wUktMfVn7i28sf_vLhl1Baimtnk';
+
+export function supabaseHeaders(extra: Record<string, string> = {}): Record<string, string> {
+  return {
+    'Content-Type': 'application/json',
+    apikey: SUPABASE_ANON_KEY,
+    Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+    ...extra,
+  };
+}
+
+export interface ApiResult<T = unknown> {
+  ok: boolean;
+  data?: T;
+  error?: string;
+}
+
+export async function supabaseFetch<T = unknown>(
+  path: string,
+  options: RequestInit & { headers?: Record<string, string> } = {}
+): Promise<ApiResult<T>> {
+  try {
+    const headers = supabaseHeaders(options.headers || {});
+    const res = await fetch(`${API_BASE_URL}${path}`, {
+      ...options,
+      headers,
+    });
+    const text = await res.text();
+    let data: unknown;
+    try {
+      data = JSON.parse(text);
+    } catch {
+      data = text;
+    }
+    if (!res.ok) {
+      const errData = data as Record<string, string> | null;
+      const msg =
+        (errData && (errData.message || errData.error || errData.hint)) ||
+        `HTTP ${res.status}`;
+      return { ok: false, error: msg };
+    }
+    return { ok: true, data: data as T };
+  } catch (err) {
+    return { ok: false, error: (err as Error).message || 'Sem conexao' };
+  }
+}
+
+export async function fetchVisits(params: Record<string, string> = {}): Promise<Visit[]> {
+  const base: Record<string, string> = { select: '*', order: 'visit_date.desc' };
+  const merged = { ...base, ...params };
+  const parts: string[] = [];
+  for (const [k, v] of Object.entries(merged)) {
+    const realKey = k.replace(/_\d+$/, '');
+    parts.push(`${realKey}=${v}`);
+  }
+  const res = await supabaseFetch<Visit[]>(`/Visit?${parts.join('&')}`);
+  return res.ok && Array.isArray(res.data) ? res.data : [];
+}
+
+export async function upsertVisit(payload: Partial<Visit>): Promise<ApiResult<Visit>> {
+  const method = payload.id ? 'PATCH' : 'POST';
+  const path = payload.id ? `/Visit?id=eq.${payload.id}` : '/Visit';
+  const body = { ...payload };
+  if (method === 'POST') delete body.id;
+  return supabaseFetch<Visit>(path, {
+    method,
+    headers: { Prefer: 'return=representation' },
+    body: JSON.stringify(body),
+  });
+}
+
+export async function deleteVisit(id: string): Promise<ApiResult> {
+  return supabaseFetch(`/Visit?id=eq.${encodeURIComponent(id)}`, { method: 'DELETE' });
+}
+
+export async function fetchSales(params: Record<string, string> = {}): Promise<MonthlySale[]> {
+  const base: Record<string, string> = { select: '*', order: 'month.desc,technicianName.asc' };
+  const merged = { ...base, ...params };
+  const parts: string[] = [];
+  for (const [k, v] of Object.entries(merged)) {
+    parts.push(`${k}=${v}`);
+  }
+  const res = await supabaseFetch<MonthlySale[]>(`/monthly_sales?${parts.join('&')}`);
+  return res.ok && Array.isArray(res.data) ? res.data : [];
+}
+
+export async function upsertSale(payload: Partial<MonthlySale>): Promise<ApiResult<MonthlySale>> {
+  return supabaseFetch<MonthlySale>('/monthly_sales?on_conflict=month,technicianName', {
+    method: 'POST',
+    headers: { Prefer: 'resolution=merge-duplicates,return=representation' },
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function deleteSale(id: string): Promise<ApiResult> {
+  return supabaseFetch(`/monthly_sales?id=eq.${encodeURIComponent(id)}`, { method: 'DELETE' });
+}
+
+export async function fetchUsers(params: Record<string, string> = {}): Promise<TechUser[]> {
+  const base: Record<string, string> = { select: '*', order: 'name.asc' };
+  const merged = { ...base, ...params };
+  const parts: string[] = [];
+  for (const [k, v] of Object.entries(merged)) {
+    parts.push(`${k}=${v}`);
+  }
+  const res = await supabaseFetch<TechUser[]>(`/User?${parts.join('&')}`);
+  return res.ok && Array.isArray(res.data) ? res.data : [];
+}
+
+export async function upsertUser(payload: Partial<TechUser>): Promise<ApiResult<TechUser>> {
+  const method = payload.id ? 'PATCH' : 'POST';
+  const path = payload.id ? `/User?id=eq.${payload.id}` : '/User';
+  const body = { ...payload };
+  if (method === 'POST') delete body.id;
+  return supabaseFetch<TechUser>(path, {
+    method,
+    headers: { Prefer: 'return=representation' },
+    body: JSON.stringify(body),
+  });
+}
+
+export async function deleteUser(id: string): Promise<ApiResult> {
+  return supabaseFetch(`/User?id=eq.${encodeURIComponent(id)}`, { method: 'DELETE' });
+}
+
+export async function loginUser(email: string, password: string): Promise<TechUser | null> {
+  const res = await supabaseFetch<TechUser[]>(
+    `/User?email=eq.${encodeURIComponent(email)}&select=*`
+  );
+  if (!res.ok || !Array.isArray(res.data) || res.data.length === 0) return null;
+  const user = res.data[0];
+  const storedPwd = (user as unknown as Record<string, string>).password || '';
+  if (storedPwd !== password) return null;
+  return user;
+}
+
+============================================================
+ARQUIVO 16: src/components/ui/LoadingSpinner.tsx
+============================================================
+
+export function LoadingSpinner() {
+  return (
+    <div className="flex items-center justify-center h-48">
+      <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary" />
+    </div>
+  );
+}
+
+============================================================
+ARQUIVO 17: src/components/ui/KpiCard.tsx
+============================================================
+
+import { ReactNode } from 'react';
+
+interface KpiCardProps {
+  label: string;
+  value: string | number;
+  icon?: ReactNode;
+  trend?: { value: number; label: string };
+  variant?: 'blue' | 'gold' | 'green' | 'red';
+}
+
+export function KpiCard({ label, value, icon, trend, variant = 'blue' }: KpiCardProps) {
+  const variantClasses = {
+    blue: 'bg-primary-light border-primary/20',
+    gold: 'bg-gold-light border-gold/20',
+    green: 'bg-emerald-50 border-emerald-200',
+    red: 'bg-red-50 border-red-200',
+  };
+
+  return (
+    <div className={`rounded-xl border p-5 ${variantClasses[variant]}`}>
+      <div className="flex items-center justify-between">
+        <div>
+          <p className="text-muted text-xs font-medium uppercase tracking-wide">{label}</p>
+          <p className="text-2xl font-bold text-gray-900 mt-1">{value}</p>
+        </div>
+        {icon && <div className="text-primary/60">{icon}</div>}
+      </div>
+      {trend && (
+        <div className="mt-3 flex items-center gap-1.5">
+          <span className={`text-xs font-semibold ${trend.value >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
+            {trend.value >= 0 ? '+' : ''}{trend.value}%
+          </span>
+          <span className="text-xs text-muted">{trend.label}</span>
+        </div>
+      )}
+    </div>
+  );
+}
+
+============================================================
+ARQUIVO 18: src/components/ui/Modal.tsx
+============================================================
+
+import { X } from 'lucide-react';
+import { ReactNode } from 'react';
+
+interface ModalProps {
+  open: boolean;
+  title: string;
+  children: ReactNode;
+  onClose: () => void;
+}
+
+export function Modal({ open, title, children, onClose }: ModalProps) {
+  if (!open) return null;
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+      <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+          <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 transition">
+            <X size={20} />
+          </button>
+        </div>
+        <div className="px-6 py-4">{children}</div>
+      </div>
+    </div>
+  );
+}
+
+============================================================
+ARQUIVO 19: src/components/ui/ConfirmDialog.tsx
+============================================================
+
+import { AlertTriangle } from 'lucide-react';
+
+interface ConfirmDialogProps {
+  open: boolean;
+  title?: string;
+  message: string;
+  onConfirm: () => void;
+  onCancel: () => void;
+  confirmLabel?: string;
+  cancelLabel?: string;
+}
+
+export function ConfirmDialog({
+  open,
+  title = 'Confirmar acao',
+  message,
+  onConfirm,
+  onCancel,
+  confirmLabel = 'Confirmar',
+  cancelLabel = 'Cancelar',
+}: ConfirmDialogProps) {
+  if (!open) return null;
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+      <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6">
+        <div className="flex items-start gap-4">
+          <div className="flex-shrink-0 bg-red-50 rounded-full p-2.5">
+            <AlertTriangle className="text-red-500" size={22} />
+          </div>
+          <div className="flex-1">
+            <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
+            <p className="text-sm text-muted mt-2 leading-relaxed">{message}</p>
+          </div>
+        </div>
+        <div className="flex gap-3 justify-end mt-6">
+          <button
+            onClick={onCancel}
+            className="px-4 py-2 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-100 transition"
+          >
+            {cancelLabel}
+          </button>
+          <button
+            onClick={onConfirm}
+            className="px-4 py-2 rounded-lg text-sm font-medium bg-red-600 text-white hover:bg-red-700 transition"
+          >
+            {confirmLabel}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+============================================================
+ARQUIVO 20: src/components/ui/Pagination.tsx
+============================================================
+
+interface PaginationProps {
+  current: number;
+  total: number;
+  onChange: (page: number) => void;
+}
+
+export function Pagination({ current, total, onChange }: PaginationProps) {
+  if (total <= 1) return null;
+  const pages = Array.from({ length: total }, (_, i) => i + 1);
+  const maxVisible = 7;
+  let visiblePages = pages;
+
+  if (total > maxVisible) {
+    if (current <= 4) {
+      visiblePages = [...pages.slice(0, 5), -1, total];
+    } else if (current >= total - 3) {
+      visiblePages = [1, -1, ...pages.slice(total - 5)];
+    } else {
+      visiblePages = [1, -1, current - 1, current, current + 1, -2, total];
+    }
+  }
+
+  return (
+    <div className="flex items-center justify-center gap-1.5 mt-6">
+      <button
+        onClick={() => onChange(Math.max(1, current - 1))}
+        disabled={current === 1}
+        className="px-3 py-1.5 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-100 disabled:opacity-40 transition"
+      >
+        Anterior
+      </button>
+      {visiblePages.map((p, i) =>
+        p < 0 ? (
+          <span key={`dots-${i}`} className="px-2 text-gray-400">...</span>
+        ) : (
+          <button
+            key={p}
+            onClick={() => onChange(p)}
+            className={`px-3 py-1.5 rounded-lg text-sm font-medium transition ${
+              p === current
+                ? 'bg-primary text-white shadow-sm'
+                : 'text-gray-600 hover:bg-gray-100'
+            }`}
+          >
+            {p}
+          </button>
+        )
+      )}
+      <button
+        onClick={() => onChange(Math.min(total, current + 1))}
+        disabled={current === total}
+        className="px-3 py-1.5 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-100 disabled:opacity-40 transition"
+      >
+        Proxima
+      </button>
+    </div>
+  );
+}
+
+============================================================
+ARQUIVO 21: src/components/layout/Sidebar.tsx
+============================================================
+
+'use client';
+
+import Link from 'next/link';
+import { usePathname, useRouter } from 'next/navigation';
+import {
+  LayoutDashboard,
+  MapPin,
+  TrendingUp,
+  Users,
+  FileText,
+  LogOut,
+  Menu,
+  X,
+} from 'lucide-react';
+import { useState } from 'react';
+import { clearSession } from '@/hooks/useAuth';
+
+const navItems = [
+  { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+  { href: '/visitas', label: 'Visitas', icon: MapPin },
+  { href: '/vendas', label: 'Vendas', icon: TrendingUp },
+  { href: '/tecnicos', label: 'Tecnicos', icon: Users },
+  { href: '/relatorios', label: 'Relatorios', icon: FileText },
+];
+
+export function Sidebar({ userName }: { userName?: string }) {
+  const pathname = usePathname();
+  const router = useRouter();
+  const [mobileOpen, setMobileOpen] = useState(false);
+
+  function handleLogout() {
+    clearSession();
+    router.push('/login');
+    router.refresh();
+  }
+
+  const NavLinks = () => (
+    <nav className="flex-1 px-3 py-4 space-y-1">
+      {navItems.map(({ href, label, icon: Icon }) => {
+        const active = pathname === href || pathname.startsWith(href + '/');
+        return (
+          <Link
+            key={href}
+            href={href}
+            onClick={() => setMobileOpen(false)}
+            className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+              active
+                ? 'bg-white text-primary shadow-sm'
+                : 'text-blue-100 hover:bg-primary-dark hover:text-white'
+            }`}
+          >
+            <Icon size={18} />
+            {label}
+          </Link>
+        );
+      })}
+    </nav>
+  );
+
+  return (
+    <>
+      <aside className="hidden lg:flex flex-col w-56 bg-primary min-h-screen fixed left-0 top-0 z-30">
+        <div className="px-4 py-5 border-b border-primary-dark">
+          <div className="text-white font-bold text-lg leading-tight">CRV LAGOA</div>
+          <div className="text-blue-200 text-xs mt-0.5">Portal Gestor</div>
+        </div>
+        <NavLinks />
+        <div className="px-3 py-4 border-t border-primary-dark">
+          {userName && (
+            <div className="text-blue-200 text-xs px-3 mb-2 truncate">{userName}</div>
+          )}
+          <button
+            onClick={handleLogout}
+            className="flex items-center gap-3 w-full px-3 py-2 rounded-lg text-sm text-blue-100 hover:bg-red-600 hover:text-white transition-colors"
+          >
+            <LogOut size={16} />
+            Sair
+          </button>
+        </div>
+      </aside>
+
+      <div className="lg:hidden fixed top-0 left-0 right-0 z-30 bg-primary px-4 py-3 flex items-center justify-between">
+        <span className="text-white font-bold">CRV LAGOA</span>
+        <button onClick={() => setMobileOpen(!mobileOpen)} className="text-white">
+          {mobileOpen ? <X size={22} /> : <Menu size={22} />}
+        </button>
+      </div>
+
+      {mobileOpen && (
+        <div className="lg:hidden fixed inset-0 z-20">
+          <div className="absolute inset-0 bg-black/50" onClick={() => setMobileOpen(false)} />
+          <div className="absolute left-0 top-0 bottom-0 w-56 bg-primary flex flex-col pt-14">
+            <NavLinks />
+            <div className="px-3 py-4 border-t border-primary-dark">
+              <button
+                onClick={handleLogout}
+                className="flex items-center gap-3 w-full px-3 py-2 rounded-lg text-sm text-blue-100 hover:bg-red-600 hover:text-white transition-colors"
+              >
+                <LogOut size={16} />
+                Sair
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
+
+============================================================
+ARQUIVO 22: src/components/layout/AppShell.tsx
+============================================================
+
+'use client';
+
+import { useAuth } from '@/hooks/useAuth';
+import { Sidebar } from './Sidebar';
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+
+export function AppShell({ children }: { children: React.ReactNode }) {
+  const { session } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!session && typeof window !== 'undefined') {
+      router.push('/login');
+    }
+  }, [session, router]);
+
+  if (!session) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-3" />
+          <p className="text-muted text-sm">Redirecionando...</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex min-h-screen bg-gray-50">
+      <Sidebar userName={session?.name} />
+      <main className="flex-1 lg:ml-56 pt-14 lg:pt-0 min-h-screen">
+        <div className="p-4 md:p-6 max-w-[1400px] mx-auto">{children}</div>
+      </main>
+    </div>
+  );
+}
+
+============================================================
+ARQUIVO 23: src/features/dashboard/types.ts
+============================================================
+
+export interface MonthlyStats {
+  technician: string;
+  visits: number;
+  sales: number;
+  revenue: number;
+  deals: number;
+}
+
+export interface AreaStats {
+  area: string;
+  visits: number;
+  revenue: number;
+}
+
+export interface DashboardSummary {
+  totalVisits: number;
+  totalRevenue: number;
+  activeTechnicians: number;
+  closedDeals: number;
+  monthlyStats: MonthlyStats[];
+  areaStats: AreaStats[];
+}

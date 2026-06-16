@@ -1,0 +1,99 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id               String         @id @default(uuid())
+  name             String
+  email            String         @unique
+  passwordHash     String
+  role             String
+  consultantArea   String?
+  active           Boolean        @default(true)
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+  refreshTokens    RefreshToken[]
+  schedulesCreated Schedule[]     @relation("ScheduleCreatedBy")
+  schedulesAssigned Schedule[]    @relation("ScheduleAssignedTo")
+  visits           Visit[]
+}
+
+model RefreshToken {
+  id        String   @id @default(uuid())
+  userId    String
+  tokenHash String
+  expiresAt DateTime
+  revokedAt DateTime?
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Client {
+  id         String     @id
+  name       String
+  clientType String
+  phone      String?
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+  properties Property[]
+}
+
+model Property {
+  id              String     @id
+  clientId        String
+  name            String
+  consultantName  String
+  consultantArea  String
+  latitude        Float
+  longitude       Float
+  address         String?
+  city            String?
+  state           String?
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+  client          Client     @relation(fields: [clientId], references: [id], onDelete: Restrict)
+  schedules       Schedule[]
+  visits          Visit[]
+}
+
+model Schedule {
+  id              String   @id
+  propertyId      String
+  assignedUserId  String
+  createdByUserId String
+  scheduledAt     DateTime
+  status          String
+  notes           String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  property        Property @relation(fields: [propertyId], references: [id], onDelete: Restrict)
+  assignedUser    User     @relation("ScheduleAssignedTo", fields: [assignedUserId], references: [id], onDelete: Restrict)
+  createdByUser   User     @relation("ScheduleCreatedBy", fields: [createdByUserId], references: [id], onDelete: Restrict)
+  visits          Visit[]
+}
+
+model Visit {
+  id                       String    @id
+  propertyId               String
+  technicianUserId         String
+  scheduleId               String?
+  herdSize                 Int
+  clientType               String
+  serviceType              String
+  animalCount              Int?
+  milkAverageLitersPerDay  Float
+  lactatingAnimals         Int
+  dealClosed               Boolean
+  notes                    String?
+  visitedAt                DateTime
+  createdAt                DateTime  @default(now())
+  updatedAt                DateTime  @updatedAt
+  property                 Property  @relation(fields: [propertyId], references: [id], onDelete: Restrict)
+  technicianUser           User      @relation(fields: [technicianUserId], references: [id], onDelete: Restrict)
+  schedule                 Schedule? @relation(fields: [scheduleId], references: [id], onDelete: SetNull)
+}

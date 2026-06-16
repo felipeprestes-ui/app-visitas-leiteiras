@@ -1,0 +1,152 @@
+========================================
+APP VISITAS LEITEIRAS — GUIA DO TECNICO
+========================================
+Versao de teste (build preview)
+Data: maio/2026
+
+
+========================================
+1. INSTALACAO DO APK NO ANDROID
+========================================
+
+Antes de instalar, voce precisa liberar a instalacao de apps externos.
+
+PASSO A PASSO:
+
+1. Acesse: Configuracoes > Seguranca (ou Privacidade)
+2. Ative a opcao "Fontes desconhecidas" ou "Instalar apps desconhecidos"
+   - Em celulares Samsung: Configuracoes > Apps > Menu (3 pontinhos) > Acesso especial > Instalar apps desconhecidos > selecione seu gerenciador de arquivos ou WhatsApp e ative
+3. Baixe o arquivo APK enviado nesta conversa
+4. Toque no arquivo APK para instalar
+5. Confirme a instalacao quando solicitado
+6. Abra o app "Visitas Leiteiras"
+
+OBSERVACAO: Dependendo do modelo do celular, o caminho pode variar um pouco.
+Se travar, chame o Felipe pelo WhatsApp.
+
+
+========================================
+2. CREDENCIAIS DE ACESSO
+========================================
+
+Use o e-mail e senha abaixo para entrar no app:
+
+TECNICOS:
+-----------------------------------------
+Cesar Oliveira
+  E-mail: cesar.oliveira@visitasleiteiras.com
+  Senha:  123456
+
+Erica Fonseca
+  E-mail: erica.fonseca@visitasleiteiras.com
+  Senha:  123456
+
+Henrique Froehlich
+  E-mail: henrique.froehlich@visitasleiteiras.com
+  Senha:  123456
+
+Leandro Teixeira
+  E-mail: leandro.teixeira@visitasleiteiras.com
+  Senha:  123456
+-----------------------------------------
+
+GESTOR (Felipe Prestes):
+  E-mail: gestor@app.com
+  Senha:  123456
+
+IMPORTANTE: Estas credenciais sao para teste. Nao compartilhe com externos.
+
+
+========================================
+3. O QUE O APP FAZ
+========================================
+
+O app Visitas Leiteiras e um sistema de campo para registro de visitas
+a produtores de leite.
+
+Funciona 100% sem internet (offline-first). Os dados ficam salvos no
+celular e sao sincronizados com o servidor quando houver conexao.
+
+O app ja vem carregado com o historico de 1473 visitas (set/2025 a abr/2026).
+
+Funcionalidades principais:
+- Login com autenticacao por e-mail e senha
+- Tela inicial com resumo: agendas, clientes, pendencias, visitas
+- Agenda de visitas programadas
+- Cadastro de novos clientes e propriedades (com GPS)
+- Formulario completo de visita tecnica
+- Sincronizacao dos dados com o servidor (quando online)
+
+
+========================================
+4. COMO USAR O APP
+========================================
+
+--- LOGIN ---
+1. Abra o app
+2. Digite seu e-mail e senha (ver secao 2 acima)
+3. Toque em "Entrar"
+4. Voce vai para a tela principal com o resumo dos seus dados
+
+--- TELA INICIAL ---
+Voce vera 4 cards:
+- Agenda: total de visitas planejadas
+- Clientes: total de clientes locais
+- Pendencias: itens ainda nao sincronizados
+- Visitas: registros locais
+
+Acoes rapidas na parte de baixo: Nova visita, Nova agenda, Clientes, Sincronizar
+
+--- AGENDA ---
+Para criar uma nova agenda:
+1. Toque em "Nova agenda"
+2. Informe o ID da propriedade (copie da lista de clientes)
+3. Informe a data e hora no formato: AAAA-MM-DDTHH:MM (ex: 2026-05-25T09:00)
+4. Adicione observacoes se quiser
+5. Toque em "Salvar agenda"
+A agenda fica salva no celular mesmo sem internet.
+
+--- CADASTRO DE CLIENTE ---
+1. Toque em "Clientes"
+2. Preencha: nome do cliente, tipo (A, B, C...), nome da propriedade
+3. Selecione a area do consultor e o nome do consultor
+4. Para o GPS: toque em "Capturar GPS atual" (deixe o celular ao ar livre)
+   Ou digite a latitude e longitude manualmente
+5. Informe cidade e estado
+6. Toque em "Salvar offline"
+
+--- FORMULARIO DE VISITA ---
+1. Toque em "Nova visita"
+2. Informe o ID da propriedade visitada
+3. Preencha os dados tecnicos:
+   - Numero do rebanho
+   - Tipo de cliente
+   - Servico realizado (opcoes aparecem no campo)
+   - Se o servico exigir, informe o numero de animais
+   - Producao media de leite (litros/dia)
+   - Animais em lactacao
+   - Negocio fechado? (ligue o botao se sim)
+   - Observacoes livres
+4. Toque em "Salvar visita offline"
+
+--- GPS ---
+O GPS e capturado automaticamente ao tocar em "Capturar GPS atual" na
+tela de clientes. Deixe o celular ao ar livre e aguarde alguns segundos.
+
+--- SINCRONIZACAO ---
+1. Toque em "Sincronizar" (tela inicial ou menu)
+2. O app mostra se esta Online ou Offline
+3. Toque em "Sincronizar agora" para enviar os dados ao servidor
+4. Acompanhe a fila de pendencias — quando zerar, tudo foi enviado
+Obs: O app sincroniza automaticamente quando detecta conexao.
+
+
+========================================
+5. DUVIDAS E SUPORTE
+========================================
+
+Qualquer problema, chame o Felipe Prestes pelo WhatsApp.
+
+Envie print da tela de erro se aparecer alguma mensagem em vermelho.
+
+========================================

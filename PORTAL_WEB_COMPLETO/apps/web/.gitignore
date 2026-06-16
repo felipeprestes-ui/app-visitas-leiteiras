@@ -1,0 +1,19 @@
+# Next.js
+/.next/
+/dist/
+/out/
+
+# Node
+node_modules/
+*.log
+
+# Vercel
+.vercel/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db

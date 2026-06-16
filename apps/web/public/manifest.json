@@ -1,0 +1,22 @@
+{
+  "name": "App Visitas Leiteiras",
+  "short_name": "Visitas",
+  "description": "Portal web com operacao mobile e offline para visitas leiteiras.",
+  "start_url": "/login/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#f3f4f6",
+  "theme_color": "#1f6b52",
+  "icons": [
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
