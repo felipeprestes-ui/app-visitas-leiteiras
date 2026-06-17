@@ -223,7 +223,7 @@ export async function fetchClients(params: Record<string, string> = {}): Promise
 }
 
 export async function fetchSchedule(params: Record<string, string> = {}): Promise<ScheduleItem[]> {
-  const base: Record<string, string> = { select: '*', order: 'date.asc' };
+  const base: Record<string, string> = { select: '*', order: 'scheduled_date.asc' };
   const merged = { ...base, ...params };
   const parts: string[] = [];
   for (const [k, v] of Object.entries(merged)) {
