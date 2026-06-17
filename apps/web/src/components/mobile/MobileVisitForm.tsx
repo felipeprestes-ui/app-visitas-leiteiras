@@ -19,6 +19,7 @@ const initialForm: Partial<Visit> = {
   doses_sexado: null,
   notes: '',
   date: new Date().toISOString().slice(0, 10),
+  technician_name: '',
 };
 
 interface Props {
@@ -27,7 +28,10 @@ interface Props {
 
 export function MobileVisitForm({ onSaved }: Props) {
   const { session } = useAuth();
-  const [form, setForm] = useState<Partial<Visit>>(initialForm);
+  const [form, setForm] = useState<Partial<Visit>>({
+    ...initialForm,
+    technician_name: session?.name || 'Gestor',
+  });
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
@@ -85,6 +89,11 @@ export function MobileVisitForm({ onSaved }: Props) {
             <option value="">Selecione</option>
             {AREAS.map((area) => <option key={area} value={area}>{area}</option>)}
           </select>
+        </div>
+
+        <div>
+          <label className="field-label">Técnico</label>
+          <input value={form.technician_name || ''} readOnly className="field-input bg-gray-100" />
         </div>
 
         <div>
