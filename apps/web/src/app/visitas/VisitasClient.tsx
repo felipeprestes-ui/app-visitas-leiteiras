@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { format } from 'date-fns';
 import { Plus, Pencil, Trash2, Eye, Search } from 'lucide-react';
-import { deleteVisit, fetchUsers, upsertVisit } from '@/lib/supabase';
+import { fetchUsers, upsertVisit } from '@/lib/supabase';
 import { Pagination } from '@/components/ui/Pagination';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { Modal } from '@/components/ui/Modal';
@@ -12,9 +12,20 @@ import { useAuth } from '@/hooks/useAuth';
 import type { Visit, TechUser } from '@/types/portal';
 import { AREAS, CLIENT_TYPES, SERVICE_TYPES, CONSULTORES, MONTHS } from '@/types/portal';
 import { getPendingVisits } from '@/lib/offline/storage';
-import { loadVisitsOfflineFirst, registerOnlineSync } from '@/lib/offline/sync';
+import { deleteVisitOfflineFirst, loadVisitsOfflineFirst, registerOnlineSync } from '@/lib/offline/sync';
 
 const PAGE_SIZE = 50;
+
+function normalizeTechnicianName(name: string) {
+  return name.trim().replace(/\s+/g, ' ').toLowerCase();
+}
+
+function normalizeMonthValue(value: string) {
+  if (!value) return '';
+  const [month, year] = value.split('-');
+  if (month === undefined || year === undefined) return value;
+  return `${Number(month)}-${year}`;
+}
 
 function fmtDate(d: string) {
   if (!d) return '—';
@@ -24,6 +35,7 @@ function fmtDate(d: string) {
 const emptyForm = (): Partial<Visit> => ({
   technician_name: '',
   client_name: '',
+  city: '',
   service_type: '',
   area: '',
   client_type: '',
@@ -64,7 +76,7 @@ export function VisitasClient({ initialNew }: { initialNew?: boolean }) {
   const loadData = useCallback(async () => {
     setLoading(true);
     const [visitsResult, users, pending] = await Promise.all([
-      loadVisitsOfflineFirst(session?.name),
+      loadVisitsOfflineFirst(undefined, { allTechnicians: true }),
       fetchUsers(),
       getPendingVisits(),
     ]);
@@ -73,7 +85,7 @@ export function VisitasClient({ initialNew }: { initialNew?: boolean }) {
     setPendingCount(pending.length);
     setSyncingData(visitsResult.fromCache && !visitsResult.syncing && typeof navigator !== 'undefined' && navigator.onLine);
     setLoading(false);
-  }, [session?.name]);
+  }, []);
 
   useEffect(() => {
     loadData();
@@ -87,13 +99,11 @@ export function VisitasClient({ initialNew }: { initialNew?: boolean }) {
       list = list.filter((v) => {
         if (!v.date) return false;
         const d = new Date(v.date);
-        return `${d.getMonth()}-${d.getFullYear()}` === filterMonth;
+        return normalizeMonthValue(`${d.getMonth()}-${d.getFullYear()}`) === normalizeMonthValue(filterMonth);
       });
     }
     if (filterTech) {
-      list = list.filter((v) =>
-        v.technician_name?.toLowerCase().includes(filterTech.toLowerCase())
-      );
+      list = list.filter((v) => normalizeTechnicianName(v.technician_name || '') === filterTech);
     }
     if (searchClient) {
       const q = searchClient.toLowerCase();
@@ -108,10 +118,14 @@ export function VisitasClient({ initialNew }: { initialNew?: boolean }) {
 
   // Unique technician names from loaded visits
   const techNames = Array.from(
-    new Set([...visits.map((v) => v.technician_name), ...techList.map((t) => t.name)])
-  )
-    .filter(Boolean)
-    .sort();
+    [...visits.map((v) => v.technician_name), ...techList.map((t) => t.name)].reduce((map, name) => {
+      const label = name?.trim();
+      if (!label) return map;
+      const normalized = normalizeTechnicianName(label);
+      if (!map.has(normalized)) map.set(normalized, label);
+      return map;
+    }, new Map<string, string>())
+  ).sort((a, b) => a[1].localeCompare(b[1], 'pt-BR'));
 
   function openNew() {
     setEditTarget(null);
@@ -126,6 +140,7 @@ export function VisitasClient({ initialNew }: { initialNew?: boolean }) {
       id: v.id,
       technician_name: v.technician_name,
       client_name: v.client_name,
+      city: v.city,
       service_type: v.service_type,
       area: v.area,
       client_type: v.client_type,
@@ -165,7 +180,11 @@ export function VisitasClient({ initialNew }: { initialNew?: boolean }) {
 
   async function handleDelete() {
     if (!deleteTarget) return;
-    await deleteVisit(deleteTarget.id);
+    const result = await deleteVisitOfflineFirst(deleteTarget);
+    if (!result.ok) {
+      setFormError(result.error || 'Erro ao excluir');
+      return;
+    }
     setDeleteOpen(false);
     setDeleteTarget(null);
     await loadData();
@@ -218,7 +237,7 @@ export function VisitasClient({ initialNew }: { initialNew?: boolean }) {
             className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
           >
             <option value="">Todos os técnicos</option>
-            {techNames.map((n) => <option key={n} value={n}>{n}</option>)}
+            {techNames.map(([value, label]) => <option key={value} value={value}>{label}</option>)}
           </select>
 
           <div className="relative flex-1 min-w-[180px]">
@@ -378,7 +397,7 @@ export function VisitasClient({ initialNew }: { initialNew?: boolean }) {
               className="field-input"
             />
             <datalist id="tech-list">
-              {techNames.map((n) => <option key={n} value={n} />)}
+              {techNames.map(([, label]) => <option key={label} value={label} />)}
             </datalist>
           </div>
 
@@ -388,6 +407,16 @@ export function VisitasClient({ initialNew }: { initialNew?: boolean }) {
               value={form.client_name || ''}
               onChange={(e) => setForm({ ...form, client_name: e.target.value })}
               placeholder="Nome do cliente / fazenda"
+              className="field-input"
+            />
+          </div>
+
+          <div className="sm:col-span-2">
+            <label className="field-label">Cidade</label>
+            <input
+              value={form.city || ''}
+              onChange={(e) => setForm({ ...form, city: e.target.value })}
+              placeholder="Cidade"
               className="field-input"
             />
           </div>
@@ -497,6 +526,7 @@ export function VisitasClient({ initialNew }: { initialNew?: boolean }) {
               ['Área', detailTarget.area],
               ['Consultor', detailTarget.consultant || '—'],
               ['Cliente', detailTarget.client_name],
+              ['Cidade', detailTarget.city || '—'],
               ['Tipo Cliente', detailTarget.client_type],
               ['Serviço', detailTarget.service_type],
               ['Animais', detailTarget.animals ?? '—'],

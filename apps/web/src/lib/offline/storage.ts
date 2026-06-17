@@ -3,7 +3,7 @@
 import type { ClientRecord, ScheduleItem, TechUser, Visit } from '@/types/portal';
 
 const DB_NAME = 'vl-offline-db';
-const DB_VERSION = 1;
+const DB_VERSION = 2;
 const VISITS_STORE = 'visits';
 const PENDING_STORE = 'pending-visits';
 const SCHEDULE_STORE = 'schedule';
@@ -99,6 +99,7 @@ export async function cacheVisits(visits: Visit[]) {
   const db = await openDb();
   const transaction = db.transaction(VISITS_STORE, 'readwrite');
   const store = transaction.objectStore(VISITS_STORE);
+  store.clear();
   visits.forEach((visit) => store.put(visit));
   await new Promise<void>((resolve, reject) => {
     transaction.oncomplete = () => resolve();
@@ -157,11 +158,42 @@ export async function removePendingVisit(localId: string) {
   db.close();
 }
 
+export async function removeCachedVisit(id: string) {
+  if (!hasIndexedDb()) return;
+  const db = await openDb();
+  const transaction = db.transaction(VISITS_STORE, 'readwrite');
+  transaction.objectStore(VISITS_STORE).delete(id);
+  await new Promise<void>((resolve, reject) => {
+    transaction.oncomplete = () => resolve();
+    transaction.onerror = () => reject(transaction.error || new Error('Falha ao remover visita do cache'));
+  });
+  db.close();
+}
+
+export async function removeVisitEverywhere(visit: Pick<Visit, 'id' | 'local_id'>) {
+  if (!hasIndexedDb()) return;
+  const db = await openDb();
+  const transaction = db.transaction([VISITS_STORE, PENDING_STORE], 'readwrite');
+  transaction.objectStore(VISITS_STORE).delete(visit.id);
+  if (visit.local_id && visit.local_id !== visit.id) {
+    transaction.objectStore(VISITS_STORE).delete(visit.local_id);
+  }
+  if (visit.local_id) {
+    transaction.objectStore(PENDING_STORE).delete(visit.local_id);
+  }
+  await new Promise<void>((resolve, reject) => {
+    transaction.oncomplete = () => resolve();
+    transaction.onerror = () => reject(transaction.error || new Error('Falha ao remover visita local'));
+  });
+  db.close();
+}
+
 export async function cacheSchedule(items: ScheduleItem[]) {
   if (!hasIndexedDb()) return;
   const db = await openDb();
   const transaction = db.transaction(SCHEDULE_STORE, 'readwrite');
   const store = transaction.objectStore(SCHEDULE_STORE);
+  store.clear();
   items.forEach((item) => store.put(item));
   await new Promise<void>((resolve, reject) => {
     transaction.oncomplete = () => resolve();

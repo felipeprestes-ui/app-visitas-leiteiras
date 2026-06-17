@@ -1,6 +1,7 @@
 'use client';
 
-import { fetchClients, fetchSchedule, fetchUsers, fetchVisits, upsertVisit } from '@/lib/supabase';
+import { deleteVisit, fetchClients, fetchSchedule, fetchUsers, fetchVisits, upsertVisit } from '@/lib/supabase';
+import type { ApiResult } from '@/lib/supabase';
 import type { ClientRecord, ScheduleItem, TechUser, Visit } from '@/types/portal';
 import {
   cacheClients,
@@ -15,7 +16,9 @@ import {
   getPendingVisits,
   isOffline,
   queuePendingVisit,
+  removeCachedVisit,
   removePendingVisit,
+  removeVisitEverywhere,
   setMeta,
 } from './storage';
 
@@ -37,10 +40,11 @@ export interface PreloadResult {
   clients: ClientRecord[];
 }
 
-export async function loadVisitsOfflineFirst(technicianName?: string): Promise<OfflineFirstResult<Visit>> {
+export async function loadVisitsOfflineFirst(technicianName?: string, options?: { allTechnicians?: boolean }): Promise<OfflineFirstResult<Visit>> {
   const cached = await getCachedVisits();
-  const filteredCached = technicianName
-    ? cached.filter((visit) => visit.technician_name === technicianName)
+  const shouldFilterByTechnician = Boolean(technicianName && !options?.allTechnicians);
+  const filteredCached = shouldFilterByTechnician
+    ? cached.filter((visit) => visit.technician_name?.trim().toLowerCase() === technicianName.trim().toLowerCase())
     : cached;
   if (isOffline()) {
     return { items: filteredCached, fromCache: true, syncing: false };
@@ -48,15 +52,17 @@ export async function loadVisitsOfflineFirst(technicianName?: string): Promise<O
 
   const remote = await fetchVisits({
     limit: '2000',
-    ...(technicianName ? { techName: `eq.${encodeURIComponent(technicianName)}` } : {}),
   });
-  if (remote.length > 0) {
-    await cacheVisits(remote);
-    await setMeta('visits-last-sync', new Date().toISOString());
-    return { items: remote, fromCache: false, syncing: false };
-  }
-
-  return { items: filteredCached, fromCache: true, syncing: false };
+  await cacheVisits(remote);
+  await setMeta('visits-last-sync', new Date().toISOString());
+  const filteredRemote = shouldFilterByTechnician
+    ? remote.filter((visit) => visit.technician_name?.trim().toLowerCase() === technicianName.trim().toLowerCase())
+    : remote;
+  return {
+    items: filteredRemote,
+    fromCache: false,
+    syncing: false,
+  };
 }
 
 export async function saveVisitOfflineFirst(payload: Partial<Visit>): Promise<{ ok: boolean; offline: boolean; visit: Visit }> {
@@ -71,6 +77,7 @@ export async function saveVisitOfflineFirst(payload: Partial<Visit>): Promise<{ 
     deal_closed: Boolean(payload.deal_closed),
     herd_size: payload.herd_size ?? null,
     consultant: payload.consultant || null,
+    city: payload.city || null,
     notes: payload.notes || '',
     date: payload.date || new Date().toISOString().slice(0, 10),
     doses_convencional: payload.doses_convencional ?? null,
@@ -93,7 +100,7 @@ export async function saveVisitOfflineFirst(payload: Partial<Visit>): Promise<{ 
     return { ok: true, offline: true, visit: { ...visit, pending_sync: true, sync_error: response.error || null } };
   }
 
-  const refreshed = await loadVisitsOfflineFirst(visit.technician_name);
+  const refreshed = await loadVisitsOfflineFirst(undefined, { allTechnicians: true });
   return { ok: true, offline: false, visit: response.data || refreshed.items[0] || visit };
 }
 
@@ -119,9 +126,7 @@ export async function syncPendingVisits(): Promise<SyncResult> {
   }
 
   const remote = await fetchVisits({ limit: '2000' });
-  if (remote.length > 0) {
-    await cacheVisits(remote);
-  }
+  await cacheVisits(remote);
   await setMeta('visits-last-sync', new Date().toISOString());
 
   return { synced, failed };
@@ -131,22 +136,20 @@ export async function loadScheduleOfflineFirst(technicianName?: string): Promise
   const cached = await getCachedSchedule();
   if (isOffline()) {
     return {
-      items: technicianName ? cached.filter((item) => item.technician_name === technicianName) : cached,
+      items: technicianName ? cached.filter((item) => item.technician_name?.trim().toLowerCase() === technicianName.trim().toLowerCase()) : cached,
       fromCache: true,
       syncing: false,
     };
   }
 
-  const remote = await fetchSchedule(technicianName ? { technician_name: `eq.${encodeURIComponent(technicianName)}` } : {});
-  if (remote.length > 0) {
-    await cacheSchedule(remote);
-    await setMeta('schedule-last-sync', new Date().toISOString());
-    return { items: remote, fromCache: false, syncing: false };
-  }
-
+  const remote = await fetchSchedule({ limit: '2000' });
+  await cacheSchedule(remote);
+  await setMeta('schedule-last-sync', new Date().toISOString());
   return {
-    items: technicianName ? cached.filter((item) => item.technician_name === technicianName) : cached,
-    fromCache: true,
+    items: technicianName
+      ? remote.filter((item) => item.technician_name?.trim().toLowerCase() === technicianName.trim().toLowerCase())
+      : remote,
+    fromCache: false,
     syncing: false,
   };
 }
@@ -197,6 +200,26 @@ export async function preloadOfflineData(technicianName?: string): Promise<Prelo
     technicians: techniciansResult.items,
     clients: clientsResult.items,
   };
+}
+
+export async function deleteVisitOfflineFirst(visit: Visit): Promise<ApiResult> {
+  const hasServerId = Boolean(visit.id);
+
+  if (!hasServerId || isOffline()) {
+    await removeVisitEverywhere(visit);
+    return { ok: true };
+  }
+
+  const response = await deleteVisit(visit.id);
+  if (!response.ok) {
+    return response;
+  }
+
+  await removeCachedVisit(visit.id);
+  if (visit.local_id) {
+    await removePendingVisit(visit.local_id);
+  }
+  return response;
 }
 
 export async function getLastSync(type: 'visits' | 'schedule') {

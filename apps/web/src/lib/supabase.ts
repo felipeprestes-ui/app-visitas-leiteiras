@@ -62,19 +62,26 @@ function extractClientFromNotes(notes: string): string {
 }
 
 export function mapSupabaseToVisit(raw: Record<string, unknown>): Visit {
+  const clientName =
+    (raw.client_name ? String(raw.client_name).trim() : '') ||
+    (raw.clientName ? String(raw.clientName).trim() : '') ||
+    (raw.nome ? String(raw.nome).trim() : '') ||
+    extractClientFromNotes(String(raw.notes || ''));
+
   return {
-    id: String(raw.id || ''),
-    technician_name: String(raw.techName || raw.technician_name || ''),
-    client_name: String(raw.client_name || raw.clientName || ''),
-    service_type: String(raw.objetivo || raw.service_type || raw.serviceType || ''),
+    id: raw.id ? String(raw.id) : '',
+    technician_name: raw.techName ? String(raw.techName) : raw.technician_name ? String(raw.technician_name) : '',
+    client_name: clientName,
+    city: raw.city ? String(raw.city).trim() : raw.cidade ? String(raw.cidade).trim() : null,
+    service_type: raw.objetivo ? String(raw.objetivo) : raw.service_type ? String(raw.service_type) : raw.serviceType ? String(raw.serviceType) : '',
     area: String(raw.areas || raw.area || '').trim().padStart(3, '0'),
-    client_type: String(raw.tipo || raw.client_type || raw.clientType || ''),
+    client_type: raw.tipo ? String(raw.tipo) : raw.client_type ? String(raw.client_type) : raw.clientType ? String(raw.clientType) : '',
     animals: (raw.mudas as number) ?? (raw.animals as number) ?? (raw.animalCount as number) ?? null,
     deal_closed: Boolean(raw.deal_closed || raw.dealClosed),
     herd_size: (raw.animaisAcasalados as number) ?? (raw.animaisColeta as number) ?? (raw.herd_size as number) ?? (raw.herdSize as number) ?? null,
-    consultant: String(raw.consultant || raw.CONSULTOR || ''),
-    notes: String(raw.notes || ''),
-    date: String(raw.date || raw.visitDate || raw.visit_date || raw.visited_at || ''),
+    consultant: raw.consultant ? String(raw.consultant) : raw.CONSULTOR ? String(raw.CONSULTOR) : '',
+    notes: raw.notes ? String(raw.notes) : '',
+    date: raw.date ? String(raw.date) : raw.visitDate ? String(raw.visitDate) : raw.visit_date ? String(raw.visit_date) : raw.visited_at ? String(raw.visited_at) : '',
     doses_convencional: (raw.doses_convencional as number) ?? (raw.dosesConvencional as number) ?? null,
     doses_sexado: (raw.doses_sexado as number) ?? (raw.dosesSexado as number) ?? null,
     local_id: (raw.local_id as string) || null,
@@ -90,7 +97,7 @@ export async function fetchVisits(params: Record<string, string> = {}): Promise<
   const converted: Record<string, string> = {};
   for (const [k, v] of Object.entries({ ...base, ...params })) {
     const realKey = k.startsWith('visit_date') ? k.replace('visit_date', 'date') : k;
-    const finalKey = realKey.replace(/_\d+$/, '');
+    const finalKey = realKey.replace(/_\d+$/, '') === 'techName' ? 'techName' : realKey.replace(/_\d+$/, '');
     const finalVal = v.replace(/visit_date/g, 'date');
     converted[finalKey] = finalVal;
   }
@@ -100,7 +107,7 @@ export async function fetchVisits(params: Record<string, string> = {}): Promise<
   }
   const res = await supabaseFetch<Record<string, unknown>[]>(`/Visit?${parts.join('&')}`);
   if (!res.ok || !Array.isArray(res.data)) return [];
-  return res.data.map(mapSupabaseToVisit);
+  return res.data.map(mapSupabaseToVisit).filter((visit) => Boolean(visit.date || visit.client_name || visit.technician_name));
 }
 
 export async function upsertVisit(payload: Partial<Visit>): Promise<ApiResult<Visit>> {
@@ -108,8 +115,7 @@ export async function upsertVisit(payload: Partial<Visit>): Promise<ApiResult<Vi
   const path = payload.id ? `/Visit?id=eq.${payload.id}` : '/Visit';
   const body = { ...payload };
   if (method === 'POST') delete body.id;
-  // Map portal fields back to Supabase columns
-  const mapped = {
+  const mapped: Record<string, unknown> = {
     techName: body.technician_name,
     areas: body.area,
     objetivo: body.service_type,
@@ -121,12 +127,17 @@ export async function upsertVisit(payload: Partial<Visit>): Promise<ApiResult<Vi
     notes: body.notes,
     date: body.date,
     client_name: body.client_name,
-    doses_convencional: body.doses_convencional,
-    doses_sexado: body.doses_sexado,
     local_id: body.local_id,
     lat: body.lat,
     lng: body.lng,
   };
+  // Só envia doses se tiver valor (colunas podem não existir no Supabase)
+  if (body.doses_convencional !== undefined && body.doses_convencional !== null && body.doses_convencional !== 0) {
+    mapped.dosesConvencional = body.doses_convencional;
+  }
+  if (body.doses_sexado !== undefined && body.doses_sexado !== null && body.doses_sexado !== 0) {
+    mapped.dosesSexado = body.doses_sexado;
+  }
   return supabaseFetch<Visit>(path, {
     method,
     headers: { Prefer: 'return=representation' },
@@ -148,7 +159,10 @@ export async function fetchSales(params: Record<string, string> = {}): Promise<M
     parts.push(`${k}=${v}`);
   }
   const res = await supabaseFetch<MonthlySale[]>(`/monthly_sales?${parts.join('&')}`);
-  return res.ok && Array.isArray(res.data) ? res.data : [];
+  if (!res.ok || !Array.isArray(res.data)) {
+    throw new Error(res.error || 'Endpoint monthly_sales indisponível');
+  }
+  return res.data;
 }
 
 export async function upsertSale(payload: Partial<MonthlySale>): Promise<ApiResult<MonthlySale>> {
@@ -209,7 +223,7 @@ export async function fetchClients(params: Record<string, string> = {}): Promise
 }
 
 export async function fetchSchedule(params: Record<string, string> = {}): Promise<ScheduleItem[]> {
-  const base: Record<string, string> = { select: '*', order: 'scheduled_date.asc' };
+  const base: Record<string, string> = { select: '*', order: 'date.asc' };
   const merged = { ...base, ...params };
   const parts: string[] = [];
   for (const [k, v] of Object.entries(merged)) {
@@ -225,7 +239,7 @@ export async function fetchSchedule(params: Record<string, string> = {}): Promis
         technician_name: String(item.technician_name || item.techName || item.technician || ''),
         title: String(item.title || item.objetivo || item.service_type || 'Agendamento'),
         property_name: String(item.property_name || item.client_name || item.clientName || ''),
-        scheduled_date: String(item.scheduled_date || item.date || item.visit_date || ''),
+        scheduled_date: String(item.scheduled_date || item.date || item.visit_date || item.visited_at || ''),
         area: String(item.area || item.areas || '').trim().padStart(3, '0'),
         notes: String(item.notes || ''),
       }));

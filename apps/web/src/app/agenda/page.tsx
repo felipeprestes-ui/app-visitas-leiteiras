@@ -10,6 +10,10 @@ import { getPendingVisits } from '@/lib/offline/storage';
 import { getLastSync, loadScheduleOfflineFirst } from '@/lib/offline/sync';
 import type { ScheduleItem } from '@/types/portal';
 
+function normalizeTechnicianName(name: string) {
+  return name.trim().replace(/\s+/g, ' ').toLowerCase();
+}
+
 export default function AgendaPage() {
   const { session } = useAuth();
   const [items, setItems] = useState<ScheduleItem[]>([]);
@@ -18,6 +22,7 @@ export default function AgendaPage() {
   const [pendingCount, setPendingCount] = useState(0);
   const [lastSync, setLastSync] = useState<string | null>(null);
   const [syncingData, setSyncingData] = useState(false);
+  const [filterTech, setFilterTech] = useState('');
 
   useEffect(() => {
     let active = true;
@@ -25,7 +30,7 @@ export default function AgendaPage() {
     async function load() {
       setLoading(true);
       const [scheduleResult, pending, syncAt] = await Promise.all([
-        loadScheduleOfflineFirst(session?.name),
+        loadScheduleOfflineFirst(),
         getPendingVisits(),
         getLastSync('schedule'),
       ]);
@@ -46,12 +51,29 @@ export default function AgendaPage() {
   }, [session?.name]);
 
   const grouped = useMemo(() => {
-    return items.reduce<Record<string, ScheduleItem[]>>((acc, item) => {
+    const filteredItems = filterTech
+      ? items.filter((item) => normalizeTechnicianName(item.technician_name || '') === filterTech)
+      : items;
+
+    return filteredItems.reduce<Record<string, ScheduleItem[]>>((acc, item) => {
       const key = item.scheduled_date ? item.scheduled_date.slice(0, 10) : 'Sem data';
       acc[key] = acc[key] || [];
       acc[key].push(item);
       return acc;
     }, {});
+  }, [items, filterTech]);
+
+  const technicianOptions = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const item of items) {
+      const label = item.technician_name?.trim();
+      if (!label) continue;
+      const normalized = normalizeTechnicianName(label);
+      if (!map.has(normalized)) map.set(normalized, label);
+    }
+    return Array.from(map.entries())
+      .sort((a, b) => a[1].localeCompare(b[1], 'pt-BR'))
+      .map(([value, label]) => ({ value, label }));
   }, [items]);
 
   return (
@@ -60,11 +82,26 @@ export default function AgendaPage() {
         <div>
           <h1 className="text-2xl font-bold text-gray-800">Agenda</h1>
           <p className="text-sm text-gray-500">
-            Exibe os agendamentos do técnico logado com leitura local imediata e atualização em segundo plano.
+            Exibe os agendamentos do Supabase com leitura local imediata e atualização em segundo plano.
           </p>
         </div>
 
         <OfflineStatusCard online={typeof navigator !== 'undefined' ? navigator.onLine : true} pendingCount={pendingCount} lastSync={lastSync} />
+
+        <div className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
+          <select
+            value={filterTech}
+            onChange={(event) => setFilterTech(event.target.value)}
+            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary sm:max-w-xs"
+          >
+            <option value="">Todos os técnicos</option>
+            {technicianOptions.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+        </div>
 
         <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
           {syncingData && <p className="mb-4 text-sm text-blue-700">Sincronizando dados...</p>}
@@ -72,7 +109,7 @@ export default function AgendaPage() {
             <p className="text-sm text-gray-500">Carregando agenda...</p>
           ) : items.length === 0 ? (
             <div className="rounded-xl border border-dashed border-gray-300 bg-gray-50 px-4 py-8 text-center text-sm text-gray-500">
-              {fromCache ? 'Nenhum agendamento encontrado no cache local.' : 'Nenhum agendamento encontrado para o técnico logado.'}
+              {fromCache ? 'Nenhum agendamento encontrado no cache local.' : 'Nenhum agendamento encontrado no Supabase.'}
             </div>
           ) : (
             <div className="space-y-5">
@@ -90,6 +127,7 @@ export default function AgendaPage() {
                           <div>
                             <h3 className="text-base font-semibold text-gray-800">{item.title}</h3>
                             <p className="text-sm text-gray-600">{item.property_name || 'Propriedade não informada'}</p>
+                            <p className="text-sm text-gray-500">{item.technician_name || 'Técnico não informado'}</p>
                           </div>
                           <span className="rounded-full bg-primary-light px-3 py-1 text-xs font-semibold text-primary">
                             Área {item.area || '—'}

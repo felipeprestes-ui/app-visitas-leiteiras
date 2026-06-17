@@ -8,6 +8,7 @@ import { saveVisitOfflineFirst } from '@/lib/offline/sync';
 
 const initialForm: Partial<Visit> = {
   client_name: '',
+  city: '',
   herd_size: null,
   client_type: 'B',
   service_type: 'Prospec',
@@ -36,6 +37,9 @@ export function MobileVisitForm({ onSaved }: Props) {
     return CONSULTORES[form.area] || [];
   }, [form.area]);
 
+  const showDoseFields = Boolean(form.deal_closed);
+  const showAnimalsField = form.service_type === 'SireMatch' || form.service_type === 'Coleta Herd';
+
   function update<K extends keyof Visit>(key: K, value: Visit[K]) {
     setForm((current) => ({ ...current, [key]: value }));
   }
@@ -62,6 +66,7 @@ export function MobileVisitForm({ onSaved }: Props) {
       ...initialForm,
       area: form.area,
       consultant: '',
+      city: '',
       technician_name: session?.name || 'Gestor',
     });
     setMessage(result.offline ? 'Visita salva offline e pendente de sincronização.' : 'Visita salva e sincronizada com sucesso.');
@@ -74,16 +79,6 @@ export function MobileVisitForm({ onSaved }: Props) {
       {error && <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>}
 
       <div className="grid gap-4 sm:grid-cols-2">
-        <div className="sm:col-span-2">
-          <label className="field-label">Propriedade visitada *</label>
-          <input value={form.client_name || ''} onChange={(event) => update('client_name', event.target.value)} className="field-input" placeholder="Nome da propriedade" />
-        </div>
-
-        <div>
-          <label className="field-label">Nº rebanho</label>
-          <input type="number" min={0} value={form.herd_size ?? ''} onChange={(event) => update('herd_size', event.target.value ? Number(event.target.value) : null)} className="field-input" placeholder="0" />
-        </div>
-
         <div>
           <label className="field-label">Área *</label>
           <select value={form.area || ''} onChange={(event) => update('area', event.target.value)} className="field-input">
@@ -92,7 +87,30 @@ export function MobileVisitForm({ onSaved }: Props) {
           </select>
         </div>
 
+        <div>
+          <label className="field-label">Consultor</label>
+          <select value={form.consultant || ''} onChange={(event) => update('consultant', event.target.value)} className="field-input">
+            <option value="">Selecione</option>
+            {consultores.map((consultor) => <option key={consultor} value={consultor}>{consultor}</option>)}
+          </select>
+        </div>
+
         <div className="sm:col-span-2">
+          <label className="field-label">Propriedade visitada *</label>
+          <input value={form.client_name || ''} onChange={(event) => update('client_name', event.target.value)} className="field-input" placeholder="Nome da propriedade" />
+        </div>
+
+        <div className="sm:col-span-2">
+          <label className="field-label">Cidade</label>
+          <input value={form.city || ''} onChange={(event) => update('city', event.target.value)} className="field-input" placeholder="Cidade" />
+        </div>
+
+        <div>
+          <label className="field-label">Nº rebanho</label>
+          <input type="number" min={0} value={form.herd_size ?? ''} onChange={(event) => update('herd_size', event.target.value ? Number(event.target.value) : null)} className="field-input" placeholder="0" />
+        </div>
+
+        <div>
           <label className="field-label">Tipo de cliente</label>
           <div className="flex flex-wrap gap-2">
             {CLIENT_TYPES.map((type) => (
@@ -114,13 +132,12 @@ export function MobileVisitForm({ onSaved }: Props) {
           </div>
         </div>
 
-        <div>
-          <label className="field-label">Consultor</label>
-          <select value={form.consultant || ''} onChange={(event) => update('consultant', event.target.value)} className="field-input">
-            <option value="">Selecione</option>
-            {consultores.map((consultor) => <option key={consultor} value={consultor}>{consultor}</option>)}
-          </select>
-        </div>
+        {showAnimalsField && (
+          <div className="sm:col-span-2">
+            <label className="field-label">Quantidade de animais</label>
+            <input type="number" min={0} value={form.animals ?? ''} onChange={(event) => update('animals', event.target.value ? Number(event.target.value) : null)} className="field-input" placeholder="0" />
+          </div>
+        )}
 
         <div>
           <label className="field-label">Data</label>
@@ -134,15 +151,19 @@ export function MobileVisitForm({ onSaved }: Props) {
           </label>
         </div>
 
-        <div>
-          <label className="field-label">Doses convencional</label>
-          <input type="number" min={0} value={form.doses_convencional ?? ''} onChange={(event) => update('doses_convencional', event.target.value ? Number(event.target.value) : null)} className="field-input" placeholder="0" />
-        </div>
+        {showDoseFields && (
+          <>
+            <div>
+              <label className="field-label">Doses convencional</label>
+              <input type="number" min={0} value={form.doses_convencional ?? ''} onChange={(event) => update('doses_convencional', event.target.value ? Number(event.target.value) : null)} className="field-input" placeholder="0" />
+            </div>
 
-        <div>
-          <label className="field-label">Doses sexado</label>
-          <input type="number" min={0} value={form.doses_sexado ?? ''} onChange={(event) => update('doses_sexado', event.target.value ? Number(event.target.value) : null)} className="field-input" placeholder="0" />
-        </div>
+            <div>
+              <label className="field-label">Doses sexado</label>
+              <input type="number" min={0} value={form.doses_sexado ?? ''} onChange={(event) => update('doses_sexado', event.target.value ? Number(event.target.value) : null)} className="field-input" placeholder="0" />
+            </div>
+          </>
+        )}
 
         <div className="sm:col-span-2">
           <label className="field-label">Observações</label>

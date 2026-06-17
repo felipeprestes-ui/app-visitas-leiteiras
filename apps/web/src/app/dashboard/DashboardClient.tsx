@@ -57,14 +57,14 @@ export function DashboardClient() {
       for (const v of allVisits) {
         if (!v.date) continue;
         const d = new Date(v.date);
-        const key = `${d.getMonth()}-${d.getFullYear()}`;
+        const key = `${d.getMonth() + 1}-${d.getFullYear()}`;
         countByMonth[key] = (countByMonth[key] || 0) + 1;
       }
       const chart: MonthlyChartData[] = [];
       for (let i = 11; i >= 0; i--) {
         const d = subMonths(today, i);
         const label = format(d, 'MMM/yy', { locale: ptBR });
-        const key = `${d.getMonth()}-${d.getFullYear()}`;
+        const key = `${d.getMonth() + 1}-${d.getFullYear()}`;
         chart.push({ mes: label, visitas: countByMonth[key] || 0 });
       }
       setChartData(chart);
@@ -120,12 +120,6 @@ export function DashboardClient() {
             className="flex items-center gap-1.5 bg-emerald-600 text-white text-sm px-3 py-2 rounded-lg hover:bg-emerald-700 transition-colors"
           >
             <CalendarDays size={15} /> Agenda
-          </Link>
-          <Link
-            href="/sync"
-            className="flex items-center gap-1.5 bg-gray-700 text-white text-sm px-3 py-2 rounded-lg hover:bg-gray-800 transition-colors"
-          >
-            <Wifi size={15} /> Sync
           </Link>
           <Link
             href="/vendas?new=1"

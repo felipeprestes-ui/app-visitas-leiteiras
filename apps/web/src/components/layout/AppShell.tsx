@@ -27,7 +27,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     const runPreload = async () => {
       setPreloading(true);
       try {
-        await preloadOfflineData(session.name);
+        await preloadOfflineData();
       } finally {
         if (active) {
           setPreloading(false);

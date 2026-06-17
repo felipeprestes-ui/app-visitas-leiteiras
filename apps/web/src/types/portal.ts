@@ -2,6 +2,7 @@ export interface Visit {
   id: string;
   technician_name: string;
   client_name: string;
+  city?: string | null;
   service_type: string;
   area: string;
   client_type: string;
@@ -75,10 +76,12 @@ export type ServiceType =
   | 'Clarifide Go'
   | 'Curso IA'
   | 'Coleta Herd'
+  | 'DPS'
   | 'Entrega Herd'
   | 'Indicacao Touro'
   | 'Prospec'
   | 'Prospec Lagoa+'
+  | 'Silagem'
   | 'SireMatch'
   | 'Visita Lagoa+'
   | 'Venda Herd';

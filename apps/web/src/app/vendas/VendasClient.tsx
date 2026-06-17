@@ -15,6 +15,38 @@ function fmtBRL(n: number) {
 
 const CURRENT_MONTH = MONTHS[MONTHS.length - 1]?.value || '';
 
+function normalizeMonthValue(value: string) {
+  if (!value) return '';
+  const trimmed = value.trim();
+  const numericMatch = trimmed.match(/^(\d{1,2})-(\d{4})$/);
+  if (numericMatch) {
+    return `${Number(numericMatch[1])}-${numericMatch[2]}`;
+  }
+  const slashMatch = trimmed.match(/^([A-Za-zÀ-ÿ]{3})\/(\d{2,4})$/);
+  if (slashMatch) {
+    const monthMap: Record<string, number> = {
+      jan: 0,
+      fev: 1,
+      mar: 2,
+      abr: 3,
+      mai: 4,
+      jun: 5,
+      jul: 6,
+      ago: 7,
+      set: 8,
+      out: 9,
+      nov: 10,
+      dez: 11,
+    };
+    const monthIndex = monthMap[slashMatch[1].toLowerCase()];
+    if (monthIndex !== undefined) {
+      const year = slashMatch[2].length === 2 ? `20${slashMatch[2]}` : slashMatch[2];
+      return `${monthIndex}-${year}`;
+    }
+  }
+  return trimmed;
+}
+
 const emptyForm = (): Partial<MonthlySale> => ({
   technicianName: '',
   month: CURRENT_MONTH,
@@ -30,6 +62,7 @@ export function VendasClient({ initialNew }: { initialNew?: boolean }) {
   const [filtered, setFiltered] = useState<MonthlySale[]>([]);
   const [loading, setLoading] = useState(true);
   const [techs, setTechs] = useState<TechUser[]>([]);
+  const [loadError, setLoadError] = useState('');
 
   const [filterMonth, setFilterMonth] = useState('');
   const [filterTech, setFilterTech] = useState('');
@@ -44,9 +77,17 @@ export function VendasClient({ initialNew }: { initialNew?: boolean }) {
 
   const loadData = useCallback(async () => {
     setLoading(true);
-    const [s, users] = await Promise.all([fetchSales(), fetchUsers()]);
-    setSales(s);
-    setTechs(users);
+    setLoadError('');
+    try {
+      const [s, users] = await Promise.all([fetchSales(), fetchUsers()]);
+      setSales(s);
+      setTechs(users);
+    } catch (error) {
+      setSales([]);
+      setLoadError(error instanceof Error ? error.message : 'Não foi possível carregar vendas.');
+      const users = await fetchUsers();
+      setTechs(users);
+    }
     setLoading(false);
   }, []);
 
@@ -54,7 +95,7 @@ export function VendasClient({ initialNew }: { initialNew?: boolean }) {
 
   useEffect(() => {
     let list = [...sales];
-    if (filterMonth) list = list.filter((s) => s.month === filterMonth);
+    if (filterMonth) list = list.filter((s) => normalizeMonthValue(s.month) === normalizeMonthValue(filterMonth));
     if (filterTech) list = list.filter((s) =>
       s.technicianName?.toLowerCase().includes(filterTech.toLowerCase())
     );
@@ -89,7 +130,7 @@ export function VendasClient({ initialNew }: { initialNew?: boolean }) {
   // Auto-fill meta when tech+month changes
   async function autoFillMeta(techName: string, month: string) {
     if (!techName || !month) return;
-    const existing = sales.find((s) => s.technicianName === techName && s.month === month);
+    const existing = sales.find((s) => s.technicianName === techName && normalizeMonthValue(s.month) === normalizeMonthValue(month));
     if (existing) {
       setForm((prev) => ({ ...prev, meta: existing.meta, id: existing.id }));
     }
@@ -129,7 +170,7 @@ export function VendasClient({ initialNew }: { initialNew?: boolean }) {
     await loadData();
   }
 
-  const monthLabel = (v: string) => MONTHS.find((m) => m.value === v)?.label || v;
+  const monthLabel = (v: string) => MONTHS.find((m) => normalizeMonthValue(m.value) === normalizeMonthValue(v))?.label || v;
 
   return (
     <div className="space-y-4">
@@ -163,6 +204,12 @@ export function VendasClient({ initialNew }: { initialNew?: boolean }) {
           {techNames.map((n) => <option key={n} value={n}>{n}</option>)}
         </select>
       </div>
+
+      {loadError && (
+        <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+          {loadError}
+        </div>
+      )}
 
       {/* KPI totals */}
       {filtered.length > 0 && (
