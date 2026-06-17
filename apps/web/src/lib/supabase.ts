@@ -133,10 +133,10 @@ export async function upsertVisit(payload: Partial<Visit>): Promise<ApiResult<Vi
   };
   // Só envia doses se tiver valor (colunas podem não existir no Supabase)
   if (body.doses_convencional !== undefined && body.doses_convencional !== null && body.doses_convencional !== 0) {
-    mapped.dosesConvencional = body.doses_convencional;
+    mapped.doses_convencional = body.doses_convencional;
   }
   if (body.doses_sexado !== undefined && body.doses_sexado !== null && body.doses_sexado !== 0) {
-    mapped.dosesSexado = body.doses_sexado;
+    mapped.doses_sexado = body.doses_sexado;
   }
   return supabaseFetch<Visit>(path, {
     method,

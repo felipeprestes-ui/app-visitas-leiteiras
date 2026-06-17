@@ -18,25 +18,23 @@ const CURRENT_MONTH = MONTHS[MONTHS.length - 1]?.value || '';
 function normalizeMonthValue(value: string) {
   if (!value) return '';
   const trimmed = value.trim();
+  // Formato ISO: 2025-11 (YYYY-MM) -> 10-2025 (base 0)
+  const isoMatch = trimmed.match(/^(\d{4})-(\d{1,2})$/);
+  if (isoMatch) {
+    const monthIndex = Number(isoMatch[2]) - 1;
+    return `${monthIndex}-${isoMatch[1]}`;
+  }
+  // Formato interno: 10-2025 (base 0 - ano)
   const numericMatch = trimmed.match(/^(\d{1,2})-(\d{4})$/);
   if (numericMatch) {
     return `${Number(numericMatch[1])}-${numericMatch[2]}`;
   }
+  // Formato textual: Nov/25
   const slashMatch = trimmed.match(/^([A-Za-zÀ-ÿ]{3})\/(\d{2,4})$/);
   if (slashMatch) {
     const monthMap: Record<string, number> = {
-      jan: 0,
-      fev: 1,
-      mar: 2,
-      abr: 3,
-      mai: 4,
-      jun: 5,
-      jul: 6,
-      ago: 7,
-      set: 8,
-      out: 9,
-      nov: 10,
-      dez: 11,
+      jan: 0, fev: 1, mar: 2, abr: 3, mai: 4, jun: 5,
+      jul: 6, ago: 7, set: 8, out: 9, nov: 10, dez: 11,
     };
     const monthIndex = monthMap[slashMatch[1].toLowerCase()];
     if (monthIndex !== undefined) {

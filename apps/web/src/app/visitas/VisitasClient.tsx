@@ -150,6 +150,8 @@ export function VisitasClient({ initialNew }: { initialNew?: boolean }) {
       consultant: v.consultant,
       notes: v.notes,
       date: v.date ? v.date.substring(0, 10) : '',
+      doses_convencional: v.doses_convencional,
+      doses_sexado: v.doses_sexado,
     });
     setFormError('');
     setModalOpen(true);
@@ -492,6 +494,33 @@ export function VisitasClient({ initialNew }: { initialNew?: boolean }) {
               Negócio Fechado
             </label>
           </div>
+
+          {form.deal_closed && (
+            <>
+              <div>
+                <label className="field-label">Doses Convencional</label>
+                <input
+                  type="number"
+                  min={0}
+                  value={form.doses_convencional ?? ''}
+                  onChange={(e) => setForm({ ...form, doses_convencional: e.target.value ? Number(e.target.value) : null })}
+                  className="field-input"
+                  placeholder="0"
+                />
+              </div>
+              <div>
+                <label className="field-label">Doses Sexado</label>
+                <input
+                  type="number"
+                  min={0}
+                  value={form.doses_sexado ?? ''}
+                  onChange={(e) => setForm({ ...form, doses_sexado: e.target.value ? Number(e.target.value) : null })}
+                  className="field-input"
+                  placeholder="0"
+                />
+              </div>
+            </>
+          )}
         </div>
 
         <div className="flex justify-end gap-3 mt-5 pt-4 border-t border-gray-200">
