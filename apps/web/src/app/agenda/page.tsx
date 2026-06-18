@@ -124,13 +124,14 @@ export default function AgendaPage() {
       if (!map.has(normalized)) map.set(normalized, label);
     }
     return Array.from(map.entries())
-      .sort((a, b) => a[1].localeCompare(b[1], 'pt-BR'))
+      .sort((a, b) => (a[1] || '').localeCompare(b[1] || '', 'pt-BR'))
       .map(([value, label]) => ({ value, label }));
   }, [items, technicians]);
 
   const clientOptions = useMemo(() => {
     return [...clients]
-      .sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'))
+      .filter((c) => c && c.name)
+      .sort((a, b) => (a.name || '').localeCompare(b.name || '', 'pt-BR'))
       .map((client) => ({ value: client.name, label: client.name, area: client.area || '' }));
   }, [clients]);
 

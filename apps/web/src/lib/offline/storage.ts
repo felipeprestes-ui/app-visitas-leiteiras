@@ -119,7 +119,7 @@ export async function getCachedVisits(): Promise<Visit[]> {
   const store = transaction.objectStore(VISITS_STORE);
   const result = await requestToPromise(store.getAll());
   db.close();
-  return (result as Visit[]).sort((a, b) => b.date.localeCompare(a.date));
+  return (result as Visit[]).sort((a, b) => (b.date || '').localeCompare(a.date || ''));
 }
 
 export async function queuePendingVisit(visit: Visit) {
@@ -213,7 +213,7 @@ export async function getCachedSchedule(): Promise<ScheduleItem[]> {
   const store = transaction.objectStore(SCHEDULE_STORE);
   const result = await requestToPromise(store.getAll());
   db.close();
-  return (result as ScheduleItem[]).sort((a, b) => a.scheduled_date.localeCompare(b.scheduled_date));
+  return (result as ScheduleItem[]).sort((a, b) => (a.scheduled_date || '').localeCompare(b.scheduled_date || ''));
 }
 
 export async function upsertCachedSchedule(item: ScheduleItem) {
@@ -253,7 +253,7 @@ export async function getPendingSchedule(): Promise<ScheduleItem[]> {
   const store = transaction.objectStore(PENDING_SCHEDULE_STORE);
   const result = await requestToPromise(store.getAll());
   db.close();
-  return (result as ScheduleItem[]).sort((a, b) => a.scheduled_date.localeCompare(b.scheduled_date));
+  return (result as ScheduleItem[]).sort((a, b) => (a.scheduled_date || '').localeCompare(b.scheduled_date || ''));
 }
 
 export async function removePendingSchedule(localId: string) {
@@ -316,7 +316,7 @@ export async function getCachedTechnicians(): Promise<TechUser[]> {
   const store = transaction.objectStore(TECHNICIANS_STORE);
   const result = await requestToPromise(store.getAll());
   db.close();
-  return (result as TechUser[]).sort((a, b) => a.name.localeCompare(b.name));
+  return (result as TechUser[]).sort((a, b) => (a.name || '').localeCompare(b.name || ''));
 }
 
 export async function cacheClients(items: ClientRecord[]) {
@@ -339,7 +339,7 @@ export async function getCachedClients(): Promise<ClientRecord[]> {
   const store = transaction.objectStore(CLIENTS_STORE);
   const result = await requestToPromise(store.getAll());
   db.close();
-  return (result as ClientRecord[]).sort((a, b) => a.name.localeCompare(b.name));
+  return (result as ClientRecord[]).sort((a, b) => (a.name || '').localeCompare(b.name || ''));
 }
 
 export async function setMeta(key: string, value: MetaValue) {

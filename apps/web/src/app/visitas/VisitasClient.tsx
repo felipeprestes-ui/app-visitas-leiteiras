@@ -158,7 +158,7 @@ export function VisitasClient({ initialNew }: { initialNew?: boolean }) {
       if (!map.has(normalized)) map.set(normalized, label);
       return map;
     }, new Map<string, string>())
-  ).sort((a, b) => a[1].localeCompare(b[1], 'pt-BR'));
+  ).sort((a, b) => (a[1] || '').localeCompare(b[1] || '', 'pt-BR'));
 
   function openNew() {
     setEditTarget(null);
