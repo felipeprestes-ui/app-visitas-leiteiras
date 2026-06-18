@@ -19,12 +19,38 @@ function normalizeStr(s: string): string {
     .replace(/[\u0300-\u036f]/g, '');
 }
 
+const MONTH_ALIASES: Record<string, number> = {
+  jan: 0,
+  fev: 1,
+  mar: 2,
+  abr: 3,
+  mai: 4,
+  jun: 5,
+  jul: 6,
+  ago: 7,
+  set: 8,
+  out: 9,
+  nov: 10,
+  dez: 11,
+};
+
 function parseDate(s: string): string {
   const t = s.trim();
   if (/^\d{4}-\d{2}-\d{2}$/.test(t)) return t; // já ISO
   if (/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(t)) {
     const [d, m, y] = t.split('/');
     return `${y}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`;
+  }
+  // Formato: fev-26, mar-26, jan/25, out 2025 etc.
+  const mesAnoMatch = t.match(/^([a-z]+)[-/.\s]?(\d{2,4})$/i);
+  if (mesAnoMatch) {
+    const [, mesStr, anoStr] = mesAnoMatch;
+    const mes = MONTH_ALIASES[normalizeStr(mesStr)];
+    if (mes !== undefined) {
+      const ano = anoStr.length === 2 ? '20' + anoStr : anoStr;
+      const mesNum = String(mes + 1).padStart(2, '0');
+      return `${ano}-${mesNum}-01`;
+    }
   }
   return t;
 }
@@ -44,16 +70,16 @@ function parseIntOrNull(v: string): number | null {
 function parseHeader(rawHeaders: string[]): Record<string, number> {
   const map: Record<string, number> = {};
   const aliases: Record<string, string[]> = {
-    date: ['data', 'date', 'data da visita'],
-    technician_name: ['tecnico', 'tecnico responsavel', 'responsavel', 'nome do tecnico'],
+    date: ['data', 'date', 'data da visita', 'mes visita', 'mes'],
+    technician_name: ['tecnico', 'tecnico responsavel', 'responsavel', 'nome do tecnico', 'especialista'],
     client_name: ['cliente', 'nome do cliente', 'cliente nome'],
     city: ['cidade'],
     area: ['area'],
     client_type: ['tipo de cliente', 'tipo cliente', 'client_type'],
-    service_type: ['servico', 'tipo de servico', 'service_type', 'objetivo', 'atividade'],
-    animals: ['animais', 'qtd animais', 'quantidade animais'],
-    herd_size: ['rebanho', 'qtd rebanho', 'quantidade rebanho', 'tamanho rebanho'],
-    deal_closed: ['fechado', 'negocio fechado', 'deal_closed', 'negocio'],
+    service_type: ['servico', 'tipo de servico', 'service_type', 'objetivo', 'atividade', 'servico realizado'],
+    animals: ['animais', 'qtd animais', 'quantidade animais', 'n animais fazenda'],
+    herd_size: ['rebanho', 'qtd rebanho', 'quantidade rebanho', 'tamanho rebanho', 'n animais pessoas atendida', 'pessoas atendida'],
+    deal_closed: ['fechado', 'negocio fechado', 'deal_closed', 'negocio', 'fechado negocio'],
     consultant: ['consultor'],
     doses_convencional: ['doses convencional', 'doses conv', 'dosesconvencional'],
     doses_sexado: ['doses sexado', 'doses sx', 'dosessexado'],
