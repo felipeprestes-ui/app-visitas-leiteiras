@@ -29,8 +29,9 @@ export default function AgendaPage() {
 
     async function load() {
       setLoading(true);
+      const techFilter = session?.role === 'tecnico' && session?.name ? session.name : undefined;
       const [scheduleResult, pending, syncAt] = await Promise.all([
-        loadScheduleOfflineFirst(),
+        loadScheduleOfflineFirst(techFilter),
         getPendingVisits(),
         getLastSync('schedule'),
       ]);
@@ -88,20 +89,22 @@ export default function AgendaPage() {
 
         <OfflineStatusCard online={typeof navigator !== 'undefined' ? navigator.onLine : true} pendingCount={pendingCount} lastSync={lastSync} />
 
-        <div className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
-          <select
-            value={filterTech}
-            onChange={(event) => setFilterTech(event.target.value)}
-            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary sm:max-w-xs"
-          >
-            <option value="">Todos os técnicos</option>
-            {technicianOptions.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-        </div>
+        {session?.role === 'gestor' && (
+          <div className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
+            <select
+              value={filterTech}
+              onChange={(event) => setFilterTech(event.target.value)}
+              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary sm:max-w-xs"
+            >
+              <option value="">Todos os técnicos</option>
+              {technicianOptions.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
 
         <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
           {syncingData && <p className="mb-4 text-sm text-blue-700">Sincronizando dados...</p>}
