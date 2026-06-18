@@ -13,14 +13,12 @@ import {
   X,
   CalendarDays,
   Wifi,
-  PlusSquare,
 } from 'lucide-react';
 import { useState } from 'react';
 import { clearSession } from '@/hooks/useAuth';
 
 const navItems = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { href: '/visitas/nova', label: 'Nova Visita', icon: PlusSquare },
   { href: '/visitas', label: 'Visitas', icon: MapPin },
   { href: '/agenda', label: 'Agenda', icon: CalendarDays },
   { href: '/sync', label: 'Sincronização', icon: Wifi },
