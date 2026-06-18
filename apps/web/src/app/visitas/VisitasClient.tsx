@@ -1,9 +1,10 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { format } from 'date-fns';
-import { Plus, Pencil, Trash2, Eye, Search } from 'lucide-react';
+import { Plus, Pencil, Trash2, Eye, Search, Upload } from 'lucide-react';
 import { fetchUsers, upsertVisit } from '@/lib/supabase';
+import { parseCSVFile, type CSVError } from '@/lib/csv-import';
 import { Pagination } from '@/components/ui/Pagination';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { Modal } from '@/components/ui/Modal';
@@ -28,7 +29,7 @@ function normalizeMonthValue(value: string) {
 }
 
 function fmtDate(d: string) {
-  if (!d) return '—';
+  if (!d) return '\u2014';
   try { return format(new Date(d), 'dd/MM/yyyy'); } catch { return d; }
 }
 
@@ -49,6 +50,7 @@ const emptyForm = (): Partial<Visit> => ({
 
 export function VisitasClient({ initialNew }: { initialNew?: boolean }) {
   const { session } = useAuth();
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [visits, setVisits] = useState<Visit[]>([]);
   const [filtered, setFiltered] = useState<Visit[]>([]);
   const [loading, setLoading] = useState(true);
@@ -73,16 +75,22 @@ export function VisitasClient({ initialNew }: { initialNew?: boolean }) {
   const [pendingCount, setPendingCount] = useState(0);
   const [syncingData, setSyncingData] = useState(false);
 
+  // CSV Import
+  const [csvModalOpen, setCsvModalOpen] = useState(false);
+  const [csvPreview, setCsvPreview] = useState<Partial<Visit>[]>([]);
+  const [csvErrors, setCsvErrors] = useState<CSVError[]>([]);
+  const [csvFile, setCsvFile] = useState<File | null>(null);
+  const [csvImporting, setCsvImporting] = useState(false);
+  const [csvImportProgress, setCsvImportProgress] = useState({ current: 0, total: 0 });
+  const [csvImportResult, setCsvImportResult] = useState('');
+
   const userRole = session?.role || 'tecnico';
   const userName = session?.name || '';
 
   const loadData = useCallback(async () => {
     setLoading(true);
-    
-    // Se for técnico, carrega apenas as próprias visitas
     const options = userRole === 'tecnico' ? undefined : { allTechnicians: true };
     const techFilter = userRole === 'tecnico' && userName ? userName : undefined;
-    
     const [visitsResult, users, pending] = await Promise.all([
       loadVisitsOfflineFirst(techFilter, options),
       userRole === 'gestor' ? fetchUsers() : Promise.resolve([]),
@@ -100,14 +108,12 @@ export function VisitasClient({ initialNew }: { initialNew?: boolean }) {
     return registerOnlineSync(loadData);
   }, [loadData]);
 
-  // Escuta evento de nova visita salva
   useEffect(() => {
     const handler = () => loadData();
     window.addEventListener('visit-saved', handler);
     return () => window.removeEventListener('visit-saved', handler);
   }, [loadData]);
 
-  // Apply filters
   useEffect(() => {
     let list = [...visits];
     if (filterMonth) {
@@ -131,7 +137,6 @@ export function VisitasClient({ initialNew }: { initialNew?: boolean }) {
   const pageCount = Math.ceil(filtered.length / PAGE_SIZE);
   const pageData = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
-  // Unique technician names from loaded visits
   const techNames = Array.from(
     [...visits.map((v) => v.technician_name), ...techList.map((t) => t.name)].reduce((map, name) => {
       const label = name?.trim();
@@ -174,7 +179,7 @@ export function VisitasClient({ initialNew }: { initialNew?: boolean }) {
 
   async function handleSave() {
     if (!form.technician_name || !form.client_name || !form.date) {
-      setFormError('Preencha: técnico, cliente e data.');
+      setFormError('Preencha: tecnico, cliente e data.');
       return;
     }
     setSaving(true);
@@ -207,6 +212,74 @@ export function VisitasClient({ initialNew }: { initialNew?: boolean }) {
     await loadData();
   }
 
+  async function handleCsvSelected(event: React.ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+    if (!file) return;
+
+    try {
+      const result = await parseCSVFile(file);
+      setCsvPreview(result.visits.slice(0, 5));
+      setCsvErrors(result.errors);
+      setCsvFile(file);
+      setCsvModalOpen(true);
+      setCsvImportResult('');
+    } catch (err) {
+      setCsvImportResult(`Erro ao ler arquivo: ${err instanceof Error ? err.message : 'desconhecido'}`);
+    }
+  }
+
+  async function handleConfirmCsvImport() {
+    if (!csvFile) return;
+    setCsvImporting(true);
+    setCsvImportProgress({ current: 0, total: 0 });
+    setCsvImportResult('');
+
+    try {
+      const result = await parseCSVFile(csvFile);
+      const visitsToImport = result.visits;
+      if (visitsToImport.length === 0) {
+        setCsvImportResult('Nenhuma visita valida encontrada no arquivo.');
+        setCsvImporting(false);
+        return;
+      }
+
+      setCsvImportProgress({ current: 0, total: visitsToImport.length });
+      let imported = 0;
+      const errors: string[] = [];
+
+      for (let i = 0; i < visitsToImport.length; i++) {
+        const visit = visitsToImport[i];
+        setCsvImportProgress({ current: i + 1, total: visitsToImport.length });
+        const res = await upsertVisit(visit);
+        if (res.ok) {
+          imported++;
+        } else {
+          errors.push(`Linha ${i + 1}: ${res.error || 'Erro ao salvar'}`);
+        }
+      }
+
+      if (imported > 0) {
+        await loadData();
+      }
+
+      if (errors.length > 0) {
+        setCsvImportResult(`${imported} visita(s) importada(s). ${errors.length} erro(s): ${errors.slice(0, 3).join('; ')}${errors.length > 3 ? '...' : ''}`);
+      } else {
+        setCsvImportResult(`${imported} visita(s) importada(s) com sucesso.`);
+      }
+      setCsvModalOpen(false);
+      setCsvFile(null);
+      setCsvPreview([]);
+      setCsvErrors([]);
+    } catch (err) {
+      setCsvImportResult(`Erro na importacao: ${err instanceof Error ? err.message : 'desconhecido'}`);
+    } finally {
+      setCsvImporting(false);
+      setCsvImportProgress({ current: 0, total: 0 });
+    }
+  }
+
   const consultoresForArea = form.area ? (CONSULTORES[form.area] || []) : [];
 
   return (
@@ -214,18 +287,45 @@ export function VisitasClient({ initialNew }: { initialNew?: boolean }) {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <h1 className="text-xl font-bold text-gray-800">Gerenciar Visitas</h1>
-        <button
-          onClick={openNew}
-          className="flex items-center gap-2 bg-primary text-white text-sm px-4 py-2 rounded-lg hover:bg-primary-dark transition-colors"
-        >
-          <Plus size={16} /> Nova Visita
-        </button>
+        <div className="flex gap-2">
+          {userRole === 'gestor' && (
+            <>
+              <input
+                type="file"
+                ref={fileInputRef}
+                accept=".csv"
+                className="hidden"
+                onChange={handleCsvSelected}
+                disabled={csvImporting}
+              />
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                disabled={csvImporting}
+                className="flex items-center gap-2 bg-white border border-gray-300 text-gray-700 text-sm px-4 py-2 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-60"
+              >
+                <Upload size={16} /> Importar CSV
+              </button>
+            </>
+          )}
+          <button
+            onClick={openNew}
+            className="flex items-center gap-2 bg-primary text-white text-sm px-4 py-2 rounded-lg hover:bg-primary-dark transition-colors"
+          >
+            <Plus size={16} /> Nova Visita
+          </button>
+        </div>
       </div>
+
+      {csvImportResult && (
+        <div className={`rounded-xl border px-4 py-3 text-sm ${csvImportResult.includes('Erro') || csvImportResult.includes('erro') ? 'border-red-200 bg-red-50 text-red-700' : 'border-emerald-200 bg-emerald-50 text-emerald-800'}`}>
+          {csvImportResult}
+        </div>
+      )}
 
       <div className="rounded-xl border border-emerald-100 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
         {pendingCount > 0
-          ? `${pendingCount} visita(s) pendente(s) de sincronização offline.`
-          : 'Todas as visitas locais estão sincronizadas.'}
+          ? `${pendingCount} visita(s) pendente(s) de sincronizacao offline.`
+          : 'Todas as visitas locais estao sincronizadas.'}
       </div>
 
       {syncingData && (
@@ -253,7 +353,7 @@ export function VisitasClient({ initialNew }: { initialNew?: boolean }) {
             onChange={(e) => setFilterTech(e.target.value)}
             className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
           >
-            <option value="">Todos os técnicos</option>
+            <option value="">Todos os tecnicos</option>
             {techNames.map(([value, label]) => <option key={value} value={value}>{label}</option>)}
           </select>
 
@@ -282,14 +382,14 @@ export function VisitasClient({ initialNew }: { initialNew?: boolean }) {
               <thead>
                 <tr className="bg-primary-light border-b border-gray-200">
                   <th className="text-left px-4 py-3 text-xs font-semibold text-primary uppercase tracking-wide">Data</th>
-                  <th className="text-left px-4 py-3 text-xs font-semibold text-primary uppercase tracking-wide">Técnico</th>
-                  <th className="text-left px-4 py-3 text-xs font-semibold text-primary uppercase tracking-wide hidden md:table-cell">Área</th>
+                  <th className="text-left px-4 py-3 text-xs font-semibold text-primary uppercase tracking-wide">Tecnico</th>
+                  <th className="text-left px-4 py-3 text-xs font-semibold text-primary uppercase tracking-wide hidden md:table-cell">Area</th>
                   <th className="text-left px-4 py-3 text-xs font-semibold text-primary uppercase tracking-wide">Cliente</th>
                   <th className="text-left px-4 py-3 text-xs font-semibold text-primary uppercase tracking-wide hidden lg:table-cell">Tipo</th>
-                  <th className="text-left px-4 py-3 text-xs font-semibold text-primary uppercase tracking-wide hidden lg:table-cell">Serviço</th>
+                  <th className="text-left px-4 py-3 text-xs font-semibold text-primary uppercase tracking-wide hidden lg:table-cell">Servico</th>
                   <th className="text-center px-4 py-3 text-xs font-semibold text-primary uppercase tracking-wide hidden md:table-cell">Animais</th>
                   <th className="text-center px-4 py-3 text-xs font-semibold text-primary uppercase tracking-wide">Fechado</th>
-                  <th className="text-center px-4 py-3 text-xs font-semibold text-primary uppercase tracking-wide">Ações</th>
+                  <th className="text-center px-4 py-3 text-xs font-semibold text-primary uppercase tracking-wide">Acoes</th>
                 </tr>
               </thead>
               <tbody>
@@ -312,12 +412,12 @@ export function VisitasClient({ initialNew }: { initialNew?: boolean }) {
                       <td className="px-4 py-3 text-gray-700 max-w-[160px] truncate" title={v.client_name}>{v.client_name}</td>
                       <td className="px-4 py-3 text-gray-500 hidden lg:table-cell">{v.client_type}</td>
                       <td className="px-4 py-3 text-gray-500 hidden lg:table-cell max-w-[120px] truncate" title={v.service_type}>{v.service_type}</td>
-                      <td className="px-4 py-3 text-gray-500 text-center hidden md:table-cell">{v.animals ?? '—'}</td>
+                      <td className="px-4 py-3 text-gray-500 text-center hidden md:table-cell">{v.animals ?? '\u2014'}</td>
                       <td className="px-4 py-3 text-center">
                         {v.deal_closed ? (
                           <span className="inline-block w-2 h-2 rounded-full bg-emerald-500" title="Fechado" />
                         ) : (
-                          <span className="inline-block w-2 h-2 rounded-full bg-gray-300" title="Não fechado" />
+                          <span className="inline-block w-2 h-2 rounded-full bg-gray-300" title="Nao fechado" />
                         )}
                       </td>
                       <td className="px-4 py-3">
@@ -357,6 +457,87 @@ export function VisitasClient({ initialNew }: { initialNew?: boolean }) {
         </div>
       </div>
 
+      {/* CSV Preview Modal */}
+      <Modal
+        open={csvModalOpen}
+        onClose={() => { if (!csvImporting) setCsvModalOpen(false); }}
+        title="Preview da Importacao CSV"
+        size="lg"
+      >
+        {csvErrors.length > 0 && (
+          <div className="mb-3 bg-yellow-50 border border-yellow-200 text-yellow-800 text-sm rounded-lg px-3 py-2">
+            <p className="font-semibold">{csvErrors.length} erro(s) encontrado(s):</p>
+            <ul className="mt-1 space-y-1 max-h-32 overflow-y-auto">
+              {csvErrors.slice(0, 5).map((err, i) => (
+                <li key={i}>Linha {err.line}: {err.message}</li>
+              ))}
+              {csvErrors.length > 5 && <li>...e mais {csvErrors.length - 5} erro(s)</li>}
+            </ul>
+          </div>
+        )}
+
+        {csvPreview.length > 0 && (
+          <div className="mb-4">
+            <p className="text-sm text-gray-600 mb-2">Preview das primeiras {csvPreview.length} linha(s) validas:</p>
+            <div className="overflow-x-auto border border-gray-200 rounded-lg">
+              <table className="w-full text-xs">
+                <thead>
+                  <tr className="bg-gray-50 border-b border-gray-200">
+                    <th className="text-left px-3 py-2 font-semibold text-gray-600">Data</th>
+                    <th className="text-left px-3 py-2 font-semibold text-gray-600">Tecnico</th>
+                    <th className="text-left px-3 py-2 font-semibold text-gray-600">Cliente</th>
+                    <th className="text-left px-3 py-2 font-semibold text-gray-600">Cidade</th>
+                    <th className="text-left px-3 py-2 font-semibold text-gray-600">Servico</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {csvPreview.map((v, i) => (
+                    <tr key={i} className="border-b border-gray-100">
+                      <td className="px-3 py-2 text-gray-700">{fmtDate(v.date || '')}</td>
+                      <td className="px-3 py-2 text-gray-700">{v.technician_name}</td>
+                      <td className="px-3 py-2 text-gray-700">{v.client_name}</td>
+                      <td className="px-3 py-2 text-gray-600">{v.city || '-'}</td>
+                      <td className="px-3 py-2 text-gray-600">{v.service_type || '-'}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {csvImporting && (
+          <div className="mb-4">
+            <div className="w-full bg-gray-200 rounded-full h-2.5">
+              <div
+                className="bg-primary h-2.5 rounded-full transition-all"
+                style={{ width: `${csvImportProgress.total > 0 ? (csvImportProgress.current / csvImportProgress.total) * 100 : 0}%` }}
+              />
+            </div>
+            <p className="text-sm text-gray-600 mt-1 text-center">
+              Importando {csvImportProgress.current} de {csvImportProgress.total}...
+            </p>
+          </div>
+        )}
+
+        <div className="flex justify-end gap-3">
+          <button
+            onClick={() => setCsvModalOpen(false)}
+            disabled={csvImporting}
+            className="px-4 py-2 text-sm border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 disabled:opacity-60"
+          >
+            Cancelar
+          </button>
+          <button
+            onClick={handleConfirmCsvImport}
+            disabled={csvImporting || csvPreview.length === 0}
+            className="px-5 py-2 text-sm bg-primary text-white rounded-lg hover:bg-primary-dark disabled:opacity-60 transition-colors"
+          >
+            {csvImporting ? 'Importando...' : 'Confirmar Importacao'}
+          </button>
+        </div>
+      </Modal>
+
       {/* New/Edit Modal */}
       <Modal
         open={modalOpen}
@@ -381,7 +562,7 @@ export function VisitasClient({ initialNew }: { initialNew?: boolean }) {
           </div>
 
           <div>
-            <label className="field-label">Área</label>
+            <label className="field-label">Area</label>
             <select
               value={form.area || ''}
               onChange={(e) => setForm({ ...form, area: e.target.value, consultant: '' })}
@@ -405,12 +586,12 @@ export function VisitasClient({ initialNew }: { initialNew?: boolean }) {
           </div>
 
           <div>
-            <label className="field-label">Técnico *</label>
+            <label className="field-label">Tecnico *</label>
             <input
               list="tech-list"
               value={form.technician_name || ''}
               onChange={(e) => setForm({ ...form, technician_name: e.target.value })}
-              placeholder="Nome do técnico"
+              placeholder="Nome do tecnico"
               className="field-input"
             />
             <datalist id="tech-list">
@@ -451,7 +632,7 @@ export function VisitasClient({ initialNew }: { initialNew?: boolean }) {
           </div>
 
           <div>
-            <label className="field-label">Tipo Serviço</label>
+            <label className="field-label">Tipo Servico</label>
             <select
               value={form.service_type || ''}
               onChange={(e) => setForm({ ...form, service_type: e.target.value })}
@@ -491,7 +672,7 @@ export function VisitasClient({ initialNew }: { initialNew?: boolean }) {
             <textarea
               value={form.notes || ''}
               onChange={(e) => setForm({ ...form, notes: e.target.value })}
-              placeholder="Observações..."
+              placeholder="Observacoes..."
               rows={2}
               className="field-input resize-none"
             />
@@ -506,7 +687,7 @@ export function VisitasClient({ initialNew }: { initialNew?: boolean }) {
               className="w-4 h-4 accent-primary"
             />
             <label htmlFor="deal-closed" className="text-sm text-gray-700 font-medium">
-              Negócio Fechado
+              Negocio Fechado
             </label>
           </div>
 
@@ -566,17 +747,17 @@ export function VisitasClient({ initialNew }: { initialNew?: boolean }) {
           <div className="space-y-3 text-sm">
             {([
               ['Data', fmtDate(detailTarget.date)],
-              ['Técnico', detailTarget.technician_name],
-              ['Área', detailTarget.area],
-              ['Consultor', detailTarget.consultant || '—'],
+              ['Tecnico', detailTarget.technician_name],
+              ['Area', detailTarget.area],
+              ['Consultor', detailTarget.consultant || '\u2014'],
               ['Cliente', detailTarget.client_name],
-              ['Cidade', detailTarget.city || '—'],
+              ['Cidade', detailTarget.city || '\u2014'],
               ['Tipo Cliente', detailTarget.client_type],
-              ['Serviço', detailTarget.service_type],
-              ['Animais', detailTarget.animals ?? '—'],
-              ['Rebanho', detailTarget.herd_size ?? '—'],
-              ['Negócio Fechado', detailTarget.deal_closed ? 'Sim' : 'Não'],
-              ['Notas', detailTarget.notes || '—'],
+              ['Servico', detailTarget.service_type],
+              ['Animais', detailTarget.animals ?? '\u2014'],
+              ['Rebanho', detailTarget.herd_size ?? '\u2014'],
+              ['Negocio Fechado', detailTarget.deal_closed ? 'Sim' : 'Nao'],
+              ['Notas', detailTarget.notes || '\u2014'],
             ] as [string, unknown][]).map(([label, val]) => (
               <div key={label} className="flex gap-2">
                 <span className="font-semibold text-gray-600 w-32 flex-shrink-0">{label}:</span>
@@ -591,7 +772,7 @@ export function VisitasClient({ initialNew }: { initialNew?: boolean }) {
       <ConfirmDialog
         open={deleteOpen}
         title="Excluir Visita"
-        message={`Confirma a exclusão da visita de "${deleteTarget?.technician_name}" para "${deleteTarget?.client_name}"? Esta ação é irreversível.`}
+        message={`Confirma a exclusao da visita de "${deleteTarget?.technician_name}" para "${deleteTarget?.client_name}"? Esta acao e irreversivel.`}
         confirmLabel="Excluir"
         onConfirm={handleDelete}
         onCancel={() => { setDeleteOpen(false); setDeleteTarget(null); }}
