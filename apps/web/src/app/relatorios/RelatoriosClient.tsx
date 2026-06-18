@@ -202,7 +202,7 @@ export function RelatoriosClient() {
       : visits;
 
     const salesFiltered = filterMonth
-      ? sales.filter((s) => s.month === filterMonth)
+      ? sales.filter((s) => normalizeMonthValue(s.month) === filterMonth)
       : sales;
 
     const techFiltered = filterTech
