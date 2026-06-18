@@ -7,6 +7,7 @@ const DB_VERSION = 2;
 const VISITS_STORE = 'visits';
 const PENDING_STORE = 'pending-visits';
 const SCHEDULE_STORE = 'schedule';
+const PENDING_SCHEDULE_STORE = 'pending-schedule';
 const TECHNICIANS_STORE = 'technicians';
 const CLIENTS_STORE = 'clients';
 const META_STORE = 'meta';
@@ -37,6 +38,9 @@ function openDb(): Promise<IDBDatabase> {
       }
       if (!db.objectStoreNames.contains(SCHEDULE_STORE)) {
         db.createObjectStore(SCHEDULE_STORE, { keyPath: 'id' });
+      }
+      if (!db.objectStoreNames.contains(PENDING_SCHEDULE_STORE)) {
+        db.createObjectStore(PENDING_SCHEDULE_STORE, { keyPath: 'local_id' });
       }
       if (!db.objectStoreNames.contains(TECHNICIANS_STORE)) {
         db.createObjectStore(TECHNICIANS_STORE, { keyPath: 'id' });
@@ -210,6 +214,86 @@ export async function getCachedSchedule(): Promise<ScheduleItem[]> {
   const result = await requestToPromise(store.getAll());
   db.close();
   return (result as ScheduleItem[]).sort((a, b) => a.scheduled_date.localeCompare(b.scheduled_date));
+}
+
+export async function upsertCachedSchedule(item: ScheduleItem) {
+  if (!hasIndexedDb()) return;
+  const db = await openDb();
+  const transaction = db.transaction(SCHEDULE_STORE, 'readwrite');
+  transaction.objectStore(SCHEDULE_STORE).put(item);
+  await new Promise<void>((resolve, reject) => {
+    transaction.oncomplete = () => resolve();
+    transaction.onerror = () => reject(transaction.error || new Error('Falha ao salvar agendamento no cache'));
+  });
+  db.close();
+}
+
+export async function queuePendingSchedule(item: ScheduleItem) {
+  if (!hasIndexedDb()) return;
+  const payload = {
+    ...item,
+    pending_sync: true,
+    local_id: item.local_id || crypto.randomUUID?.() || `schedule-${Date.now()}`,
+  };
+  const db = await openDb();
+  const transaction = db.transaction([PENDING_SCHEDULE_STORE, SCHEDULE_STORE], 'readwrite');
+  transaction.objectStore(PENDING_SCHEDULE_STORE).put(payload);
+  transaction.objectStore(SCHEDULE_STORE).put(payload);
+  await new Promise<void>((resolve, reject) => {
+    transaction.oncomplete = () => resolve();
+    transaction.onerror = () => reject(transaction.error || new Error('Falha ao enfileirar agendamento'));
+  });
+  db.close();
+}
+
+export async function getPendingSchedule(): Promise<ScheduleItem[]> {
+  if (!hasIndexedDb()) return [];
+  const db = await openDb();
+  const transaction = db.transaction(PENDING_SCHEDULE_STORE, 'readonly');
+  const store = transaction.objectStore(PENDING_SCHEDULE_STORE);
+  const result = await requestToPromise(store.getAll());
+  db.close();
+  return (result as ScheduleItem[]).sort((a, b) => a.scheduled_date.localeCompare(b.scheduled_date));
+}
+
+export async function removePendingSchedule(localId: string) {
+  if (!hasIndexedDb()) return;
+  const db = await openDb();
+  const transaction = db.transaction(PENDING_SCHEDULE_STORE, 'readwrite');
+  transaction.objectStore(PENDING_SCHEDULE_STORE).delete(localId);
+  await new Promise<void>((resolve, reject) => {
+    transaction.oncomplete = () => resolve();
+    transaction.onerror = () => reject(transaction.error || new Error('Falha ao remover pendência de agendamento'));
+  });
+  db.close();
+}
+
+export async function removeCachedSchedule(id: string) {
+  if (!hasIndexedDb()) return;
+  const db = await openDb();
+  const transaction = db.transaction(SCHEDULE_STORE, 'readwrite');
+  transaction.objectStore(SCHEDULE_STORE).delete(id);
+  await new Promise<void>((resolve, reject) => {
+    transaction.oncomplete = () => resolve();
+    transaction.onerror = () => reject(transaction.error || new Error('Falha ao remover agendamento do cache'));
+  });
+  db.close();
+}
+
+export async function removeScheduleEverywhere(item: Pick<ScheduleItem, 'id' | 'local_id'>) {
+  if (!hasIndexedDb()) return;
+  const db = await openDb();
+  const transaction = db.transaction([SCHEDULE_STORE, PENDING_SCHEDULE_STORE], 'readwrite');
+  transaction.objectStore(SCHEDULE_STORE).delete(item.id);
+  if (item.local_id && item.local_id !== item.id) {
+    transaction.objectStore(SCHEDULE_STORE).delete(item.local_id);
+    transaction.objectStore(PENDING_SCHEDULE_STORE).delete(item.local_id);
+  }
+  await new Promise<void>((resolve, reject) => {
+    transaction.oncomplete = () => resolve();
+    transaction.onerror = () => reject(transaction.error || new Error('Falha ao remover agendamento local'));
+  });
+  db.close();
 }
 
 export async function cacheTechnicians(items: TechUser[]) {

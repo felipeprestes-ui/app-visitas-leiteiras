@@ -69,6 +69,9 @@ export interface ScheduleItem {
   scheduled_date: string;
   area: string;
   notes: string;
+  pending_sync?: boolean;
+  sync_error?: string | null;
+  local_id?: string | null;
 }
 
 export type ClientType = 'B' | 'C' | 'Conexao Leite' | 'KAM' | 'Lagoa+';

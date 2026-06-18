@@ -242,11 +242,39 @@ export async function fetchSchedule(params: Record<string, string> = {}): Promis
         scheduled_date: String(item.scheduled_date || item.date || item.visit_date || item.visited_at || ''),
         area: String(item.area || item.areas || '').trim().padStart(3, '0'),
         notes: String(item.notes || ''),
+        local_id: item.local_id ? String(item.local_id) : null,
+        pending_sync: false,
+        sync_error: null,
       }));
     }
   }
 
   return [];
+}
+
+export async function upsertSchedule(payload: Partial<ScheduleItem>): Promise<ApiResult<ScheduleItem>> {
+  const method = payload.id ? 'PATCH' : 'POST';
+  const path = payload.id ? `/Schedule?id=eq.${payload.id}` : '/Schedule';
+  const body = { ...payload };
+  if (method === 'POST') delete body.id;
+  const mapped: Record<string, unknown> = {
+    technician_name: body.technician_name,
+    title: body.title,
+    property_name: body.property_name,
+    scheduled_date: body.scheduled_date,
+    area: body.area,
+    notes: body.notes,
+    local_id: body.local_id,
+  };
+  return supabaseFetch<ScheduleItem>(path, {
+    method,
+    headers: { Prefer: 'return=representation' },
+    body: JSON.stringify(mapped),
+  });
+}
+
+export async function deleteSchedule(id: string): Promise<ApiResult> {
+  return supabaseFetch(`/Schedule?id=eq.${encodeURIComponent(id)}`, { method: 'DELETE' });
 }
 
 export async function upsertUser(payload: Partial<TechUser>): Promise<ApiResult<TechUser>> {

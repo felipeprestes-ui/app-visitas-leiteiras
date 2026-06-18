@@ -1,6 +1,6 @@
 'use client';
 
-import { deleteVisit, fetchClients, fetchSchedule, fetchUsers, fetchVisits, upsertVisit } from '@/lib/supabase';
+import { deleteSchedule, deleteVisit, fetchClients, fetchSchedule, fetchUsers, fetchVisits, upsertSchedule, upsertVisit } from '@/lib/supabase';
 import type { ApiResult } from '@/lib/supabase';
 import type { ClientRecord, ScheduleItem, TechUser, Visit } from '@/types/portal';
 import {
@@ -13,18 +13,29 @@ import {
   getCachedTechnicians,
   getCachedVisits,
   getMeta,
+  getPendingSchedule,
   getPendingVisits,
   isOffline,
+  queuePendingSchedule,
   queuePendingVisit,
+  removeCachedSchedule,
   removeCachedVisit,
+  removePendingSchedule,
   removePendingVisit,
+  removeScheduleEverywhere,
   removeVisitEverywhere,
   setMeta,
+  upsertCachedSchedule,
 } from './storage';
 
 export interface SyncResult {
   synced: Visit[];
   failed: Visit[];
+}
+
+export interface ScheduleSyncResult {
+  synced: ScheduleItem[];
+  failed: ScheduleItem[];
 }
 
 export interface OfflineFirstResult<T> {
@@ -181,6 +192,73 @@ export async function loadScheduleOfflineFirst(technicianName?: string): Promise
   };
 }
 
+export async function saveScheduleOfflineFirst(payload: Partial<ScheduleItem>): Promise<{ ok: boolean; offline: boolean; schedule: ScheduleItem }> {
+  const schedule: ScheduleItem = {
+    id: payload.id || payload.local_id || crypto.randomUUID?.() || `schedule-${Date.now()}`,
+    technician_name: payload.technician_name || '',
+    title: payload.title || 'Agendamento',
+    property_name: payload.property_name || '',
+    scheduled_date: payload.scheduled_date || new Date().toISOString(),
+    area: payload.area || '',
+    notes: payload.notes || '',
+    local_id: payload.local_id || crypto.randomUUID?.() || `schedule-local-${Date.now()}`,
+    pending_sync: false,
+    sync_error: null,
+  };
+
+  if (isOffline()) {
+    await queuePendingSchedule(schedule);
+    return { ok: true, offline: true, schedule: { ...schedule, pending_sync: true } };
+  }
+
+  const response = await upsertSchedule(schedule);
+  if (!response.ok) {
+    await queuePendingSchedule({ ...schedule, sync_error: response.error || 'Falha ao sincronizar' });
+    return { ok: true, offline: true, schedule: { ...schedule, pending_sync: true, sync_error: response.error || null } };
+  }
+
+  const returned = response.data || schedule;
+  const normalized: ScheduleItem = {
+    ...schedule,
+    ...returned,
+    id: returned.id || schedule.id,
+    local_id: returned.local_id || schedule.local_id,
+    pending_sync: false,
+    sync_error: null,
+  };
+  await upsertCachedSchedule(normalized);
+  await setMeta('schedule-last-sync', new Date().toISOString());
+  return { ok: true, offline: false, schedule: normalized };
+}
+
+export async function syncPendingSchedule(): Promise<ScheduleSyncResult> {
+  const pending = await getPendingSchedule();
+  if (pending.length === 0 || isOffline()) {
+    return { synced: [], failed: pending };
+  }
+
+  const synced: ScheduleItem[] = [];
+  const failed: ScheduleItem[] = [];
+
+  for (const item of pending) {
+    const response = await upsertSchedule({ ...item, id: undefined });
+    if (response.ok) {
+      synced.push(item);
+      if (item.local_id) {
+        await removePendingSchedule(item.local_id);
+      }
+    } else {
+      failed.push({ ...item, sync_error: response.error || 'Falha ao sincronizar' });
+      await upsertCachedSchedule({ ...item, pending_sync: true, sync_error: response.error || 'Falha ao sincronizar' });
+    }
+  }
+
+  const remote = await fetchSchedule({ limit: '2000' });
+  await cacheSchedule(remote);
+  await setMeta('schedule-last-sync', new Date().toISOString());
+  return { synced, failed };
+}
+
 export async function loadTechniciansOfflineFirst(): Promise<OfflineFirstResult<TechUser>> {
   const cached = await getCachedTechnicians();
   if (isOffline()) {
@@ -258,9 +336,30 @@ export function registerOnlineSync(callback?: () => void) {
 
   const handler = async () => {
     await syncPendingVisits();
+    await syncPendingSchedule();
     callback?.();
   };
 
   window.addEventListener('online', handler);
   return () => window.removeEventListener('online', handler);
+}
+
+export async function deleteScheduleOfflineFirst(item: ScheduleItem): Promise<ApiResult> {
+  const hasServerId = Boolean(item.id && !String(item.id).startsWith('schedule-local-'));
+
+  if (!hasServerId || isOffline()) {
+    await removeScheduleEverywhere(item);
+    return { ok: true };
+  }
+
+  const response = await deleteSchedule(item.id);
+  if (!response.ok) {
+    return response;
+  }
+
+  await removeCachedSchedule(item.id);
+  if (item.local_id) {
+    await removePendingSchedule(item.local_id);
+  }
+  return response;
 }
