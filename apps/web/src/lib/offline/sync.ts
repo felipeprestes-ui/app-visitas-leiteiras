@@ -91,12 +91,18 @@ export async function saveVisitOfflineFirst(payload: Partial<Visit>): Promise<{ 
 
   if (isOffline()) {
     await queuePendingVisit(visit);
+    // Também salva no cache local para aparecer na lista imediatamente
+    const cached = await getCachedVisits();
+    await cacheVisits([visit, ...cached]);
     return { ok: true, offline: true, visit: { ...visit, pending_sync: true } };
   }
 
   const response = await upsertVisit(visit);
   if (!response.ok) {
     await queuePendingVisit({ ...visit, sync_error: response.error || 'Falha ao sincronizar' });
+    // Também salva no cache local para aparecer na lista mesmo com erro
+    const cached = await getCachedVisits();
+    await cacheVisits([{ ...visit, pending_sync: true, sync_error: response.error || null }, ...cached]);
     return { ok: true, offline: true, visit: { ...visit, pending_sync: true, sync_error: response.error || null } };
   }
 
@@ -108,6 +114,8 @@ export async function saveVisitOfflineFirst(payload: Partial<Visit>): Promise<{ 
     ...returnedVisit,
     id: returnedVisit.id || crypto.randomUUID?.() || `${Date.now()}`,
     local_id: returnedVisit.local_id || crypto.randomUUID?.() || `${Date.now()}`,
+    pending_sync: false,
+    sync_error: null,
   };
   
   // Atualiza o cache com a nova visita
