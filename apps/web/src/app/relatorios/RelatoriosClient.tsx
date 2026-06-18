@@ -216,7 +216,7 @@ export function RelatoriosClient() {
 
     const [visits, sales, users] = await Promise.all([
       fetchVisits(visitParams),
-      userRole === 'gestor' ? fetchSales() : Promise.resolve([]),
+      fetchSales(),
       userRole === 'gestor' ? fetchUsers() : Promise.resolve([{ id: '1', name: userName, email: '', role: 'tecnico', area: '', areas: [] }]),
     ]);
 
@@ -229,9 +229,14 @@ export function RelatoriosClient() {
         })
       : visits;
 
-    const salesFiltered = filterMonth
-      ? sales.filter((s) => normalizeMonthValue(s.month) === filterMonth)
+    // Para técnicos, filtra apenas as próprias vendas
+    const techSales = userRole === 'tecnico' && userName 
+      ? sales.filter((s) => s.technicianName === userName)
       : sales;
+
+    const salesFiltered = filterMonth
+      ? techSales.filter((s) => normalizeMonthValue(s.month) === filterMonth)
+      : techSales;
 
     const techFiltered = filterTech
       ? users.filter((u) => u.name.toLowerCase().includes(filterTech.toLowerCase()))

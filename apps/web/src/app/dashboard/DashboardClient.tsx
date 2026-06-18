@@ -142,12 +142,14 @@ export function DashboardClient() {
           >
             <CalendarDays size={15} /> Agenda
           </Link>
-          <Link
-            href="/vendas?new=1"
-            className="flex items-center gap-1.5 bg-gold text-white text-sm px-3 py-2 rounded-lg hover:bg-gold-dark transition-colors"
-          >
-            <TrendingUp size={15} /> Lançar Vendas
-          </Link>
+          {userRole === 'gestor' && (
+            <Link
+              href="/vendas?new=1"
+              className="flex items-center gap-1.5 bg-gold text-white text-sm px-3 py-2 rounded-lg hover:bg-gold-dark transition-colors"
+            >
+              <TrendingUp size={15} /> Lançar Vendas
+            </Link>
+          )}
           <Link
             href="/relatorios"
             className="flex items-center gap-1.5 bg-gray-700 text-white text-sm px-3 py-2 rounded-lg hover:bg-gray-800 transition-colors"
