@@ -103,12 +103,19 @@ export async function saveVisitOfflineFirst(payload: Partial<Visit>): Promise<{ 
   // Se o Supabase retornou a visita criada, usa ela. Senão, usa a visita original
   const returnedVisit = response.data || visit;
   
+  // Garante que a visita tenha um id antes de salvar no cache
+  const visitWithId = {
+    ...returnedVisit,
+    id: returnedVisit.id || crypto.randomUUID?.() || `${Date.now()}`,
+    local_id: returnedVisit.local_id || crypto.randomUUID?.() || `${Date.now()}`,
+  };
+  
   // Atualiza o cache com a nova visita
   const cached = await getCachedVisits();
-  const updatedCache = [returnedVisit, ...cached.filter((v) => v.id !== returnedVisit.id && v.local_id !== returnedVisit.local_id)];
+  const updatedCache = [visitWithId, ...cached.filter((v) => v.id !== visitWithId.id && v.local_id !== visitWithId.local_id)];
   await cacheVisits(updatedCache);
   
-  return { ok: true, offline: false, visit: returnedVisit };
+  return { ok: true, offline: false, visit: visitWithId };
 }
 
 export async function syncPendingVisits(): Promise<SyncResult> {
