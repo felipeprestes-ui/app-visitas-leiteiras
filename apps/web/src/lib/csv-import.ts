@@ -123,8 +123,6 @@ function parseLine(
     herd_size: parseIntOrNull(get('herd_size')),
     deal_closed,
     consultant: get('consultant').trim() || null,
-    doses_convencional: parseIntOrNull(get('doses_convencional')),
-    doses_sexado: parseIntOrNull(get('doses_sexado')),
     notes: get('notes').trim() || '',
   };
 
