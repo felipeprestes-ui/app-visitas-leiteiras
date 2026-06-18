@@ -208,12 +208,16 @@ export async function saveScheduleOfflineFirst(payload: Partial<ScheduleItem>): 
 
   if (isOffline()) {
     await queuePendingSchedule(schedule);
+    // Também salva no cache local para aparecer na lista imediatamente
+    await upsertCachedSchedule({ ...schedule, pending_sync: true });
     return { ok: true, offline: true, schedule: { ...schedule, pending_sync: true } };
   }
 
   const response = await upsertSchedule(schedule);
   if (!response.ok) {
     await queuePendingSchedule({ ...schedule, sync_error: response.error || 'Falha ao sincronizar' });
+    // Também salva no cache local para aparecer na lista mesmo com erro
+    await upsertCachedSchedule({ ...schedule, pending_sync: true, sync_error: response.error || null });
     return { ok: true, offline: true, schedule: { ...schedule, pending_sync: true, sync_error: response.error || null } };
   }
 
