@@ -13,6 +13,23 @@ function fmtBRL(n: number) {
   return n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 }
 
+function normalizeMonthValue(value: string) {
+  if (!value) return '';
+  const trimmed = value.trim();
+  // Formato ISO: 2025-11 (YYYY-MM) -> 10-2025 (base 0)
+  const isoMatch = trimmed.match(/^(\d{4})-(\d{1,2})$/);
+  if (isoMatch) {
+    const monthIndex = Number(isoMatch[2]) - 1;
+    return `${monthIndex}-${isoMatch[1]}`;
+  }
+  // Formato interno: 10-2025 (base 0 - ano)
+  const numericMatch = trimmed.match(/^(\d{1,2})-(\d{4})$/);
+  if (numericMatch) {
+    return `${Number(numericMatch[1])}-${numericMatch[2]}`;
+  }
+  return trimmed;
+}
+
 interface TechRow {
   nome: string;
   area: string;
