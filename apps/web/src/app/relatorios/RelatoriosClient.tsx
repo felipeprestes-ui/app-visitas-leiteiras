@@ -217,7 +217,7 @@ export function RelatoriosClient() {
     const [visits, sales, users] = await Promise.all([
       fetchVisits(visitParams),
       userRole === 'gestor' ? fetchSales() : Promise.resolve([]),
-      userRole === 'gestor' ? fetchUsers() : Promise.resolve([{ id: '1', name: userName, email: '', role: 'tecnico' }]),
+      userRole === 'gestor' ? fetchUsers() : Promise.resolve([{ id: '1', name: userName, email: '', role: 'tecnico', area: '', areas: '' }]),
     ]);
 
     // Filter by month
