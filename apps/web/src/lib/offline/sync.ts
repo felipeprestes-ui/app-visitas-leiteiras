@@ -100,8 +100,15 @@ export async function saveVisitOfflineFirst(payload: Partial<Visit>): Promise<{ 
     return { ok: true, offline: true, visit: { ...visit, pending_sync: true, sync_error: response.error || null } };
   }
 
-  const refreshed = await loadVisitsOfflineFirst(undefined, { allTechnicians: true });
-  return { ok: true, offline: false, visit: response.data || refreshed.items[0] || visit };
+  // Se o Supabase retornou a visita criada, usa ela. Senão, usa a visita original
+  const returnedVisit = response.data || visit;
+  
+  // Atualiza o cache com a nova visita
+  const cached = await getCachedVisits();
+  const updatedCache = [returnedVisit, ...cached.filter((v) => v.id !== returnedVisit.id && v.local_id !== returnedVisit.local_id)];
+  await cacheVisits(updatedCache);
+  
+  return { ok: true, offline: false, visit: returnedVisit };
 }
 
 export async function syncPendingVisits(): Promise<SyncResult> {
