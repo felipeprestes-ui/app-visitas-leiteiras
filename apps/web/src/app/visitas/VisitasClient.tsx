@@ -13,6 +13,7 @@ import type { Visit, TechUser } from '@/types/portal';
 import { AREAS, CLIENT_TYPES, SERVICE_TYPES, CONSULTORES, MONTHS } from '@/types/portal';
 import { getPendingVisits } from '@/lib/offline/storage';
 import { deleteVisitOfflineFirst, loadVisitsOfflineFirst, registerOnlineSync } from '@/lib/offline/sync';
+import { getSession } from '@/hooks/useAuth';
 
 const PAGE_SIZE = 50;
 
@@ -73,11 +74,20 @@ export function VisitasClient({ initialNew }: { initialNew?: boolean }) {
   const [pendingCount, setPendingCount] = useState(0);
   const [syncingData, setSyncingData] = useState(false);
 
+  const session = getSession();
+  const userRole = session?.role || 'tecnico';
+  const userName = session?.name || '';
+
   const loadData = useCallback(async () => {
     setLoading(true);
+    
+    // Se for técnico, carrega apenas as próprias visitas
+    const options = userRole === 'tecnico' ? undefined : { allTechnicians: true };
+    const techFilter = userRole === 'tecnico' && userName ? userName : undefined;
+    
     const [visitsResult, users, pending] = await Promise.all([
-      loadVisitsOfflineFirst(undefined, { allTechnicians: true }),
-      fetchUsers(),
+      loadVisitsOfflineFirst(techFilter, options),
+      userRole === 'gestor' ? fetchUsers() : Promise.resolve([]),
       getPendingVisits(),
     ]);
     setVisits(visitsResult.items);
@@ -85,7 +95,7 @@ export function VisitasClient({ initialNew }: { initialNew?: boolean }) {
     setPendingCount(pending.length);
     setSyncingData(visitsResult.fromCache && !visitsResult.syncing && typeof navigator !== 'undefined' && navigator.onLine);
     setLoading(false);
-  }, []);
+  }, [userRole, userName]);
 
   useEffect(() => {
     loadData();

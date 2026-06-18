@@ -15,22 +15,27 @@ import {
   Wifi,
 } from 'lucide-react';
 import { useState } from 'react';
-import { clearSession } from '@/hooks/useAuth';
+import { clearSession, getSession } from '@/hooks/useAuth';
 
-const navItems = [
-  { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { href: '/visitas', label: 'Visitas', icon: MapPin },
-  { href: '/agenda', label: 'Agenda', icon: CalendarDays },
-  { href: '/sync', label: 'Sincronização', icon: Wifi },
-  { href: '/vendas', label: 'Vendas', icon: TrendingUp },
-  { href: '/tecnicos', label: 'Técnicos', icon: Users },
-  { href: '/relatorios', label: 'Relatórios', icon: FileText },
+const allNavItems = [
+  { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, roles: ['gestor', 'tecnico'] },
+  { href: '/visitas', label: 'Visitas', icon: MapPin, roles: ['gestor', 'tecnico'] },
+  { href: '/agenda', label: 'Agenda', icon: CalendarDays, roles: ['gestor', 'tecnico'] },
+  { href: '/sync', label: 'Sincronização', icon: Wifi, roles: ['gestor', 'tecnico'] },
+  { href: '/vendas', label: 'Vendas', icon: TrendingUp, roles: ['gestor'] },
+  { href: '/tecnicos', label: 'Técnicos', icon: Users, roles: ['gestor'] },
+  { href: '/relatorios', label: 'Relatórios', icon: FileText, roles: ['gestor', 'tecnico'] },
 ];
 
 export function Sidebar({ userName }: { userName?: string }) {
   const pathname = usePathname();
   const router = useRouter();
   const [mobileOpen, setMobileOpen] = useState(false);
+  
+  const session = getSession();
+  const userRole = session?.role || 'tecnico';
+  
+  const navItems = allNavItems.filter(item => item.roles.includes(userRole));
 
   function handleLogout() {
     clearSession();

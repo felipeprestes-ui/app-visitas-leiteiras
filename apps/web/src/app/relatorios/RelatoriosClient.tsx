@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { format } from 'date-fns';
 import { FileDown, Table2, BarChart3 } from 'lucide-react';
 import { fetchVisits, fetchSales, fetchUsers } from '@/lib/supabase';
+import { getSession } from '@/hooks/useAuth';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import type { Visit, MonthlySale, TechUser } from '@/types/portal';
 import { MONTHS } from '@/types/portal';
@@ -199,14 +200,24 @@ export function RelatoriosClient() {
   const [filterTech, setFilterTech] = useState('');
   const [rows, setRows] = useState<TechRow[]>([]);
   const [loaded, setLoaded] = useState(false);
+  
+  const session = getSession();
+  const userRole = session?.role || 'tecnico';
+  const userName = session?.name || '';
 
   const loadData = useCallback(async () => {
     setLoading(true);
 
+    // Se for técnico, carrega apenas os próprios dados
+    const visitParams: Record<string, string> = { limit: '5000' };
+    if (userRole === 'tecnico' && userName) {
+      visitParams['techName'] = `eq.${userName}`;
+    }
+
     const [visits, sales, users] = await Promise.all([
-      fetchVisits({ limit: '5000' }),
-      fetchSales(),
-      fetchUsers(),
+      fetchVisits(visitParams),
+      userRole === 'gestor' ? fetchSales() : Promise.resolve([]),
+      userRole === 'gestor' ? fetchUsers() : Promise.resolve([{ id: '1', name: userName, email: '', role: 'tecnico' }]),
     ]);
 
     // Filter by month

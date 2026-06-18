@@ -27,19 +27,19 @@ export default function LoginPage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  async function loginUser(email: string, password: string): Promise<{ ok: boolean; name?: string; error?: string }> {
+  async function loginUser(email: string, password: string): Promise<{ ok: boolean; name?: string; role?: string; error?: string }> {
     const e = email.trim().toLowerCase();
     const p = password;
 
     // 1. Check local hardcoded gestors
     const local = LOCAL_USERS.find(
-      (u) => u.email.toLowerCase() === e && u.password === p && u.role === 'gestor'
+      (u) => u.email.toLowerCase() === e && u.password === p
     );
     if (local) {
-      return { ok: true, name: local.name };
+      return { ok: true, name: local.name, role: local.role };
     }
 
-    // 2. Fallback: query Supabase /User table for gestor
+    // 2. Fallback: query Supabase /User table for gestor or tecnico
     try {
       const supaRes = await fetch(
         `${SUPABASE_URL}/User?email=eq.${encodeURIComponent(e)}&select=id,name,email,role,password`,
@@ -50,8 +50,8 @@ export default function LoginPage() {
         if (Array.isArray(users) && users.length > 0) {
           const user = users[0] as { id: string; name: string; email: string; role: string; password?: string };
           const storedPwd = user.password || '';
-          if (storedPwd === p && user.role === 'gestor') {
-            return { ok: true, name: user.name };
+          if (storedPwd === p && (user.role === 'gestor' || user.role === 'tecnico')) {
+            return { ok: true, name: user.name, role: user.role };
           }
         }
       }
@@ -59,7 +59,7 @@ export default function LoginPage() {
       // Supabase unavailable — fall through
     }
 
-    return { ok: false, error: 'Email ou senha invalidos, ou usuario nao e gestor' };
+    return { ok: false, error: 'Email ou senha invalidos' };
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -72,7 +72,7 @@ export default function LoginPage() {
         setError(result.error || 'Erro ao fazer login');
       } else {
         // Create session
-        const session = { id: 'session-' + Date.now(), name: result.name || 'Gestor', email, role: 'gestor' };
+        const session = { id: 'session-' + Date.now(), name: result.name || 'Usuario', email, role: result.role || 'tecnico' };
         setSession(session);
         router.push('/dashboard');
         router.refresh();
@@ -98,7 +98,7 @@ export default function LoginPage() {
 
         {/* Card */}
         <div className="bg-white rounded-2xl shadow-xl p-7">
-          <h2 className="text-lg font-semibold text-gray-800 mb-5">Acesso do Gestor</h2>
+          <h2 className="text-lg font-semibold text-gray-800 mb-5">Acesso ao Portal</h2>
 
           {error && (
             <div className="mb-4 bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg px-4 py-3">
@@ -115,7 +115,7 @@ export default function LoginPage() {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="gestor@crv4all.com.br"
+                placeholder="email@crv4all.com.br"
                 required
                 className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition"
               />
@@ -146,7 +146,7 @@ export default function LoginPage() {
         </div>
 
         <p className="text-center text-xs text-muted mt-4">
-          Acesso exclusivo para gestores
+          Acesso para gestores e técnicos
         </p>
       </div>
     </div>

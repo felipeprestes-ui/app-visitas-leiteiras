@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { fetchVisits, fetchSales, fetchUsers } from '@/lib/supabase';
+import { getSession } from '@/hooks/useAuth';
 import { KpiCard } from '@/components/ui/KpiCard';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import type { Visit, MonthlySale } from '@/types/portal';
@@ -32,6 +33,10 @@ export function DashboardClient() {
   const [techCount, setTechCount] = useState(0);
   const [chartData, setChartData] = useState<MonthlyChartData[]>([]);
   const [lastSync, setLastSync] = useState<string>('');
+  
+  const session = getSession();
+  const userRole = session?.role || 'tecnico';
+  const userName = session?.name || '';
 
   const today = new Date();
   const monthStart = format(startOfMonth(today), 'yyyy-MM-dd');
@@ -41,18 +46,34 @@ export function DashboardClient() {
   const load = useCallback(async () => {
     setLoading(true);
     try {
+      // Se for técnico, filtra apenas as próprias visitas
+      const visitParams: Record<string, string> = { 
+        'date': `gte.${monthStart}`, 
+        'date_2': `lte.${monthEnd}` 
+      };
+      
+      if (userRole === 'tecnico' && userName) {
+        visitParams['techName'] = `eq.${userName}`;
+      }
+      
       const [visitsMonth, allSales, users] = await Promise.all([
-        fetchVisits({ 'date': `gte.${monthStart}`, 'date_2': `lte.${monthEnd}` }),
-        fetchSales({ 'month': `eq.${currentMonth}` }),
-        fetchUsers({ 'role': 'eq.tecnico' }),
+        fetchVisits(visitParams),
+        userRole === 'gestor' ? fetchSales({ 'month': `eq.${currentMonth}` }) : Promise.resolve([]),
+        userRole === 'gestor' ? fetchUsers({ 'role': 'eq.tecnico' }) : Promise.resolve([]),
       ]);
+      
       setVisits(visitsMonth);
       setSales(allSales);
       setTechCount(users.length);
       setLastSync(new Date().toLocaleTimeString('pt-BR'));
 
-      // Build chart: last 12 months
-      const allVisits = await fetchVisits({ 'select': 'date', 'limit': '5000' });
+      // Build chart: last 12 months (apenas do técnico se for técnico)
+      const chartParams: Record<string, string> = { 'select': 'date', 'limit': '5000' };
+      if (userRole === 'tecnico' && userName) {
+        chartParams['techName'] = `eq.${userName}`;
+      }
+      
+      const allVisits = await fetchVisits(chartParams);
       const countByMonth: Record<string, number> = {};
       for (const v of allVisits) {
         if (!v.date) continue;
@@ -72,7 +93,7 @@ export function DashboardClient() {
       setLoading(false);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [userRole, userName]);
 
   useEffect(() => { load(); }, [load]);
 
