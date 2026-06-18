@@ -33,8 +33,8 @@ function fmtDate(d: string) {
   try { return format(new Date(d), 'dd/MM/yyyy'); } catch { return d; }
 }
 
-const emptyForm = (): Partial<Visit> => ({
-  technician_name: '',
+const emptyForm = (techName?: string): Partial<Visit> => ({
+  technician_name: techName || '',
   client_name: '',
   city: '',
   service_type: '',
@@ -149,7 +149,7 @@ export function VisitasClient({ initialNew }: { initialNew?: boolean }) {
 
   function openNew() {
     setEditTarget(null);
-    setForm(emptyForm());
+    setForm(emptyForm(userName));
     setFormError('');
     setModalOpen(true);
   }

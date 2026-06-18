@@ -41,10 +41,15 @@ export interface PreloadResult {
 }
 
 export async function loadVisitsOfflineFirst(technicianName?: string, options?: { allTechnicians?: boolean }): Promise<OfflineFirstResult<Visit>> {
+  function normalizeTechnicianName(name: string) {
+    return name.trim().replace(/\s+/g, ' ').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  }
+
   const cached = await getCachedVisits();
   const shouldFilterByTechnician = Boolean(technicianName && !options?.allTechnicians);
+  const normalizedTechName = shouldFilterByTechnician ? normalizeTechnicianName(technicianName) : null;
   const filteredCached = shouldFilterByTechnician
-    ? cached.filter((visit) => visit.technician_name?.trim().toLowerCase() === technicianName.trim().toLowerCase())
+    ? cached.filter((visit) => normalizeTechnicianName(visit.technician_name || '') === normalizedTechName)
     : cached;
   if (isOffline()) {
     return { items: filteredCached, fromCache: true, syncing: false };
@@ -56,7 +61,7 @@ export async function loadVisitsOfflineFirst(technicianName?: string, options?: 
   await cacheVisits(remote);
   await setMeta('visits-last-sync', new Date().toISOString());
   const filteredRemote = shouldFilterByTechnician
-    ? remote.filter((visit) => visit.technician_name?.trim().toLowerCase() === technicianName.trim().toLowerCase())
+    ? remote.filter((visit) => normalizeTechnicianName(visit.technician_name || '') === normalizedTechName)
     : remote;
   return {
     items: filteredRemote,
