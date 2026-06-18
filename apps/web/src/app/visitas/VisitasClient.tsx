@@ -89,18 +89,23 @@ export function VisitasClient({ initialNew }: { initialNew?: boolean }) {
 
   const loadData = useCallback(async () => {
     setLoading(true);
-    const options = userRole === 'tecnico' ? undefined : { allTechnicians: true };
-    const techFilter = userRole === 'tecnico' && userName ? userName : undefined;
-    const [visitsResult, users, pending] = await Promise.all([
-      loadVisitsOfflineFirst(techFilter, options),
-      userRole === 'gestor' ? fetchUsers() : Promise.resolve([]),
-      getPendingVisits(),
-    ]);
-    setVisits(visitsResult.items);
-    setTechList(users);
-    setPendingCount(pending.length);
-    setSyncingData(visitsResult.fromCache && !visitsResult.syncing && typeof navigator !== 'undefined' && navigator.onLine);
-    setLoading(false);
+    try {
+      const options = userRole === 'tecnico' ? undefined : { allTechnicians: true };
+      const techFilter = userRole === 'tecnico' && userName ? userName : undefined;
+      const [visitsResult, users, pending] = await Promise.all([
+        loadVisitsOfflineFirst(techFilter, options),
+        userRole === 'gestor' ? fetchUsers() : Promise.resolve([]),
+        getPendingVisits(),
+      ]);
+      setVisits(visitsResult.items);
+      setTechList(users);
+      setPendingCount(pending.length);
+      setSyncingData(visitsResult.fromCache && !visitsResult.syncing && typeof navigator !== 'undefined' && navigator.onLine);
+    } catch (err) {
+      console.error('Erro ao carregar visitas:', err);
+    } finally {
+      setLoading(false);
+    }
   }, [userRole, userName]);
 
   useEffect(() => {
