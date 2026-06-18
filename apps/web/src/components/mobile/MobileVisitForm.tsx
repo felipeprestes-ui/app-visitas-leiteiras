@@ -65,6 +65,8 @@ export function MobileVisitForm({ onSaved }: Props) {
       technician_name: session?.name || 'Gestor',
     });
 
+    console.log('Visita salva:', result);
+
     setSaving(false);
     setForm({
       ...initialForm,
