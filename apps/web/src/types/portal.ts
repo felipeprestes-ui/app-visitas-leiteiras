@@ -76,12 +76,10 @@ export type ServiceType =
   | 'Clarifide Go'
   | 'Curso IA'
   | 'Coleta Herd'
-  | 'DPS'
   | 'Entrega Herd'
   | 'Indicacao Touro'
   | 'Prospec'
   | 'Prospec Lagoa+'
-  | 'Silagem'
   | 'SireMatch'
   | 'Visita Lagoa+'
   | 'Venda Herd';
@@ -96,10 +94,8 @@ export const SERVICE_TYPES: ServiceType[] = [
   'Coleta Herd',
   'Entrega Herd',
   'Indicacao Touro',
-  'DPS',
   'Prospec',
   'Prospec Lagoa+',
-  'Silagem',
   'SireMatch',
   'Visita Lagoa+',
   'Venda Herd',
