@@ -74,6 +74,8 @@ export function VisitasClient({ initialNew }: { initialNew?: boolean }) {
   const [formError, setFormError] = useState('');
   const [pendingCount, setPendingCount] = useState(0);
   const [syncingData, setSyncingData] = useState(false);
+  const [loadError, setLoadError] = useState('');
+  const [debugInfo, setDebugInfo] = useState('');
 
   // CSV Import
   const [csvModalOpen, setCsvModalOpen] = useState(false);
@@ -89,9 +91,12 @@ export function VisitasClient({ initialNew }: { initialNew?: boolean }) {
 
   const loadData = useCallback(async () => {
     setLoading(true);
+    setLoadError('');
+    setDebugInfo('');
     try {
       const options = userRole === 'tecnico' ? undefined : { allTechnicians: true };
       const techFilter = userRole === 'tecnico' && userName ? userName : undefined;
+      setDebugInfo(`Filtro: ${techFilter || 'nenhum'} | Role: ${userRole}`);
       const [visitsResult, users, pending] = await Promise.all([
         loadVisitsOfflineFirst(techFilter, options),
         userRole === 'gestor' ? fetchUsers() : Promise.resolve([]),
@@ -101,8 +106,11 @@ export function VisitasClient({ initialNew }: { initialNew?: boolean }) {
       setTechList(users);
       setPendingCount(pending.length);
       setSyncingData(visitsResult.fromCache && !visitsResult.syncing && typeof navigator !== 'undefined' && navigator.onLine);
+      setDebugInfo((prev) => `${prev} | Visitas: ${visitsResult.items.length}`);
     } catch (err) {
-      console.error('Erro ao carregar visitas:', err);
+      const msg = err instanceof Error ? err.message : 'Erro desconhecido';
+      setLoadError(`Erro ao carregar: ${msg}`);
+      setDebugInfo((prev) => `${prev} | ERRO: ${msg}`);
     } finally {
       setLoading(false);
     }
@@ -376,6 +384,18 @@ export function VisitasClient({ initialNew }: { initialNew?: boolean }) {
           {filtered.length} visita{filtered.length !== 1 ? 's' : ''} encontrada{filtered.length !== 1 ? 's' : ''}
         </p>
       </div>
+
+      {loadError && (
+        <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          {loadError}
+        </div>
+      )}
+
+      {debugInfo && (
+        <div className="rounded-xl border border-blue-200 bg-blue-50 px-4 py-2 text-xs text-blue-700 font-mono">
+          DEBUG: {debugInfo}
+        </div>
+      )}
 
       {/* Table */}
       <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
