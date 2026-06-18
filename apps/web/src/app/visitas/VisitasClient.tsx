@@ -13,7 +13,7 @@ import { useAuth } from '@/hooks/useAuth';
 import type { Visit, TechUser } from '@/types/portal';
 import { AREAS, CLIENT_TYPES, SERVICE_TYPES, CONSULTORES, MONTHS } from '@/types/portal';
 import { getPendingVisits } from '@/lib/offline/storage';
-import { deleteVisitOfflineFirst, loadVisitsOfflineFirst, registerOnlineSync } from '@/lib/offline/sync';
+import { deleteVisitOfflineFirst, loadVisitsOfflineFirst, registerOnlineSync, saveVisitOfflineFirst } from '@/lib/offline/sync';
 
 const PAGE_SIZE = 50;
 
@@ -190,10 +190,10 @@ export function VisitasClient({ initialNew }: { initialNew?: boolean }) {
       herd_size: form.herd_size ? Number(form.herd_size) : null,
       deal_closed: Boolean(form.deal_closed),
     };
-    const res = await upsertVisit(payload);
+    const res = await saveVisitOfflineFirst(payload);
     setSaving(false);
     if (!res.ok) {
-      setFormError(res.error || 'Erro ao salvar');
+      setFormError('Erro ao salvar');
       return;
     }
     setModalOpen(false);
