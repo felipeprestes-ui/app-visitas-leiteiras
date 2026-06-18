@@ -92,6 +92,13 @@ export function VisitasClient({ initialNew }: { initialNew?: boolean }) {
     return registerOnlineSync(loadData);
   }, [loadData]);
 
+  // Escuta evento de nova visita salva
+  useEffect(() => {
+    const handler = () => loadData();
+    window.addEventListener('visit-saved', handler);
+    return () => window.removeEventListener('visit-saved', handler);
+  }, [loadData]);
+
   // Apply filters
   useEffect(() => {
     let list = [...visits];

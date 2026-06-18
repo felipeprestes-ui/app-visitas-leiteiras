@@ -75,6 +75,11 @@ export function MobileVisitForm({ onSaved }: Props) {
     });
     setMessage(result.offline ? 'Visita salva offline e pendente de sincronização.' : 'Visita salva e sincronizada com sucesso.');
     onSaved?.({ offline: result.offline });
+    
+    // Força recarregamento da página de visitas
+    if (!result.offline) {
+      window.dispatchEvent(new CustomEvent('visit-saved'));
+    }
   }
 
   return (
