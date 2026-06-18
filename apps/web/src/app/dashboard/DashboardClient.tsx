@@ -8,7 +8,7 @@ import {
 } from 'recharts';
 import {
   MapPin, TrendingUp, Users, CheckCircle2, Target, Activity,
-  Plus, FileText, RefreshCw, CalendarDays, Wifi
+  Plus, FileText, RefreshCw, CalendarDays, Wifi, X
 } from 'lucide-react';
 import Link from 'next/link';
 import { fetchVisits, fetchSales, fetchUsers } from '@/lib/supabase';
@@ -33,6 +33,7 @@ export function DashboardClient() {
   const [techCount, setTechCount] = useState(0);
   const [chartData, setChartData] = useState<MonthlyChartData[]>([]);
   const [lastSync, setLastSync] = useState<string>('');
+  const [showClosedModal, setShowClosedModal] = useState(false);
   
   const session = getSession();
   const userRole = session?.role || 'tecnico';
@@ -162,7 +163,7 @@ export function DashboardClient() {
       {/* KPI Grid */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
         <KpiCard title="Visitas no Mês" value={totalVisits} icon={MapPin} accent="primary" />
-        <KpiCard title="Negócios Fechados" value={closedDeals} icon={CheckCircle2} accent="green" />
+        <KpiCard title="Negócios Fechados" value={closedDeals} icon={CheckCircle2} accent="green" onClick={() => setShowClosedModal(true)} />
         <KpiCard title="Taxa Conversão" value={`${convRate}%`} icon={Activity} accent="primary" />
         <KpiCard title="Doses Novas" value={dosesNovos} icon={TrendingUp} accent="gold" />
         <KpiCard title="Doses Ativas" value={dosesAtivos} icon={TrendingUp} accent="primary" />
@@ -217,6 +218,42 @@ export function DashboardClient() {
               />
             </AreaChart>
           </ResponsiveContainer>
+        </div>
+      )}
+
+      {/* Modal Negocios Fechados */}
+      {showClosedModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={() => setShowClosedModal(false)}>
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl max-h-[80vh] flex flex-col" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between px-5 py-4 border-b border-gray-200">
+              <h2 className="text-lg font-bold text-gray-800">Negocios Fechados</h2>
+              <button onClick={() => setShowClosedModal(false)} className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-700 transition-colors">
+                <X size={20} />
+              </button>
+            </div>
+            <div className="overflow-y-auto p-5">
+              {visits.filter((v) => v.deal_closed).length === 0 ? (
+                <p className="text-center text-gray-500 py-8">Nenhum negocio fechado neste mes.</p>
+              ) : (
+                <div className="space-y-3">
+                  {visits.filter((v) => v.deal_closed).map((v) => (
+                    <div key={v.id} className="bg-emerald-50 border border-emerald-200 rounded-lg px-4 py-3">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="font-semibold text-gray-800">{v.client_name}</p>
+                          <p className="text-sm text-gray-600">{v.technician_name} &middot; {v.city || 'Sem cidade'}</p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-sm font-medium text-emerald-700">{format(new Date(v.date), 'dd/MM/yyyy')}</p>
+                          <p className="text-xs text-gray-500">{v.service_type}</p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       )}
     </div>

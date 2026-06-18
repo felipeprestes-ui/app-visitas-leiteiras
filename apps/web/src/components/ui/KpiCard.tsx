@@ -6,6 +6,7 @@ interface KpiCardProps {
   sub?: string;
   icon: LucideIcon;
   accent?: 'primary' | 'gold' | 'green' | 'red';
+  onClick?: () => void;
 }
 
 const accentMap = {
@@ -15,9 +16,12 @@ const accentMap = {
   red: 'bg-red-500 text-white',
 };
 
-export function KpiCard({ title, value, sub, icon: Icon, accent = 'primary' }: KpiCardProps) {
+export function KpiCard({ title, value, sub, icon: Icon, accent = 'primary', onClick }: KpiCardProps) {
   return (
-    <div className="bg-white rounded-xl border border-gray-200 p-4 flex items-start gap-4 shadow-sm hover:shadow-md transition-shadow">
+    <div
+      className={`bg-white rounded-xl border border-gray-200 p-4 flex items-start gap-4 shadow-sm hover:shadow-md transition-shadow ${onClick ? 'cursor-pointer hover:border-primary' : ''}`}
+      onClick={onClick}
+    >
       <div className={`rounded-lg p-2.5 flex-shrink-0 ${accentMap[accent]}`}>
         <Icon size={20} />
       </div>
