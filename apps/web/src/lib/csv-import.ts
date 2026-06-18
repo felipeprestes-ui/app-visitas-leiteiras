@@ -129,7 +129,13 @@ function parseLine(
   return { visit };
 }
 
-function splitCSVLine(line: string): string[] {
+function detectDelimiter(firstLine: string): string {
+  const commaCount = (firstLine.match(/,/g) || []).length;
+  const semicolonCount = (firstLine.match(/;/g) || []).length;
+  return semicolonCount > commaCount ? ';' : ',';
+}
+
+function splitCSVLine(line: string, delimiter: string): string[] {
   const result: string[] = [];
   let cur = '';
   let inQuotes = false;
@@ -137,7 +143,7 @@ function splitCSVLine(line: string): string[] {
     const ch = line[i];
     if (ch === '"') {
       inQuotes = !inQuotes;
-    } else if (ch === ',' && !inQuotes) {
+    } else if (ch === delimiter && !inQuotes) {
       result.push(cur.trim());
       cur = '';
     } else {
@@ -153,13 +159,14 @@ export function parseCSVContent(content: string): CSVParseResult {
   if (lines.length < 2)
     return { visits: [], errors: [{ line: 0, message: 'Arquivo CSV vazio ou sem dados', raw: {} }] };
 
-  const header = splitCSVLine(lines[0]);
+  const delimiter = detectDelimiter(lines[0]);
+  const header = splitCSVLine(lines[0], delimiter);
   const colMap = parseHeader(header);
   const visits: Partial<Visit>[] = [];
   const errors: CSVError[] = [];
 
   for (let i = 1; i < lines.length; i++) {
-    const row = splitCSVLine(lines[i]);
+    const row = splitCSVLine(lines[i], delimiter);
     if (row.every((c) => c.trim() === '')) continue;
     const res = parseLine(row, colMap, i + 1);
     if (res.visit) visits.push(res.visit);
