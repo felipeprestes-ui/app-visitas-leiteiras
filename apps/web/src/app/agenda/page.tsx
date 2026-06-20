@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useMemo, useState } from 'react';
 import { format } from 'date-fns';
@@ -10,10 +10,34 @@ import { useAuth } from '@/hooks/useAuth';
 import { getPendingSchedule } from '@/lib/offline/storage';
 import { deleteScheduleOfflineFirst, getLastSync, loadClientsOfflineFirst, loadScheduleOfflineFirst, loadTechniciansOfflineFirst, registerOnlineSync, saveScheduleOfflineFirst } from '@/lib/offline/sync';
 import type { ClientRecord, ScheduleItem, TechUser } from '@/types/portal';
-import { AREAS, SERVICE_TYPES } from '@/types/portal';
+import { AREAS, CONSULTORES } from '@/types/portal';
 
 function normalizeTechnicianName(name: string) {
   return name.trim().replace(/\s+/g, ' ').toLowerCase();
+}
+
+function normalizeText(value: string) {
+  return value
+    .trim()
+    .replace(/\s+/g, ' ')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '');
+}
+
+function toDateTimeLocalValue(value?: string | null) {
+  if (!value) return '';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value.slice(0, 16);
+  const timezoneOffset = date.getTimezoneOffset() * 60_000;
+  return new Date(date.getTime() - timezoneOffset).toISOString().slice(0, 16);
+}
+
+function toIsoDateTime(value: string) {
+  const normalized = value?.trim();
+  if (!normalized) return '';
+  const date = new Date(normalized);
+  if (Number.isNaN(date.getTime())) return '';
+  return date.toISOString();
 }
 
 export default function AgendaPage() {
@@ -30,13 +54,15 @@ export default function AgendaPage() {
   const [modalOpen, setModalOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
   const [editTarget, setEditTarget] = useState<ScheduleItem | null>(null);
   const [form, setForm] = useState<Partial<ScheduleItem>>({
     technician_name: '',
-    title: '',
     property_name: '',
     scheduled_date: '',
     area: '',
+    consultant: '',
+    city: '',
     notes: '',
   });
 
@@ -47,17 +73,19 @@ export default function AgendaPage() {
       id: target.id,
       local_id: target.local_id,
       technician_name: target.technician_name,
-      title: target.title,
       property_name: target.property_name,
-      scheduled_date: target.scheduled_date ? target.scheduled_date.slice(0, 16) : '',
+      scheduled_date: toDateTimeLocalValue(target.scheduled_date),
       area: target.area,
+      consultant: target.consultant || '',
+      city: target.city || '',
       notes: target.notes,
     } : {
       technician_name: isTechnician ? session?.name || '' : '',
-      title: '',
       property_name: '',
       scheduled_date: '',
       area: '',
+      consultant: '',
+      city: '',
       notes: '',
     });
     setError('');
@@ -117,16 +145,10 @@ export default function AgendaPage() {
       const normalized = normalizeTechnicianName(label);
       if (!map.has(normalized)) map.set(normalized, label);
     }
-    for (const item of items) {
-      const label = item.technician_name?.trim();
-      if (!label) continue;
-      const normalized = normalizeTechnicianName(label);
-      if (!map.has(normalized)) map.set(normalized, label);
-    }
     return Array.from(map.entries())
       .sort((a, b) => (a[1] || '').localeCompare(b[1] || '', 'pt-BR'))
       .map(([value, label]) => ({ value, label }));
-  }, [items, technicians]);
+  }, [technicians]);
 
   const clientOptions = useMemo(() => {
     return [...clients]
@@ -134,6 +156,10 @@ export default function AgendaPage() {
       .sort((a, b) => (a.name || '').localeCompare(b.name || '', 'pt-BR'))
       .map((client) => ({ value: client.name, label: client.name, area: client.area || '' }));
   }, [clients]);
+
+  const filteredGroups = useMemo(() => {
+    return Object.entries(grouped).filter(([, dayItems]) => dayItems.length > 0);
+  }, [grouped]);
 
   async function reload() {
     const techFilter = session?.role === 'tecnico' && session?.name ? session.name : undefined;
@@ -152,26 +178,47 @@ export default function AgendaPage() {
   function openNew() {
     setEditTarget(null);
     resetForm(null);
+    setSuccessMessage('');
     setModalOpen(true);
   }
 
   function openEdit(item: ScheduleItem) {
     setEditTarget(item);
     resetForm(item);
+    setSuccessMessage('');
     setModalOpen(true);
   }
 
   async function handleSave() {
-    if (!form.technician_name || !form.title || !form.property_name || !form.scheduled_date) {
-      setError('Preencha técnico, título, propriedade e data.');
+    const technicianName = normalizeText(String(form.technician_name || ''));
+    const propertyName = normalizeText(String(form.property_name || ''));
+    const scheduledDate = toIsoDateTime(String(form.scheduled_date || ''));
+    const area = String(form.area || '').trim();
+    const consultant = String(form.consultant || '').trim();
+    const city = String(form.city || '').trim();
+
+    if (!technicianName || !propertyName || !scheduledDate || !area) {
+      setError('Preencha técnico, propriedade, área e data.');
       return;
     }
+
+    if (!AREAS.includes(area as (typeof AREAS)[number])) {
+      setError('Selecione uma área válida.');
+      return;
+    }
+
     setSaving(true);
     setError('');
+    setSuccessMessage('');
     const payload: Partial<ScheduleItem> = {
       ...form,
-      area: form.area ? String(form.area).trim().padStart(3, '0') : '',
-      scheduled_date: form.scheduled_date?.includes('T') ? form.scheduled_date : `${form.scheduled_date}:00`,
+      technician_name: technicianName,
+      property_name: propertyName,
+      area,
+      consultant,
+      city,
+      scheduled_date: scheduledDate,
+      notes: String(form.notes || '').trim(),
     };
     const result = await saveScheduleOfflineFirst(payload);
     setSaving(false);
@@ -180,17 +227,19 @@ export default function AgendaPage() {
       return;
     }
     setModalOpen(false);
+    setSuccessMessage(result.offline ? 'Agendamento salvo offline e pendente de sincronização.' : 'Agendamento salvo com sucesso.');
     await reload();
   }
 
   async function handleDelete(item: ScheduleItem) {
-    const confirmed = typeof window === 'undefined' ? true : window.confirm(`Excluir agendamento de ${item.property_name || item.title}?`);
+    const confirmed = typeof window === 'undefined' ? true : window.confirm(`Excluir agendamento de ${item.property_name}?`);
     if (!confirmed) return;
     const result = await deleteScheduleOfflineFirst(item);
     if (!result.ok) {
       setError(result.error || 'Erro ao excluir agendamento.');
       return;
     }
+    setSuccessMessage('Agendamento excluído com sucesso.');
     await reload();
   }
 
@@ -234,16 +283,21 @@ export default function AgendaPage() {
 
         <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
           {error && <p className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</p>}
+          {successMessage && <p className="mb-4 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">{successMessage}</p>}
           {syncingData && <p className="mb-4 text-sm text-blue-700">Sincronizando dados...</p>}
           {loading ? (
             <p className="text-sm text-gray-500">Carregando agenda...</p>
-          ) : items.length === 0 ? (
+          ) : filteredGroups.length === 0 ? (
             <div className="rounded-xl border border-dashed border-gray-300 bg-gray-50 px-4 py-8 text-center text-sm text-gray-500">
-              {fromCache ? 'Nenhum agendamento encontrado no cache local.' : 'Nenhum agendamento encontrado no Supabase.'}
+              {filterTech
+                ? 'Nenhum agendamento encontrado para o técnico selecionado.'
+                : fromCache
+                  ? 'Nenhum agendamento encontrado no cache local.'
+                  : 'Nenhum agendamento encontrado no Supabase.'}
             </div>
           ) : (
             <div className="space-y-5">
-              {Object.entries(grouped).map(([date, dayItems]) => (
+              {filteredGroups.map(([date, dayItems]) => (
                 <section key={date} className="space-y-3">
                   <div>
                     <h2 className="text-sm font-semibold uppercase tracking-wide text-primary">
@@ -255,9 +309,10 @@ export default function AgendaPage() {
                       <article key={item.id} className="rounded-xl border border-gray-200 bg-gray-50 p-4">
                         <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
                           <div>
-                            <h3 className="text-base font-semibold text-gray-800">{item.title}</h3>
-                            <p className="text-sm text-gray-600">{item.property_name || 'Propriedade não informada'}</p>
-                            <p className="text-sm text-gray-500">{item.technician_name || 'Técnico não informado'}</p>
+                            <h3 className="text-base font-semibold text-gray-800">{item.property_name || 'Propriedade não informada'}</h3>
+                            <p className="text-sm text-gray-600">{item.technician_name || 'Técnico não informado'}</p>
+                            {item.consultant && <p className="text-sm text-gray-500">{item.consultant}</p>}
+                            {item.city && <p className="text-sm text-gray-500">{item.city}</p>}
                           </div>
                           <div className="flex items-center gap-2">
                             <span className="rounded-full bg-primary-light px-3 py-1 text-xs font-semibold text-primary">
@@ -290,12 +345,18 @@ export default function AgendaPage() {
         {modalOpen && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
             <div className="w-full max-w-2xl rounded-2xl bg-white p-6 shadow-2xl">
+              <form
+                onSubmit={(event) => {
+                  event.preventDefault();
+                  void handleSave();
+                }}
+              >
               <div className="mb-4 flex items-start justify-between gap-4">
                 <div>
                   <h2 className="text-xl font-bold text-gray-800">{editTarget ? 'Editar agendamento' : 'Novo agendamento'}</h2>
                   <p className="text-sm text-gray-500">Salva localmente offline e sincroniza com o Supabase quando houver conexão.</p>
                 </div>
-                <button onClick={() => setModalOpen(false)} className="rounded-lg border border-gray-200 px-3 py-1 text-sm text-gray-600 hover:bg-gray-50">Fechar</button>
+                <button type="button" onClick={() => setModalOpen(false)} className="rounded-lg border border-gray-200 px-3 py-1 text-sm text-gray-600 hover:bg-gray-50">Fechar</button>
               </div>
 
               <div className="grid gap-4 sm:grid-cols-2">
@@ -315,17 +376,27 @@ export default function AgendaPage() {
                 </label>
 
                 <label className="space-y-1 text-sm text-gray-700">
-                  <span>Título</span>
+                  <span>Consultor</span>
                   <select
-                    value={form.title || ''}
-                    onChange={(event) => setForm((current) => ({ ...current, title: event.target.value }))}
+                    value={form.consultant || ''}
+                    onChange={(event) => setForm((current) => ({ ...current, consultant: event.target.value }))}
                     className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
                   >
                     <option value="">Selecione</option>
-                    {SERVICE_TYPES.map((service) => (
-                      <option key={service} value={service}>{service}</option>
+                    {(form.area ? (CONSULTORES[form.area] || []) : []).map((c) => (
+                      <option key={c} value={c}>{c}</option>
                     ))}
                   </select>
+                </label>
+
+                <label className="space-y-1 text-sm text-gray-700">
+                  <span>Cidade</span>
+                  <input
+                    value={form.city || ''}
+                    onChange={(event) => setForm((current) => ({ ...current, city: event.target.value }))}
+                    className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
+                    placeholder="Nome da cidade"
+                  />
                 </label>
 
                 <label className="space-y-1 text-sm text-gray-700">
@@ -335,8 +406,13 @@ export default function AgendaPage() {
                     value={form.property_name || ''}
                     onChange={(event) => {
                       const value = event.target.value;
-                      const matched = clientOptions.find((client) => client.value === value);
-                      setForm((current) => ({ ...current, property_name: value, area: current.area || matched?.area || '' }));
+                      const normalizedValue = normalizeText(value).toLowerCase();
+                      const matched = clientOptions.find((client) => normalizeText(client.value).toLowerCase() === normalizedValue);
+                      setForm((current) => ({
+                        ...current,
+                        property_name: value,
+                        area: matched?.area || '',
+                      }));
                     }}
                     className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
                     placeholder="Nome da propriedade"
@@ -387,13 +463,14 @@ export default function AgendaPage() {
               {error && <p className="mt-4 text-sm text-red-600">{error}</p>}
 
               <div className="mt-6 flex justify-end gap-3">
-                <button onClick={() => setModalOpen(false)} className="rounded-xl border border-gray-300 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50">
+                <button type="button" onClick={() => setModalOpen(false)} className="rounded-xl border border-gray-300 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50">
                   Cancelar
                 </button>
-                <button onClick={handleSave} disabled={saving} className="rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-white hover:opacity-95 disabled:opacity-60">
+                <button type="submit" disabled={saving} className="rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-white hover:opacity-95 disabled:opacity-60">
                   {saving ? 'Salvando...' : 'Salvar agendamento'}
                 </button>
               </div>
+              </form>
             </div>
           </div>
         )}
@@ -401,3 +478,6 @@ export default function AgendaPage() {
     </AppShell>
   );
 }
+
+
+

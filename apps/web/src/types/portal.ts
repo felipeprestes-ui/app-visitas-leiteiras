@@ -64,10 +64,12 @@ export interface GestorSession {
 export interface ScheduleItem {
   id: string;
   technician_name: string;
-  title: string;
+  title?: string;
   property_name: string;
   scheduled_date: string;
   area: string;
+  consultant?: string;
+  city?: string;
   notes: string;
   pending_sync?: boolean;
   sync_error?: string | null;
