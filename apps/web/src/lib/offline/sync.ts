@@ -281,11 +281,12 @@ export async function loadTechniciansOfflineFirst(): Promise<OfflineFirstResult<
     return { items: cached, fromCache: true, syncing: false };
   }
 
-  const remote = await fetchUsers({ role: 'eq.tecnico' });
-  if (remote.length > 0) {
-    await cacheTechnicians(remote);
+  const remote = await fetchUsers();
+  const techs = remote.filter((u) => u.role === 'tecnico');
+  if (techs.length > 0) {
+    await cacheTechnicians(techs);
     await setMeta('technicians-last-sync', new Date().toISOString());
-    return { items: remote, fromCache: false, syncing: false };
+    return { items: techs, fromCache: false, syncing: false };
   }
 
   return { items: cached, fromCache: true, syncing: false };

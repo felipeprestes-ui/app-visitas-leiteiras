@@ -96,24 +96,30 @@ export default function AgendaPage() {
 
     async function load() {
       setLoading(true);
-      const techFilter = session?.role === 'tecnico' && session?.name ? session.name : undefined;
-      const [scheduleResult, pending, syncAt, techniciansResult, clientsResult] = await Promise.all([
-        loadScheduleOfflineFirst(techFilter),
-        getPendingSchedule(),
-        getLastSync('schedule'),
-        loadTechniciansOfflineFirst(),
-        loadClientsOfflineFirst(),
-      ]);
+      try {
+        const techFilter = session?.role === 'tecnico' && session?.name ? session.name : undefined;
+        const [scheduleResult, pending, syncAt, techniciansResult, clientsResult] = await Promise.all([
+          loadScheduleOfflineFirst(techFilter),
+          getPendingSchedule(),
+          getLastSync('schedule'),
+          loadTechniciansOfflineFirst().catch(() => ({ items: [] as TechUser[], fromCache: true, syncing: false })),
+          loadClientsOfflineFirst().catch(() => ({ items: [] as ClientRecord[], fromCache: true, syncing: false })),
+        ]);
 
-      if (!active) return;
-      setItems(scheduleResult.items);
-      setFromCache(scheduleResult.fromCache);
-      setSyncingData(scheduleResult.fromCache && typeof navigator !== 'undefined' && navigator.onLine);
-      setPendingCount(pending.length);
-      setLastSync(syncAt);
-      setTechnicians(techniciansResult.items);
-      setClients(clientsResult.items);
-      setLoading(false);
+        if (!active) return;
+        setItems(scheduleResult.items);
+        setFromCache(scheduleResult.fromCache);
+        setSyncingData(scheduleResult.fromCache && typeof navigator !== 'undefined' && navigator.onLine);
+        setPendingCount(pending.length);
+        setLastSync(syncAt);
+        setTechnicians(techniciansResult.items);
+        setClients(clientsResult.items);
+      } catch (err) {
+        console.error('Agenda load error:', err);
+        if (active) setError('Erro ao carregar agenda.');
+      } finally {
+        if (active) setLoading(false);
+      }
     }
 
     load();
@@ -366,11 +372,25 @@ export default function AgendaPage() {
                     value={form.technician_name || ''}
                     disabled={isTechnician}
                     onChange={(event) => setForm((current) => ({ ...current, technician_name: event.target.value }))}
-                    className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
+                    className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary disabled:bg-gray-100"
                   >
                     <option value="">Selecione</option>
                     {technicianOptions.map((option) => (
                       <option key={option.value} value={option.label}>{option.label}</option>
+                    ))}
+                  </select>
+                </label>
+
+                <label className="space-y-1 text-sm text-gray-700">
+                  <span>Área</span>
+                  <select
+                    value={form.area || ''}
+                    onChange={(event) => setForm((current) => ({ ...current, area: event.target.value, consultant: '' }))}
+                    className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
+                  >
+                    <option value="">Selecione</option>
+                    {AREAS.map((area) => (
+                      <option key={area} value={area}>{area}</option>
                     ))}
                   </select>
                 </label>
@@ -390,16 +410,6 @@ export default function AgendaPage() {
                 </label>
 
                 <label className="space-y-1 text-sm text-gray-700">
-                  <span>Cidade</span>
-                  <input
-                    value={form.city || ''}
-                    onChange={(event) => setForm((current) => ({ ...current, city: event.target.value }))}
-                    className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
-                    placeholder="Nome da cidade"
-                  />
-                </label>
-
-                <label className="space-y-1 text-sm text-gray-700">
                   <span>Propriedade / cliente</span>
                   <input
                     list="agenda-client-options"
@@ -411,7 +421,7 @@ export default function AgendaPage() {
                       setForm((current) => ({
                         ...current,
                         property_name: value,
-                        area: matched?.area || '',
+                        ...(matched?.area ? { area: matched.area } : {}),
                       }));
                     }}
                     className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
@@ -425,6 +435,16 @@ export default function AgendaPage() {
                 </label>
 
                 <label className="space-y-1 text-sm text-gray-700">
+                  <span>Cidade</span>
+                  <input
+                    value={form.city || ''}
+                    onChange={(event) => setForm((current) => ({ ...current, city: event.target.value }))}
+                    className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
+                    placeholder="Nome da cidade"
+                  />
+                </label>
+
+                <label className="space-y-1 text-sm text-gray-700">
                   <span>Data e hora</span>
                   <input
                     type="datetime-local"
@@ -434,26 +454,12 @@ export default function AgendaPage() {
                   />
                 </label>
 
-                <label className="space-y-1 text-sm text-gray-700">
-                  <span>Área</span>
-                  <select
-                    value={form.area || ''}
-                    onChange={(event) => setForm((current) => ({ ...current, area: event.target.value }))}
-                    className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
-                  >
-                    <option value="">Selecione</option>
-                    {AREAS.map((area) => (
-                      <option key={area} value={area}>{area}</option>
-                    ))}
-                  </select>
-                </label>
-
                 <label className="space-y-1 text-sm text-gray-700 sm:col-span-2">
                   <span>Observações</span>
                   <textarea
                     value={form.notes || ''}
                     onChange={(event) => setForm((current) => ({ ...current, notes: event.target.value }))}
-                    rows={4}
+                    rows={3}
                     className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
                     placeholder="Detalhes do agendamento"
                   />
