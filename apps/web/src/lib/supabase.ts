@@ -241,6 +241,8 @@ export async function fetchSchedule(params: Record<string, string> = {}): Promis
         property_name: String(item.property_name || item.client_name || item.clientName || ''),
         scheduled_date: String(item.scheduled_date || item.date || item.visit_date || item.visited_at || ''),
         area: String(item.area || item.areas || '').trim().padStart(3, '0'),
+        consultant: String(item.consultant || ''),
+        city: String(item.city || ''),
         notes: String(item.notes || ''),
         local_id: item.local_id ? String(item.local_id) : null,
         pending_sync: false,
@@ -257,19 +259,18 @@ export async function upsertSchedule(payload: Partial<ScheduleItem>): Promise<Ap
   const path = payload.id ? `/Schedule?id=eq.${payload.id}` : '/Schedule';
   const body = { ...payload };
   if (method === 'POST') delete body.id;
-  // Only send fields that exist in the Supabase Schedule table
+  // Map app fields to actual Supabase Schedule table columns
   const mapped: Record<string, unknown> = {
     technician_name: body.technician_name,
-    property_name: body.property_name,
+    client_name: body.property_name,
     scheduled_date: body.scheduled_date,
     area: body.area,
     notes: body.notes,
+    local_id: body.local_id,
   };
-  // Optional fields - only include if they have values
-  if (body.title) mapped.title = body.title;
-  if (body.local_id) mapped.local_id = body.local_id;
   if (body.consultant) mapped.consultant = body.consultant;
-  if (body.city) mapped.city = body.city;
+  if (body.service_type) mapped.service_type = body.service_type;
+  if (body.client_type) mapped.client_type = body.client_type;
   return supabaseFetch<ScheduleItem>(path, {
     method,
     headers: { Prefer: 'return=representation' },

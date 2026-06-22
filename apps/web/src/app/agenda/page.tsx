@@ -99,9 +99,9 @@ export default function AgendaPage() {
       try {
         const techFilter = session?.role === 'tecnico' && session?.name ? session.name : undefined;
         const [scheduleResult, pending, syncAt, techniciansResult, clientsResult] = await Promise.all([
-          loadScheduleOfflineFirst(techFilter),
-          getPendingSchedule(),
-          getLastSync('schedule'),
+          loadScheduleOfflineFirst(techFilter).catch(() => ({ items: [] as ScheduleItem[], fromCache: true, syncing: false })),
+          getPendingSchedule().catch(() => [] as ScheduleItem[]),
+          getLastSync('schedule').catch(() => null),
           loadTechniciansOfflineFirst().catch(() => ({ items: [] as TechUser[], fromCache: true, syncing: false })),
           loadClientsOfflineFirst().catch(() => ({ items: [] as ClientRecord[], fromCache: true, syncing: false })),
         ]);
