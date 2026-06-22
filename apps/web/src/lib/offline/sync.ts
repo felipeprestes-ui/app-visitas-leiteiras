@@ -60,7 +60,10 @@ export async function loadVisitsOfflineFirst(technicianName?: string, options?: 
   const shouldFilterByTechnician = Boolean(technicianName && !options?.allTechnicians);
   const normalizedTechName = shouldFilterByTechnician ? normalizeTechnicianName(technicianName) : null;
   const filteredCached = shouldFilterByTechnician
-    ? cached.filter((visit) => normalizeTechnicianName(visit.technician_name || '') === normalizedTechName)
+    ? cached.filter((visit) => {
+        const visitName = normalizeTechnicianName(visit.technician_name || '');
+        return visitName === normalizedTechName || normalizedTechName!.startsWith(visitName) || visitName.startsWith(normalizedTechName!);
+      })
     : cached;
   if (isOffline()) {
     return { items: filteredCached, fromCache: true, syncing: false };
@@ -72,7 +75,10 @@ export async function loadVisitsOfflineFirst(technicianName?: string, options?: 
   await cacheVisits(remote);
   await setMeta('visits-last-sync', new Date().toISOString());
   const filteredRemote = shouldFilterByTechnician
-    ? remote.filter((visit) => normalizeTechnicianName(visit.technician_name || '') === normalizedTechName)
+    ? remote.filter((visit) => {
+        const visitName = normalizeTechnicianName(visit.technician_name || '');
+        return visitName === normalizedTechName || normalizedTechName!.startsWith(visitName) || visitName.startsWith(normalizedTechName!);
+      })
     : remote;
   return {
     items: filteredRemote,
@@ -171,10 +177,16 @@ export async function syncPendingVisits(): Promise<SyncResult> {
 }
 
 export async function loadScheduleOfflineFirst(technicianName?: string): Promise<OfflineFirstResult<ScheduleItem>> {
+  function matchesTech(itemName?: string | null) {
+    if (!technicianName || !itemName) return !technicianName;
+    const a = itemName.trim().toLowerCase();
+    const b = technicianName.trim().toLowerCase();
+    return a === b || a.startsWith(b) || b.startsWith(a);
+  }
   const cached = await getCachedSchedule();
   if (isOffline()) {
     return {
-      items: technicianName ? cached.filter((item) => item.technician_name?.trim().toLowerCase() === technicianName.trim().toLowerCase()) : cached,
+      items: technicianName ? cached.filter((item) => matchesTech(item.technician_name)) : cached,
       fromCache: true,
       syncing: false,
     };
@@ -185,7 +197,7 @@ export async function loadScheduleOfflineFirst(technicianName?: string): Promise
   await setMeta('schedule-last-sync', new Date().toISOString());
   return {
     items: technicianName
-      ? remote.filter((item) => item.technician_name?.trim().toLowerCase() === technicianName.trim().toLowerCase())
+      ? remote.filter((item) => matchesTech(item.technician_name))
       : remote,
     fromCache: false,
     syncing: false,

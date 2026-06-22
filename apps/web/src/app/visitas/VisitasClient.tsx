@@ -137,7 +137,10 @@ export function VisitasClient({ initialNew }: { initialNew?: boolean }) {
       });
     }
     if (filterTech) {
-      list = list.filter((v) => normalizeTechnicianName(v.technician_name || '') === filterTech);
+      list = list.filter((v) => {
+        const vn = normalizeTechnicianName(v.technician_name || '');
+        return vn === filterTech || vn.startsWith(filterTech) || filterTech.startsWith(vn);
+      });
     }
     if (searchClient) {
       const q = searchClient.toLowerCase();
@@ -151,7 +154,7 @@ export function VisitasClient({ initialNew }: { initialNew?: boolean }) {
   const pageData = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   const techNames = Array.from(
-    [...visits.map((v) => v.technician_name), ...techList.map((t) => t.name)].reduce((map, name) => {
+    (techList.length > 0 ? techList.map((t) => t.name) : visits.map((v) => v.technician_name)).reduce((map, name) => {
       const label = name?.trim();
       if (!label) return map;
       const normalized = normalizeTechnicianName(label);
@@ -388,12 +391,6 @@ export function VisitasClient({ initialNew }: { initialNew?: boolean }) {
       {loadError && (
         <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
           {loadError}
-        </div>
-      )}
-
-      {debugInfo && (
-        <div className="rounded-xl border border-blue-200 bg-blue-50 px-4 py-2 text-xs text-blue-700 font-mono">
-          DEBUG: {debugInfo}
         </div>
       )}
 
