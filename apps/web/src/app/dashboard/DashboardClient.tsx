@@ -49,8 +49,7 @@ export function DashboardClient() {
     try {
       // Se for técnico, filtra apenas as próprias visitas
       const visitParams: Record<string, string> = { 
-        'date': `gte.${monthStart}`, 
-        'date_2': `lte.${monthEnd}` 
+        'and': `(date.gte.${monthStart},date.lte.${monthEnd})`,
       };
       
       if (userRole === 'tecnico' && userName) {
@@ -59,8 +58,8 @@ export function DashboardClient() {
       
       const [visitsMonth, allSales, users] = await Promise.all([
         fetchVisits(visitParams),
-        userRole === 'gestor' ? fetchSales({ 'month': `eq.${currentMonth}` }) : Promise.resolve([]),
-        userRole === 'gestor' ? fetchUsers({ 'role': 'eq.tecnico' }) : Promise.resolve([]),
+        userRole === 'gestor' ? fetchSales({ 'month': `eq.${currentMonth}` }).catch(() => []) : Promise.resolve([]),
+        userRole === 'gestor' ? fetchUsers().then(all => all.filter(u => u.role === 'tecnico')).catch(() => []) : Promise.resolve([]),
       ]);
       
       setVisits(visitsMonth);

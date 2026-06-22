@@ -257,15 +257,19 @@ export async function upsertSchedule(payload: Partial<ScheduleItem>): Promise<Ap
   const path = payload.id ? `/Schedule?id=eq.${payload.id}` : '/Schedule';
   const body = { ...payload };
   if (method === 'POST') delete body.id;
+  // Only send fields that exist in the Supabase Schedule table
   const mapped: Record<string, unknown> = {
     technician_name: body.technician_name,
-    title: body.title,
     property_name: body.property_name,
     scheduled_date: body.scheduled_date,
     area: body.area,
     notes: body.notes,
-    local_id: body.local_id,
   };
+  // Optional fields - only include if they have values
+  if (body.title) mapped.title = body.title;
+  if (body.local_id) mapped.local_id = body.local_id;
+  if (body.consultant) mapped.consultant = body.consultant;
+  if (body.city) mapped.city = body.city;
   return supabaseFetch<ScheduleItem>(path, {
     method,
     headers: { Prefer: 'return=representation' },

@@ -216,25 +216,31 @@ export default function AgendaPage() {
     setSaving(true);
     setError('');
     setSuccessMessage('');
-    const payload: Partial<ScheduleItem> = {
-      ...form,
-      technician_name: technicianName,
-      property_name: propertyName,
-      area,
-      consultant,
-      city,
-      scheduled_date: scheduledDate,
-      notes: String(form.notes || '').trim(),
-    };
-    const result = await saveScheduleOfflineFirst(payload);
-    setSaving(false);
-    if (!result.ok) {
-      setError('Erro ao salvar agendamento.');
-      return;
+    try {
+      const payload: Partial<ScheduleItem> = {
+        ...form,
+        technician_name: technicianName,
+        property_name: propertyName,
+        area,
+        consultant,
+        city,
+        scheduled_date: scheduledDate,
+        notes: String(form.notes || '').trim(),
+      };
+      const result = await saveScheduleOfflineFirst(payload);
+      setSaving(false);
+      if (!result.ok) {
+        setError('Erro ao salvar agendamento.');
+        return;
+      }
+      setModalOpen(false);
+      setSuccessMessage(result.offline ? 'Agendamento salvo offline e pendente de sincronização.' : 'Agendamento salvo com sucesso.');
+      await reload();
+    } catch (err) {
+      console.error('Save schedule error:', err);
+      setSaving(false);
+      setError('Erro inesperado ao salvar. Tente novamente.');
     }
-    setModalOpen(false);
-    setSuccessMessage(result.offline ? 'Agendamento salvo offline e pendente de sincronização.' : 'Agendamento salvo com sucesso.');
-    await reload();
   }
 
   async function handleDelete(item: ScheduleItem) {
@@ -368,17 +374,24 @@ export default function AgendaPage() {
               <div className="grid gap-4 sm:grid-cols-2">
                 <label className="space-y-1 text-sm text-gray-700">
                   <span>Técnico</span>
-                  <select
-                    value={form.technician_name || ''}
-                    disabled={isTechnician}
-                    onChange={(event) => setForm((current) => ({ ...current, technician_name: event.target.value }))}
-                    className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary disabled:bg-gray-100"
-                  >
-                    <option value="">Selecione</option>
-                    {technicianOptions.map((option) => (
-                      <option key={option.value} value={option.label}>{option.label}</option>
-                    ))}
-                  </select>
+                  {isTechnician ? (
+                    <input
+                      value={session?.name || ''}
+                      disabled
+                      className="w-full rounded-lg border border-gray-300 bg-gray-100 px-3 py-2"
+                    />
+                  ) : (
+                    <select
+                      value={form.technician_name || ''}
+                      onChange={(event) => setForm((current) => ({ ...current, technician_name: event.target.value }))}
+                      className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
+                    >
+                      <option value="">Selecione</option>
+                      {technicianOptions.map((option) => (
+                        <option key={option.value} value={option.label}>{option.label}</option>
+                      ))}
+                    </select>
+                  )}
                 </label>
 
                 <label className="space-y-1 text-sm text-gray-700">
