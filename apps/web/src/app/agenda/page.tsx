@@ -116,7 +116,6 @@ export default function AgendaPage() {
         setClients(clientsResult.items);
       } catch (err) {
         console.error('Agenda load error:', err);
-        if (active) setError('Erro ao carregar agenda.');
       } finally {
         if (active) setLoading(false);
       }
@@ -234,11 +233,13 @@ export default function AgendaPage() {
         return;
       }
       setModalOpen(false);
+      setError('');
       setSuccessMessage(result.offline ? 'Agendamento salvo offline e pendente de sincronização.' : 'Agendamento salvo com sucesso.');
       reload().catch(() => {});
     } catch (err) {
       console.error('Save schedule error:', err);
       setSaving(false);
+      setSuccessMessage('');
       setError('Erro inesperado ao salvar. Tente novamente.');
     }
   }
