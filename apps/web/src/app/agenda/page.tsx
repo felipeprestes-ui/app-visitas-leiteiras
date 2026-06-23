@@ -240,7 +240,8 @@ export default function AgendaPage() {
       console.error('Save schedule error:', err);
       setSaving(false);
       setSuccessMessage('');
-      setError('Erro inesperado ao salvar. Tente novamente.');
+      const msg = err instanceof Error ? err.message : String(err);
+      setError(`Erro ao salvar: ${msg}`);
     }
   }
 
