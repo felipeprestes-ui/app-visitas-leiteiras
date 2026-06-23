@@ -212,6 +212,8 @@ export async function saveScheduleOfflineFirst(payload: Partial<ScheduleItem>): 
     property_name: payload.property_name || '',
     scheduled_date: payload.scheduled_date || new Date().toISOString(),
     area: payload.area || '',
+    consultant: payload.consultant || '',
+    city: payload.city || '',
     notes: payload.notes || '',
     local_id: payload.local_id || crypto.randomUUID?.() || `schedule-local-${Date.now()}`,
     pending_sync: false,
@@ -233,7 +235,7 @@ export async function saveScheduleOfflineFirst(payload: Partial<ScheduleItem>): 
     return { ok: true, offline: true, schedule: { ...schedule, pending_sync: true, sync_error: response.error || null } };
   }
 
-  const returned = response.data || schedule;
+  const returned = Array.isArray(response.data) ? response.data[0] || schedule : (response.data || schedule);
   const normalized: ScheduleItem = {
     ...schedule,
     ...returned,
