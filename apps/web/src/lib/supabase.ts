@@ -269,8 +269,9 @@ export async function upsertSchedule(payload: Partial<ScheduleItem>): Promise<Ap
     local_id: body.local_id,
   };
   if (body.consultant) mapped.consultant = body.consultant;
-  if (body.service_type) mapped.service_type = body.service_type;
-  if (body.client_type) mapped.client_type = body.client_type;
+  const extra = body as Record<string, unknown>;
+  if (extra.service_type) mapped.service_type = extra.service_type;
+  if (extra.client_type) mapped.client_type = extra.client_type;
   return supabaseFetch<ScheduleItem>(path, {
     method,
     headers: { Prefer: 'return=representation' },
