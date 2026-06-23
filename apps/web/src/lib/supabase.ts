@@ -267,6 +267,7 @@ export async function upsertSchedule(payload: Partial<ScheduleItem>): Promise<Ap
     area: body.area,
     notes: body.notes,
     local_id: body.local_id,
+    city: body.city ?? null,
   };
   if (body.consultant) mapped.consultant = body.consultant;
   const extra = body as Record<string, unknown>;

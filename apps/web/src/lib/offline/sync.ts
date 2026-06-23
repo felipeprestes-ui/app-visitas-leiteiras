@@ -193,12 +193,26 @@ export async function loadScheduleOfflineFirst(technicianName?: string): Promise
   }
 
   const remote = await fetchSchedule({ limit: '2000' });
+  // Preserve pending items not yet synced to Supabase so they stay visible after reload
+  const pending = await getPendingSchedule();
+  const pendingNotInRemote = pending.filter(
+    (p) =>
+      !remote.some(
+        (r) =>
+          (p.id && r.id === p.id) ||
+          (p.local_id && (r.local_id === p.local_id || r.id === p.local_id))
+      )
+  );
   await cacheSchedule(remote);
+  for (const p of pendingNotInRemote) {
+    await upsertCachedSchedule({ ...p, pending_sync: true });
+  }
   await setMeta('schedule-last-sync', new Date().toISOString());
+  const merged = [...pendingNotInRemote.map((p) => ({ ...p, pending_sync: true as const })), ...remote];
   return {
     items: technicianName
-      ? remote.filter((item) => matchesTech(item.technician_name))
-      : remote,
+      ? merged.filter((item) => matchesTech(item.technician_name))
+      : merged,
     fromCache: false,
     syncing: false,
   };

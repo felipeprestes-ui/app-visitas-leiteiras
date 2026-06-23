@@ -13,7 +13,7 @@ import type { ClientRecord, ScheduleItem, TechUser } from '@/types/portal';
 import { AREAS, CONSULTORES } from '@/types/portal';
 
 function normalizeTechnicianName(name: string) {
-  return name.trim().replace(/\s+/g, ' ').toLowerCase();
+  return name.trim().replace(/\s+/g, ' ').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 }
 
 function normalizeText(value: string) {
