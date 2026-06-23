@@ -59,7 +59,7 @@ export function DashboardClient() {
       const [visitsMonth, allSales, users] = await Promise.all([
         fetchVisits(visitParams),
         userRole === 'gestor' ? fetchSales({ 'month': `eq.${currentMonth}` }).catch(() => []) : Promise.resolve([]),
-        userRole === 'gestor' ? fetchUsers().then(all => all.filter(u => u.role === 'tecnico')).catch(() => []) : Promise.resolve([]),
+        userRole === 'gestor' ? fetchUsers().then(all => all.filter(u => u.role === 'tecnico' || u.role === 'gestor')).catch(() => []) : Promise.resolve([]),
       ]);
       
       setVisits(visitsMonth);

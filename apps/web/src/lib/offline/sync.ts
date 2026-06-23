@@ -282,7 +282,7 @@ export async function loadTechniciansOfflineFirst(): Promise<OfflineFirstResult<
   }
 
   const remote = await fetchUsers();
-  const techs = remote.filter((u) => u.role === 'tecnico');
+  const techs = remote.filter((u) => u.role === 'tecnico' || u.role === 'gestor');
   if (techs.length > 0) {
     await cacheTechnicians(techs);
     await setMeta('technicians-last-sync', new Date().toISOString());

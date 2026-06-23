@@ -1,11 +1,32 @@
 const CACHE_VERSION = 'vl-pwa-v1';
 const STATIC_CACHE = `${CACHE_VERSION}-static`;
 const API_CACHE = `${CACHE_VERSION}-api`;
-const OFFLINE_URLS = ['/', '/login/', '/dashboard/', '/visitas/'];
+
+// Helper to get base path dynamically
+function getBasePath() {
+  const scope = self.registration.scope;
+  return new URL(scope).pathname;
+}
 
 self.addEventListener('install', (event) => {
+  const basePath = getBasePath();
+  const OFFLINE_ROUTES = [
+    '',
+    'login/',
+    'dashboard/',
+    'visitas/',
+    'agenda/',
+    'vendas/',
+    'tecnicos/',
+    'relatorios/',
+    'sync/'
+  ];
+  const OFFLINE_URLS = OFFLINE_ROUTES.map(route => `${basePath}${route}`);
+
   event.waitUntil(
-    caches.open(STATIC_CACHE).then((cache) => cache.addAll(OFFLINE_URLS)).then(() => self.skipWaiting())
+    caches.open(STATIC_CACHE)
+      .then((cache) => cache.addAll(OFFLINE_URLS))
+      .then(() => self.skipWaiting())
   );
 });
 
@@ -49,8 +70,12 @@ async function cacheFirstStatic(request) {
     const cache = await caches.open(STATIC_CACHE);
     cache.put(request, response.clone());
     return response;
-  } catch {
-    return caches.match('/login/');
+  } catch (err) {
+    const basePath = getBasePath();
+    if (request.destination === 'document') {
+      return caches.match(`${basePath}login/`);
+    }
+    return new Response('Offline', { status: 503 });
   }
 }
 
