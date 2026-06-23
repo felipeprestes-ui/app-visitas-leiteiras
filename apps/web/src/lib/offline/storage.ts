@@ -3,7 +3,7 @@
 import type { ClientRecord, ScheduleItem, TechUser, Visit } from '@/types/portal';
 
 const DB_NAME = 'vl-offline-db';
-const DB_VERSION = 2;
+const DB_VERSION = 3;
 const VISITS_STORE = 'visits';
 const PENDING_STORE = 'pending-visits';
 const SCHEDULE_STORE = 'schedule';
