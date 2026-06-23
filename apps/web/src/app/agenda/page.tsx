@@ -170,9 +170,9 @@ export default function AgendaPage() {
   async function reload() {
     const techFilter = session?.role === 'tecnico' && session?.name ? session.name : undefined;
     const [scheduleResult, pending, syncAt] = await Promise.all([
-      loadScheduleOfflineFirst(techFilter),
-      getPendingSchedule(),
-      getLastSync('schedule'),
+      loadScheduleOfflineFirst(techFilter).catch(() => ({ items: [] as ScheduleItem[], fromCache: true, syncing: false })),
+      getPendingSchedule().catch(() => [] as ScheduleItem[]),
+      getLastSync('schedule').catch(() => null),
     ]);
     setItems(scheduleResult.items);
     setFromCache(scheduleResult.fromCache);
@@ -235,7 +235,7 @@ export default function AgendaPage() {
       }
       setModalOpen(false);
       setSuccessMessage(result.offline ? 'Agendamento salvo offline e pendente de sincronização.' : 'Agendamento salvo com sucesso.');
-      await reload();
+      reload().catch(() => {});
     } catch (err) {
       console.error('Save schedule error:', err);
       setSaving(false);
