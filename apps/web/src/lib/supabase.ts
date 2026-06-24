@@ -273,11 +273,22 @@ export async function upsertSchedule(payload: Partial<ScheduleItem>): Promise<Ap
   const extra = body as Record<string, unknown>;
   if (extra.service_type) mapped.service_type = extra.service_type;
   if (extra.client_type) mapped.client_type = extra.client_type;
-  return supabaseFetch<ScheduleItem>(path, {
+  const result = await supabaseFetch<ScheduleItem>(path, {
     method,
     headers: { Prefer: 'return=representation' },
     body: JSON.stringify(mapped),
   });
+  // If failed due to unknown column (schema cache stale), retry without city/consultant
+  if (!result.ok && result.error && (result.error.includes('column') || result.error.includes('schema'))) {
+    delete mapped.city;
+    delete mapped.consultant;
+    return supabaseFetch<ScheduleItem>(path, {
+      method,
+      headers: { Prefer: 'return=representation' },
+      body: JSON.stringify(mapped),
+    });
+  }
+  return result;
 }
 
 export async function deleteSchedule(id: string): Promise<ApiResult> {
