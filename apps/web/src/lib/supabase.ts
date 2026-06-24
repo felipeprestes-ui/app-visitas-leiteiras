@@ -47,6 +47,10 @@ export async function supabaseFetch<T = unknown>(
         `HTTP ${res.status}`;
       return { ok: false, error: msg };
     }
+    // Detect RLS silent rejection: POST returns 201 with empty array
+    if (options.method === 'POST' && Array.isArray(data) && (data as unknown[]).length === 0) {
+      return { ok: false, error: 'Insert bloqueado (RLS policy). Contate o administrador.' };
+    }
     return { ok: true, data: data as T };
   } catch (err) {
     return { ok: false, error: (err as Error).message || 'Sem conexao' };
